@@ -61,6 +61,13 @@ interface ExtensionInterface
      * the client explicitly includes them in request.extensions[].
      *
      * Non-global extensions only run when the client opts in.
+     *
+     * PERFORMANCE WARNING: Global extensions execute on every request.
+     * Ensure handlers are lightweight and add minimal overhead (<1ms).
+     * Use non-global mode for expensive operations that clients should
+     * opt into explicitly.
+     *
+     * @return bool True if this extension runs globally
      */
     public function isGlobal(): bool;
 

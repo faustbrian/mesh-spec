@@ -10,6 +10,8 @@
 namespace Cline\Forrst\Data;
 
 use BackedEnum;
+use Cline\Forrst\Validation\UrnValidator;
+use InvalidArgumentException;
 
 use function is_array;
 use function is_string;
@@ -57,10 +59,27 @@ final readonly class ExtensionData
     ) {
         if ($urn instanceof BackedEnum) {
             $urnValue = $urn->value;
-            $this->urn = is_string($urnValue) ? $urnValue : (string) $urnValue;
+            $urnString = is_string($urnValue) ? $urnValue : (string) $urnValue;
         } else {
-            $this->urn = $urn;
+            $urnString = $urn;
         }
+
+        // Validate URN format
+        UrnValidator::validateExtensionUrn($urnString, 'urn');
+
+        // Enforce mutual exclusivity
+        if ($options !== null && $data !== null) {
+            throw new InvalidArgumentException(
+                'Extension cannot have both options (request) and data (response) set. ' .
+                'Use ExtensionData::request() for requests or ExtensionData::response() for responses.'
+            );
+        }
+
+        // Validate arrays
+        UrnValidator::validateArray($options, 'options');
+        UrnValidator::validateArray($data, 'data');
+
+        $this->urn = $urnString;
     }
 
     /**
@@ -107,7 +126,14 @@ final readonly class ExtensionData
      */
     public static function from(array $data): self
     {
-        $urn = $data['urn'] ?? '';
+        // Validate URN is present and valid
+        if (!isset($data['urn']) || !is_string($data['urn']) || $data['urn'] === '') {
+            throw new InvalidArgumentException(
+                'Extension data must contain a valid non-empty "urn" field'
+            );
+        }
+
+        $urn = $data['urn'];
         $rawOptions = $data['options'] ?? null;
         $rawData = $data['data'] ?? null;
 
@@ -118,7 +144,7 @@ final readonly class ExtensionData
         $extensionData = is_array($rawData) ? $rawData : null;
 
         return new self(
-            urn: is_string($urn) ? $urn : '',
+            urn: $urn,
             options: $options,
             data: $extensionData,
         );
