@@ -35,10 +35,15 @@ interface StreamableFunction extends FunctionInterface
      * Stream the function response.
      *
      * Yields progressive chunks of the response data as a Generator. Each yielded
-     * value is sent to the client as a Server-Sent Event. StreamChunk objects are
-     * sent directly; raw data values are automatically wrapped in StreamChunk::data().
-     * The final chunk should include `final: true` to signal stream completion.
+     * value must be a StreamChunk object and is sent to the client as a Server-Sent
+     * Event. The final chunk should include `final: true` to signal stream completion.
      *
+     * ERROR HANDLING: If an error occurs during streaming:
+     * 1. Yield StreamChunk::error($code, $message)
+     * 2. Yield StreamChunk::final() to close the stream
+     * 3. Do NOT throw exceptions (connection may be open)
+     *
+     * @example Basic streaming
      * ```php
      * public function stream(): Generator {
      *     yield StreamChunk::data(['progress' => 0.25]);
@@ -47,7 +52,25 @@ interface StreamableFunction extends FunctionInterface
      * }
      * ```
      *
-     * @return Generator<int, mixed|StreamChunk> Yields chunks to be sent as SSE events
+     * @example Error handling during stream
+     * ```php
+     * public function stream(): Generator
+     * {
+     *     try {
+     *         yield StreamChunk::data(['progress' => 0.25]);
+     *         yield StreamChunk::data(['progress' => 0.50]);
+     *
+     *         $result = $this->processData(); // May throw
+     *
+     *         yield StreamChunk::data($result, final: true);
+     *     } catch (\Exception $e) {
+     *         yield StreamChunk::error('PROCESSING_ERROR', $e->getMessage());
+     *         yield StreamChunk::final();
+     *     }
+     * }
+     * ```
+     *
+     * @return Generator<int, StreamChunk> Yields StreamChunk objects as SSE events
      */
     public function stream(): Generator;
 }
