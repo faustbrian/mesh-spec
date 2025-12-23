@@ -61,5 +61,29 @@ final class ExampleData extends Data
         public readonly ?array $arguments = null,
         public readonly mixed $result = null,
         public readonly ?array $error = null,
-    ) {}
+    ) {
+        $this->validateMutualExclusivity();
+    }
+
+    /**
+     * Validates mutual exclusivity constraints between fields.
+     *
+     * @throws \InvalidArgumentException
+     */
+    private function validateMutualExclusivity(): void
+    {
+        // value and externalValue are mutually exclusive
+        if ($this->value !== null && $this->externalValue !== null) {
+            throw new \InvalidArgumentException(
+                'Cannot specify both "value" and "externalValue"—they are mutually exclusive'
+            );
+        }
+
+        // result and error are mutually exclusive
+        if ($this->result !== null && $this->error !== null) {
+            throw new \InvalidArgumentException(
+                'Cannot specify both "result" and "error"—use separate examples for success/error cases'
+            );
+        }
+    }
 }
