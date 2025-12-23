@@ -112,4 +112,18 @@ enum ReplayPriority: string
     {
         return $this === $other;
     }
+
+    /**
+     * Get the default priority level.
+     *
+     * Returns the standard priority used when no explicit priority is
+     * specified. Centralizes the default value for consistency across
+     * the application.
+     *
+     * @return self The default priority level (Normal)
+     */
+    public static function default(): self
+    {
+        return self::Normal;
+    }
 }
