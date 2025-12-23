@@ -129,6 +129,33 @@ final readonly class RequestHandler
         $startTime = hrtime(true);
         $requestData = null;
 
+        // Validate request size if string
+        if (is_string($request)) {
+            $maxSize = config('rpc.max_request_size', 1024 * 1024);
+            $size = strlen($request);
+
+            if ($maxSize > 0 && $size > $maxSize) {
+                return RequestResultData::from([
+                    'data' => ResponseData::fromException(
+                        StructurallyInvalidRequestException::create([
+                            [
+                                'status' => '413',
+                                'code' => 'request_too_large',
+                                'title' => 'Request too large',
+                                'detail' => sprintf(
+                                    'Request size %d bytes exceeds maximum %d bytes',
+                                    $size,
+                                    $maxSize,
+                                ),
+                            ],
+                        ]),
+                        Str::ulid()->toString(),
+                    ),
+                    'statusCode' => 413,
+                ]);
+            }
+        }
+
         try {
             $requestData = $this->parse($request);
 

@@ -50,6 +50,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Maximum Request Size
+    |--------------------------------------------------------------------------
+    |
+    | The maximum size in bytes for incoming request payloads. Requests larger
+    | than this limit will be rejected with a 413 status code to prevent
+    | resource exhaustion attacks. Set to 0 to disable size validation.
+    |
+    | Default: 1048576 (1 MB)
+    |
+    */
+
+    'max_request_size' => env('FORRST_MAX_REQUEST_SIZE', 1024 * 1024),
+
+    /*
+    |--------------------------------------------------------------------------
     | Forrst Function Namespaces
     |--------------------------------------------------------------------------
     |
