@@ -171,7 +171,21 @@ final class CancellationExtension extends AbstractExtension implements ProvidesF
         }
 
         // Register the token as active (not cancelled)
-        Cache::put(self::CACHE_PREFIX.$validToken, 'active', $this->tokenTtl);
+        try {
+            Cache::put(self::CACHE_PREFIX.$validToken, 'active', $this->tokenTtl);
+        } catch (\Throwable $e) {
+            // Log the error
+            error_log('Failed to register cancellation token: '.$e->getMessage());
+
+            $event->setResponse(ResponseData::error(
+                new ErrorData(
+                    code: ErrorCode::InternalError,
+                    message: 'Failed to register cancellation token',
+                ),
+                $event->request->id,
+            ));
+            $event->stopPropagation();
+        }
     }
 
     /**
@@ -246,31 +260,38 @@ final class CancellationExtension extends AbstractExtension implements ProvidesF
      *
      * Marks the token as cancelled in cache, signaling to the executing request
      * to abort. Safe to call multiple times for the same token. Returns false
-     * if token doesn't exist or has expired.
+     * if token doesn't exist or has expired or if cache operation fails.
      *
      * @param string $token Cancellation token from original request
      *
-     * @return bool True if cancellation was successful, false if token not found
+     * @return bool True if cancellation was successful, false if token not found or cache error
      */
     public function cancel(string $token): bool
     {
-        $key = self::CACHE_PREFIX.$token;
-        $status = Cache::get($key);
+        try {
+            $key = self::CACHE_PREFIX.$token;
+            $status = Cache::get($key);
 
-        if ($status === null) {
-            // Token doesn't exist or expired
+            if ($status === null) {
+                // Token doesn't exist or expired
+                return false;
+            }
+
+            if ($status === 'cancelled') {
+                // Already cancelled
+                return true;
+            }
+
+            // Mark as cancelled
+            Cache::put($key, 'cancelled', $this->tokenTtl);
+
+            return true;
+        } catch (\Throwable $e) {
+            // Log the error
+            error_log('Failed to cancel request token: '.$e->getMessage());
+
             return false;
         }
-
-        if ($status === 'cancelled') {
-            // Already cancelled
-            return true;
-        }
-
-        // Mark as cancelled
-        Cache::put($key, 'cancelled', $this->tokenTtl);
-
-        return true;
     }
 
     /**
@@ -307,11 +328,17 @@ final class CancellationExtension extends AbstractExtension implements ProvidesF
      *
      * @param string $token Cancellation token to check
      *
-     * @return bool True if token is marked as cancelled
+     * @return bool True if token is marked as cancelled, false on cache error
      */
     public function isCancelled(string $token): bool
     {
-        return Cache::get(self::CACHE_PREFIX.$token) === 'cancelled';
+        try {
+            return Cache::get(self::CACHE_PREFIX.$token) === 'cancelled';
+        } catch (\Throwable $e) {
+            error_log('Failed to check cancellation status: '.$e->getMessage());
+
+            return false;
+        }
     }
 
     /**
@@ -321,11 +348,17 @@ final class CancellationExtension extends AbstractExtension implements ProvidesF
      *
      * @param string $token Cancellation token to check
      *
-     * @return bool True if token is registered and not cancelled
+     * @return bool True if token is registered and not cancelled, false on cache error
      */
     public function isActive(string $token): bool
     {
-        return Cache::get(self::CACHE_PREFIX.$token) === 'active';
+        try {
+            return Cache::get(self::CACHE_PREFIX.$token) === 'active';
+        } catch (\Throwable $e) {
+            error_log('Failed to check token active status: '.$e->getMessage());
+
+            return false;
+        }
     }
 
     /**
@@ -338,6 +371,11 @@ final class CancellationExtension extends AbstractExtension implements ProvidesF
      */
     public function cleanup(string $token): void
     {
-        Cache::forget(self::CACHE_PREFIX.$token);
+        try {
+            Cache::forget(self::CACHE_PREFIX.$token);
+        } catch (\Throwable $e) {
+            // Log but don't throw - cleanup is best effort
+            error_log('Failed to cleanup cancellation token: '.$e->getMessage());
+        }
     }
 }
