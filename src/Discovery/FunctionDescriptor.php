@@ -108,9 +108,25 @@ final class FunctionDescriptor
      * Set the function version.
      *
      * @param string $version Semantic version (e.g., "1.0.0", "2.0.0-beta.1")
+     *
+     * @throws \InvalidArgumentException If version invalid
      */
     public function version(string $version): self
     {
+        // Validate semantic versioning format
+        $semverPattern = '/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)' .
+            '(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)' .
+            '(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?'  .
+            '(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/';
+
+        if (!preg_match($semverPattern, $version)) {
+            throw new \InvalidArgumentException(
+                "Invalid semantic version: '{$version}'. " .
+                "Must follow semver format (e.g., '1.0.0', '2.1.0-beta.1', '3.0.0+build.123'). " .
+                "See: https://semver.org/"
+            );
+        }
+
         $this->version = $version;
 
         return $this;
