@@ -62,7 +62,7 @@ final class ConfigurationData extends AbstractData
         #[DataCollectionOf(ServerData::class)]
         public readonly DataCollection $servers,
     ) {
-        $this->validate();
+        $this->validateConfiguration();
     }
 
     /**
@@ -101,7 +101,7 @@ final class ConfigurationData extends AbstractData
      *
      * @throws \InvalidArgumentException When configuration is invalid
      */
-    private function validate(): void
+    private function validateConfiguration(): void
     {
         // Validate namespaces
         if ($this->namespaces === []) {
