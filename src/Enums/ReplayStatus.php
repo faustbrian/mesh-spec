@@ -95,4 +95,118 @@ enum ReplayStatus: string
             default => false,
         };
     }
+
+    /**
+     * Validate if transition from this status to another is allowed.
+     *
+     * Enforces the replay lifecycle state machine by validating proposed
+     * transitions against allowed state changes. Terminal states cannot
+     * transition to any other state. Non-terminal states have specific
+     * allowed transitions based on the replay lifecycle.
+     *
+     * Valid transition paths:
+     * - Queued → Processing, Cancelled, Expired
+     * - Processing → Completed, Failed, Cancelled, Expired, Processed
+     * - Terminal states → No transitions allowed
+     *
+     * @param self $newStatus The proposed new status
+     *
+     * @return bool True if the transition is valid, false otherwise
+     */
+    public function canTransitionTo(self $newStatus): bool
+    {
+        // Terminal states cannot transition
+        if ($this->isTerminal()) {
+            return false;
+        }
+
+        // Self-transition is always invalid (status shouldn't change to itself)
+        if ($this === $newStatus) {
+            return false;
+        }
+
+        return match ($this) {
+            self::Queued => in_array($newStatus, [
+                self::Processing,
+                self::Cancelled,
+                self::Expired,
+            ], true),
+
+            self::Processing => in_array($newStatus, [
+                self::Completed,
+                self::Failed,
+                self::Cancelled,
+                self::Expired,
+                self::Processed,
+            ], true),
+
+            // Terminal states already handled above
+            default => false,
+        };
+    }
+
+    /**
+     * Validate and enforce a state transition.
+     *
+     * Throws an exception if the transition is not valid according to
+     * the replay lifecycle rules. Use this when transitioning replay
+     * status to ensure state machine integrity.
+     *
+     * @param self $newStatus The desired new status
+     *
+     * @throws \Cline\Forrst\Exceptions\InvalidStatusTransitionException
+     *
+     * @return self The new status if transition is valid
+     */
+    public function transitionTo(self $newStatus): self
+    {
+        if (!$this->canTransitionTo($newStatus)) {
+            throw new \Cline\Forrst\Exceptions\InvalidStatusTransitionException(
+                sprintf(
+                    'Invalid status transition from %s to %s. %s',
+                    $this->value,
+                    $newStatus->value,
+                    $this->isTerminal()
+                        ? 'Terminal states cannot transition.'
+                        : 'This transition is not allowed by the replay lifecycle.'
+                )
+            );
+        }
+
+        return $newStatus;
+    }
+
+    /**
+     * Get all valid next states from this status.
+     *
+     * Returns an array of statuses that are valid transitions from the
+     * current status. Useful for UI dropdowns, API documentation, and
+     * validation logic.
+     *
+     * @return array<self> Array of valid next statuses
+     */
+    public function getValidTransitions(): array
+    {
+        if ($this->isTerminal()) {
+            return [];
+        }
+
+        return match ($this) {
+            self::Queued => [
+                self::Processing,
+                self::Cancelled,
+                self::Expired,
+            ],
+
+            self::Processing => [
+                self::Completed,
+                self::Failed,
+                self::Cancelled,
+                self::Expired,
+                self::Processed,
+            ],
+
+            default => [],
+        };
+    }
 }
