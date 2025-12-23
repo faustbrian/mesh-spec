@@ -16,6 +16,29 @@ namespace Cline\Forrst\Enums;
  * terminal states like completion or failure. Status transitions follow a defined
  * lifecycle where certain states are terminal and cannot transition further.
  *
+ * State Transition Flow:
+ *
+ *     ┌─────────┐
+ *     │ Queued  │────┐
+ *     └────┬────┘    │
+ *          │         │
+ *          ▼         │
+ *    ┌────────────┐  │
+ *    │ Processing │  │
+ *    └─────┬──────┘  │
+ *          │         │
+ *    ┌─────┴────────────────┬──────────┬────────────┐
+ *    ▼          ▼           ▼          ▼            ▼
+ * ┌─────────┐ ┌──────┐ ┌─────────┐ ┌──────────┐ ┌───────────┐
+ * │Completed│ │Failed│ │Cancelled│ │ Expired  │ │ Processed │
+ * └─────────┘ └──────┘ └─────────┘ └──────────┘ └───────────┘
+ *  (Terminal) (Terminal) (Terminal)  (Terminal)   (Terminal)
+ *
+ * Transition Rules:
+ * - Queued can transition to: Processing, Cancelled, Expired
+ * - Processing can transition to: Completed, Failed, Cancelled, Expired, Processed
+ * - Terminal states (Completed, Failed, Cancelled, Expired, Processed) cannot transition
+ *
  * @author Brian Faust <brian@cline.sh>
  *
  * @see https://docs.cline.sh/forrst/extensions/replay
