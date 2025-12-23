@@ -507,7 +507,8 @@ final class AsyncExtension extends AbstractExtension implements ProvidesFunction
      * Update operation progress for long-running tasks.
      *
      * Background workers can call this periodically during execution to provide
-     * progress feedback to polling clients. Progress is clamped to [0.0, 1.0].
+     * progress feedback to polling clients. Progress is clamped to [0.0, 1.0]
+     * and cannot decrease from its current value.
      *
      * @param string      $operationId Unique operation identifier
      * @param float       $progress    Progress value between 0.0 (started) and 1.0 (complete)
@@ -515,7 +516,7 @@ final class AsyncExtension extends AbstractExtension implements ProvidesFunction
      *
      * @throws OperationNotFoundException If operation doesn't exist
      * @throws InvalidOperationStateException If operation cannot have progress updated
-     * @throws \InvalidArgumentException If progress message exceeds maximum length
+     * @throws \InvalidArgumentException If progress decreases or message exceeds maximum length
      */
     public function updateProgress(string $operationId, float $progress, ?string $message = null): void
     {
@@ -537,6 +538,19 @@ final class AsyncExtension extends AbstractExtension implements ProvidesFunction
             ));
         }
 
+        // Validate progress doesn't decrease
+        $currentProgress = $operation->progress ?? 0.0;
+        $newProgress = max(0.0, min(1.0, $progress));
+
+        if ($newProgress < $currentProgress) {
+            throw new \InvalidArgumentException(sprintf(
+                'Progress cannot decrease from %.2f to %.2f for operation %s',
+                $currentProgress,
+                $newProgress,
+                $operationId,
+            ));
+        }
+
         $metadata = $operation->metadata ?? [];
 
         if ($message !== null) {
@@ -554,7 +568,7 @@ final class AsyncExtension extends AbstractExtension implements ProvidesFunction
             function: $operation->function,
             version: $operation->version,
             status: $operation->status,
-            progress: max(0.0, min(1.0, $progress)),
+            progress: $newProgress,
             result: $operation->result,
             errors: $operation->errors,
             startedAt: $operation->startedAt,
