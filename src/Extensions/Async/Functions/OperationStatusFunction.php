@@ -51,7 +51,11 @@ final class OperationStatusFunction extends AbstractFunction
     {
         $operationId = $this->requestObject->getArgument('operation_id');
 
-        assert(is_string($operationId));
+        if (!is_string($operationId)) {
+            throw new \InvalidArgumentException('Operation ID must be a string');
+        }
+
+        $this->validateOperationId($operationId);
 
         $operation = $this->repository->find($operationId);
 
@@ -60,5 +64,21 @@ final class OperationStatusFunction extends AbstractFunction
         }
 
         return $operation->toArray();
+    }
+
+    /**
+     * Validate operation ID format.
+     *
+     * @param string $operationId Operation ID to validate
+     *
+     * @throws \InvalidArgumentException If format is invalid
+     */
+    private function validateOperationId(string $operationId): void
+    {
+        if (!preg_match('/^op_[0-9a-f]{24}$/', $operationId)) {
+            throw new \InvalidArgumentException(
+                "Invalid operation ID format: {$operationId}. Expected format: op_<24 hex characters>",
+            );
+        }
     }
 }
