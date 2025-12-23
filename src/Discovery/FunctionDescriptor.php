@@ -83,10 +83,23 @@ final class FunctionDescriptor
      * Set the function URN.
      *
      * @param BackedEnum|string $urn Function URN or URN enum (e.g., "urn:acme:forrst:fn:orders:create")
+     *
+     * @throws \InvalidArgumentException If URN format invalid
      */
     public function urn(BackedEnum|string $urn): self
     {
-        $this->urn = $urn instanceof BackedEnum ? (string) $urn->value : $urn;
+        $urnString = $urn instanceof BackedEnum ? (string) $urn->value : $urn;
+
+        // Validate URN format: urn:namespace:forrst:fn:function:name
+        if (!preg_match('/^urn:[a-z][a-z0-9-]*:forrst:fn:[a-z][a-z0-9:.]*$/i', $urnString)) {
+            throw new \InvalidArgumentException(
+                "Invalid function URN format: '{$urnString}'. " .
+                "Expected format: 'urn:namespace:forrst:fn:function:name' " .
+                "(e.g., 'urn:acme:forrst:fn:users:get')"
+            );
+        }
+
+        $this->urn = $urnString;
 
         return $this;
     }
