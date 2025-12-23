@@ -19,10 +19,59 @@ use Spatie\LaravelData\Data;
  * discovery documents to document expected error responses, enabling clients
  * to implement proper error handling and display meaningful error messages.
  *
+ * SECURITY CONSIDERATIONS:
+ * - Error messages may contain placeholders ({0}, {1}) for dynamic values
+ * - ALWAYS escape values before substituting into messages displayed in HTML
+ * - Use formatMessage() helper for safe HTML substitution with automatic escaping
+ * - Validate JSON schemas to prevent deeply nested structures causing DoS
+ * - Never expose sensitive data (passwords, tokens, keys) in error messages
+ *
+ * @example Basic error definition with enum code
+ *
+ * ```php
+ * $error = new ErrorDefinitionData(
+ *     code: ErrorCode::ResourceNotFound,
+ *     message: 'Resource with ID {0} not found',
+ *     description: 'The requested resource does not exist in the system',
+ * );
+ * ```
+ *
+ * @example Error with JSON Schema details
+ *
+ * ```php
+ * $error = new ErrorDefinitionData(
+ *     code: 'VALIDATION_FAILED',
+ *     message: 'Input validation failed',
+ *     details: [
+ *         'type' => 'object',
+ *         'properties' => [
+ *             'field' => ['type' => 'string', 'description' => 'Field that failed'],
+ *             'errors' => [
+ *                 'type' => 'array',
+ *                 'items' => ['type' => 'string'],
+ *                 'description' => 'Validation error messages',
+ *             ],
+ *         ],
+ *         'required' => ['field', 'errors'],
+ *     ],
+ * );
+ * ```
+ *
+ * @example Safe message formatting
+ *
+ * ```php
+ * $formatted = $error->formatMessage([
+ *     $userId,  // Automatically HTML-escaped
+ *     $action,  // Automatically HTML-escaped
+ * ]);
+ * echo $formatted; // Safe to display in HTML
+ * ```
+ *
  * @author Brian Faust <brian@cline.sh>
  *
  * @see https://docs.cline.sh/forrst/errors
  * @see https://docs.cline.sh/specs/forrst/discovery#error-definition-object
+ * @see https://json-schema.org/ JSON Schema specification
  */
 final class ErrorDefinitionData extends Data
 {
@@ -39,13 +88,20 @@ final class ErrorDefinitionData extends Data
      *                                               clients to programmatically identify and handle specific error conditions
      *                                               without parsing human-readable messages.
      * @param string                    $message     Human-readable error message template describing the error condition.
-     *                                               May include variable placeholders that are populated with context-specific
-     *                                               values when the error occurs. Displayed to end users in error dialogs
-     *                                               and logging output.
+     *                                               Use numbered placeholders {0}, {1}, {2} for dynamic values. DO NOT use
+     *                                               named placeholders like {fieldName} as they increase injection risk.
+     *                                               Always sanitize/escape values before substitution using formatMessage().
+     *
+     *                                               Example: "Invalid value {0} for field {1}"
+     *
+     *                                               WARNING: When substituting values, escape HTML/SQL special characters
+     *                                               to prevent injection attacks.
      * @param null|string               $description Optional detailed explanation of when this error occurs, what
      *                                               causes it, and how to resolve it. Provides additional context
      *                                               beyond the brief message for documentation and troubleshooting.
      * @param null|array<string, mixed> $details     JSON Schema definition for the error's details field.
+     *                                               Must include a valid 'type' property. Nested schemas are
+     *                                               validated recursively with a maximum depth of 10 levels.
      *                                               Specifies the structure and validation rules for
      *                                               additional error metadata, enabling type-safe error
      *                                               handling and validation in client implementations.
