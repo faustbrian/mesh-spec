@@ -9,6 +9,7 @@
 
 namespace Cline\Forrst\Discovery;
 
+use InvalidArgumentException;
 use Spatie\LaravelData\Data;
 
 /**
@@ -45,11 +46,44 @@ final class TagData extends Data
      *                                            about the tag's functional area. Useful for linking to detailed
      *                                            guides, tutorials, or architectural documentation that explains
      *                                            the tagged functions in greater depth.
+     *
+     * @throws InvalidArgumentException If tag name is empty or exceeds maximum length
      */
     public function __construct(
         public readonly string $name,
         public readonly ?string $summary = null,
         public readonly ?string $description = null,
         public readonly ?ExternalDocsData $externalDocs = null,
-    ) {}
+    ) {
+        // Validate name
+        $trimmedName = trim($name);
+        if ($trimmedName === '') {
+            throw new InvalidArgumentException('Tag name cannot be empty');
+        }
+
+        if (mb_strlen($trimmedName) > 50) {
+            throw new InvalidArgumentException(
+                'Tag name too long (max 50 characters, got ' . mb_strlen($trimmedName) . ')'
+            );
+        }
+
+        // Recommend kebab-case or snake_case for consistency
+        if (!preg_match('/^[a-z][a-z0-9_-]*$/', $trimmedName)) {
+            trigger_error(
+                "Warning: Tag name '{$trimmedName}' should use lowercase kebab-case or snake_case " .
+                "(e.g., 'user-management', 'billing', 'analytics')",
+                E_USER_WARNING
+            );
+        }
+
+        $this->name = $trimmedName;
+
+        // Validate summary length
+        if ($this->summary !== null && mb_strlen($this->summary) > 60) {
+            trigger_error(
+                'Warning: Tag summary should be brief (under 60 characters). Got ' . mb_strlen($this->summary),
+                E_USER_WARNING
+            );
+        }
+    }
 }
