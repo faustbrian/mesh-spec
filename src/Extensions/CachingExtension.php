@@ -361,17 +361,18 @@ final class CachingExtension extends AbstractExtension
      * @param RequestObjectData $request Request to generate key for
      *
      * @return string Unique cache key for this request
+     *
+     * @throws \JsonException If arguments cannot be JSON-encoded
      */
     public function buildCacheKey(RequestObjectData $request): string
     {
-        $json = json_encode($request->call->arguments ?? []);
-        assert($json !== false);
+        $json = json_encode($request->call->arguments ?? [], JSON_THROW_ON_ERROR);
 
         $parts = [
             'forrst_cache',
             $request->call->function,
             $request->call->version ?? 'latest',
-            md5($json),
+            hash('sha256', $json), // Use full SHA-256 hash for cache keys
         ];
 
         return implode(':', $parts);
