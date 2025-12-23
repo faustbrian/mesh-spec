@@ -71,10 +71,16 @@ final readonly class BootServer
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // @phpstan-ignore-next-line - route() can be null when resolver not set, despite PHPStan's conditional return type
+        // Route can be null in several scenarios:
+        // 1. Request doesn't match any route (should be caught by 404 handler before this)
+        // 2. Route resolver not set (testing/console contexts)
+        // 3. Route exists but has no name (misconfiguration)
+        // @phpstan-ignore-next-line - PHPStan's conditional return type doesn't account for resolver edge cases
         $routeName = $request->route()?->getName();
 
-        throw_if($routeName === null, RouteNameRequiredException::create());
+        if ($routeName === null) {
+            throw RouteNameRequiredException::create();
+        }
 
         $this->container->instance(
             ServerInterface::class,

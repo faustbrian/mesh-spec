@@ -18,6 +18,7 @@ use Illuminate\Contracts\Cache\Repository as CacheRepository;
 use Override;
 
 use function assert;
+use function hash;
 use function implode;
 use function is_array;
 use function is_float;
@@ -26,7 +27,6 @@ use function is_string;
 use function json_encode;
 use function mb_substr;
 use function mb_trim;
-use function md5;
 use function preg_replace;
 use function sprintf;
 
