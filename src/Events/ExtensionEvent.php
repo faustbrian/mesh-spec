@@ -45,7 +45,7 @@ abstract class ExtensionEvent
      * for this event. Used to short-circuit processing when an extension has
      * handled the event and wants to prevent further processing.
      */
-    protected bool $propagationStopped = false;
+    private bool $propagationStopped = false;
 
     /**
      * Response to return immediately, bypassing normal execution.
@@ -55,7 +55,7 @@ abstract class ExtensionEvent
      * by caching extensions to return cached responses or by idempotency
      * extensions to return previously computed results.
      */
-    protected ?ResponseData $shortCircuitResponse = null;
+    private ?ResponseData $shortCircuitResponse = null;
 
     /**
      * Create a new extension event instance.
