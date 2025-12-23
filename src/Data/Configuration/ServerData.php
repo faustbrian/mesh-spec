@@ -29,6 +29,30 @@ use Cline\Forrst\Data\AbstractData;
 final class ServerData extends AbstractData
 {
     /**
+     * Create a server configuration instance from an array.
+     *
+     * Factory method for creating ServerData instances from configuration arrays.
+     * Validates required fields and provides sensible defaults for optional fields.
+     *
+     * @param array<string, mixed> $data Configuration data array
+     *
+     * @return self New ServerData instance
+     *
+     * @throws \InvalidArgumentException If required fields are missing
+     */
+    public static function createFromArray(array $data): self
+    {
+        return new self(
+            name: $data['name'] ?? throw new \InvalidArgumentException('Server name is required'),
+            path: $data['path'] ?? throw new \InvalidArgumentException('Server path is required'),
+            route: $data['route'] ?? throw new \InvalidArgumentException('Server route is required'),
+            version: $data['version'] ?? '1.0.0',
+            middleware: $data['middleware'] ?? [],
+            functions: $data['functions'] ?? null,
+        );
+    }
+
+    /**
      * Create a new server configuration instance.
      *
      * @param string                                           $name       Unique identifier for this server instance, used
