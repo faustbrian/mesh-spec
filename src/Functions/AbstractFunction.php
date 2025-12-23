@@ -370,11 +370,10 @@ abstract class AbstractFunction implements FunctionInterface
     #[Override()]
     public function getExtensions(): ?FunctionExtensionsData
     {
-        if (($descriptor = $this->resolveDescriptor()) instanceof FunctionDescriptor) {
-            return $descriptor->getExtensions();
-        }
-
-        return null;
+        return $this->fromDescriptorOr(
+            fn (FunctionDescriptor $d) => $d->getExtensions(),
+            null,
+        );
     }
 
     /**

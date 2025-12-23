@@ -72,6 +72,20 @@ abstract class AbstractRequestException extends Exception implements RpcExceptio
     }
 
     /**
+     * Get user-friendly error message safe for display.
+     *
+     * By default returns the error message, but can be overridden by subclasses
+     * to provide sanitized, translated, or simplified messaging appropriate for
+     * end-user display in client applications.
+     *
+     * @return string The user-facing error message
+     */
+    public function getUserMessage(): string
+    {
+        return $this->getErrorMessage();
+    }
+
+    /**
      * Get additional error details.
      *
      * @return null|array<string, mixed> Optional additional context and debugging information
