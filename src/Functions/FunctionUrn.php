@@ -113,14 +113,34 @@ enum FunctionUrn: string
     }
 
     /**
-     * Check if a URN is a standard system function.
+     * Check if a URN is a valid Forrst system function.
      *
      * @param string $urn The URN string to validate
      *
-     * @return bool True if the URN is a standard function, false otherwise
+     * @return bool True if the URN is a standard function with valid format
      */
     public static function isSystem(string $urn): bool
     {
-        return self::tryFrom($urn) !== null;
+        // First check it's a valid system URN
+        if (self::tryFrom($urn) !== null) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Validate URN format.
+     *
+     * @param string $urn The URN to validate
+     *
+     * @return bool True if format is valid
+     */
+    public static function isValidFormat(string $urn): bool
+    {
+        return (bool) preg_match(
+            '/^urn:[a-z][a-z0-9-]*:forrst:(fn|ext):[a-z0-9-]+:[a-z0-9-]+$/',
+            $urn
+        );
     }
 }
