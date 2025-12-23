@@ -177,6 +177,8 @@ final class FunctionDescriptor
      * @param mixed                  $default     Default value if not required
      * @param null|DeprecatedData    $deprecated  Deprecation info
      * @param null|array<int, mixed> $examples    Example values
+     *
+     * @throws \InvalidArgumentException If schema is invalid
      */
     public function argument(
         string $name,
@@ -188,6 +190,9 @@ final class FunctionDescriptor
         ?DeprecatedData $deprecated = null,
         ?array $examples = null,
     ): self {
+        // Validate schema structure
+        $this->validateJsonSchema($schema);
+
         $this->arguments[] = new ArgumentData(
             name: $name,
             schema: $schema,
@@ -570,5 +575,32 @@ final class FunctionDescriptor
     public function getSecurity(): ?array
     {
         return $this->security;
+    }
+
+    /**
+     * Validate JSON Schema structure.
+     *
+     * @param array<string, mixed> $schema
+     *
+     * @throws \InvalidArgumentException
+     */
+    private function validateJsonSchema(array $schema): void
+    {
+        if (!isset($schema['type']) && !isset($schema['$ref'])) {
+            throw new \InvalidArgumentException(
+                'JSON Schema must include "type" or "$ref" property'
+            );
+        }
+
+        if (isset($schema['type'])) {
+            $validTypes = ['null', 'boolean', 'object', 'array', 'number', 'string', 'integer'];
+
+            if (!in_array($schema['type'], $validTypes, true)) {
+                throw new \InvalidArgumentException(
+                    "Invalid JSON Schema type: '{$schema['type']}'. " .
+                    'Must be one of: ' . implode(', ', $validTypes)
+                );
+            }
+        }
     }
 }
