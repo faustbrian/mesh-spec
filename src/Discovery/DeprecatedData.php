@@ -32,13 +32,249 @@ final class DeprecatedData extends Data
      *                            Typically includes guidance on what to use instead, such as
      *                            "Use createUser() instead" or "Replaced by v2 authentication".
      *                            Helps developers migrate to supported alternatives.
-     * @param null|string $sunset The date when this deprecated element will be removed from the API,
-     *                            in ISO 8601 format (e.g., "2025-12-31"). Provides a timeline for
-     *                            migration planning. Null indicates no specific removal date has been
-     *                            set, though the element should still not be used in new code.
+     * @param null|\DateTimeImmutable $sunset The date when this deprecated element will be removed from the API.
+     *                                        Provides a timeline for migration planning. Null indicates no specific
+     *                                        removal date has been set, though the element should still not be used in new code.
+     * @throws \InvalidArgumentException if sunset date is in the past or validation fails
      */
     public function __construct(
         public readonly ?string $reason = null,
-        public readonly ?string $sunset = null,
-    ) {}
+        public readonly ?\DateTimeImmutable $sunset = null,
+    ) {
+        $this->validate();
+    }
+
+    /**
+     * Create deprecation data with string sunset date.
+     *
+     * @param null|string $reason Deprecation reason
+     * @param null|string $sunsetDate ISO 8601 date string (e.g., "2025-12-31")
+     * @return self
+     * @throws \InvalidArgumentException if date format is invalid
+     */
+    public static function create(?string $reason = null, ?string $sunsetDate = null): self
+    {
+        $sunset = null;
+
+        if ($sunsetDate !== null) {
+            try {
+                $sunset = new \DateTimeImmutable($sunsetDate);
+            } catch (\Exception $e) {
+                throw new \InvalidArgumentException(
+                    sprintf('Invalid sunset date format "%s". Expected ISO 8601 format (e.g., "2025-12-31")', $sunsetDate),
+                    0,
+                    $e
+                );
+            }
+        }
+
+        return new self(reason: $reason, sunset: $sunset);
+    }
+
+    /**
+     * Validate deprecation data.
+     *
+     * @throws \InvalidArgumentException
+     */
+    private function validate(): void
+    {
+        if ($this->reason !== null) {
+            $this->validateReason();
+        }
+
+        if ($this->sunset !== null) {
+            $this->validateSunset();
+        }
+
+        $this->validateAtLeastOneFieldPresent();
+    }
+
+    /**
+     * Validate the reason field.
+     *
+     * @throws \InvalidArgumentException
+     */
+    private function validateReason(): void
+    {
+        $trimmedReason = trim($this->reason);
+
+        if ($trimmedReason === '') {
+            throw new \InvalidArgumentException('Deprecation reason cannot be empty or whitespace only');
+        }
+
+        if (mb_strlen($trimmedReason) < 10) {
+            throw new \InvalidArgumentException(
+                'Deprecation reason must be at least 10 characters to provide meaningful context'
+            );
+        }
+
+        if (mb_strlen($trimmedReason) > 1000) {
+            throw new \InvalidArgumentException(
+                sprintf('Deprecation reason cannot exceed 1000 characters, got %d', mb_strlen($trimmedReason))
+            );
+        }
+
+        // Prevent HTML injection
+        if ($trimmedReason !== strip_tags($trimmedReason)) {
+            throw new \InvalidArgumentException('Deprecation reason cannot contain HTML tags');
+        }
+
+        // Check for suspicious patterns
+        $suspiciousPatterns = [
+            '/<script/i',
+            '/javascript:/i',
+            '/on\w+\s*=/i', // Event handlers like onclick=
+            '/<iframe/i',
+        ];
+
+        foreach ($suspiciousPatterns as $pattern) {
+            if (preg_match($pattern, $trimmedReason)) {
+                throw new \InvalidArgumentException('Deprecation reason contains potentially malicious content');
+            }
+        }
+    }
+
+    /**
+     * Validate the sunset field.
+     *
+     * @throws \InvalidArgumentException
+     */
+    private function validateSunset(): void
+    {
+        $now = new \DateTimeImmutable();
+
+        if ($this->sunset < $now) {
+            throw new \InvalidArgumentException(
+                sprintf(
+                    'Sunset date "%s" is in the past. Deprecated elements with past sunset dates should be removed.',
+                    $this->sunset->format('Y-m-d')
+                )
+            );
+        }
+    }
+
+    /**
+     * Validate that at least one field is present.
+     *
+     * @throws \InvalidArgumentException
+     */
+    private function validateAtLeastOneFieldPresent(): void
+    {
+        if ($this->reason === null && $this->sunset === null) {
+            throw new \InvalidArgumentException(
+                'DeprecatedData requires at least one field (reason or sunset) to be provided'
+            );
+        }
+    }
+
+    /**
+     * Get sunset date as ISO 8601 string.
+     *
+     * @return null|string
+     */
+    public function getSunsetString(): ?string
+    {
+        return $this->sunset?->format('Y-m-d');
+    }
+
+    /**
+     * Check if the sunset date has passed.
+     *
+     * @return bool
+     */
+    public function hasSunsetPassed(): bool
+    {
+        if ($this->sunset === null) {
+            return false;
+        }
+
+        return $this->sunset < new \DateTimeImmutable();
+    }
+
+    /**
+     * Get days until sunset.
+     *
+     * @return null|int Days remaining until sunset, or null if no sunset set
+     */
+    public function getDaysUntilSunset(): ?int
+    {
+        if ($this->sunset === null) {
+            return null;
+        }
+
+        $now = new \DateTimeImmutable();
+        $interval = $now->diff($this->sunset);
+
+        return (int) $interval->format('%r%a'); // Positive for future, negative for past
+    }
+
+    /**
+     * Check if sunset is approaching (within 90 days).
+     *
+     * @param int $days Number of days to consider as "approaching" (default 90)
+     * @return bool
+     */
+    public function isSunsetApproaching(int $days = 90): bool
+    {
+        $daysUntil = $this->getDaysUntilSunset();
+
+        if ($daysUntil === null) {
+            return false;
+        }
+
+        return $daysUntil > 0 && $daysUntil <= $days;
+    }
+
+    /**
+     * Check if the reason includes alternative suggestions.
+     *
+     * @return bool
+     */
+    public function hasAlternativeSuggestion(): bool
+    {
+        if ($this->reason === null) {
+            return false;
+        }
+
+        $patterns = [
+            '/use\s+\w+\s+instead/i',
+            '/replaced\s+by/i',
+            '/migrate\s+to/i',
+            '/see\s+\w+/i',
+            '/instead\s+of/i',
+        ];
+
+        foreach ($patterns as $pattern) {
+            if (preg_match($pattern, $this->reason)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Get a deprecation warning message.
+     *
+     * @param string $elementName Name of the deprecated element
+     * @return string
+     */
+    public function getWarningMessage(string $elementName): string
+    {
+        $message = "DEPRECATED: {$elementName} is deprecated";
+
+        if ($this->reason !== null) {
+            $message .= ". {$this->reason}";
+        }
+
+        if ($this->sunset !== null) {
+            $message .= sprintf(
+                ' and will be removed on %s (%d days remaining)',
+                $this->getSunsetString(),
+                $this->getDaysUntilSunset()
+            );
+        }
+
+        return $message;
+    }
 }
