@@ -78,13 +78,35 @@ final class ServiceProvider extends PackageServiceProvider
     public function packageRegistered(): void
     {
         // ProtocolInterface requires runtime config resolution - cannot use attributes
-        $this->app->singleton(function (): ProtocolInterface {
+        $this->app->singleton(ProtocolInterface::class, function (): ProtocolInterface {
             $protocolClass = config('rpc.protocol');
-            assert(is_string($protocolClass));
-            assert(class_exists($protocolClass));
+
+            if (!is_string($protocolClass)) {
+                throw new InvalidArgumentException(
+                    sprintf(
+                        'Configuration rpc.protocol must be a class string, %s given',
+                        gettype($protocolClass)
+                    )
+                );
+            }
+
+            if (!class_exists($protocolClass)) {
+                throw new InvalidArgumentException(
+                    sprintf('Protocol class %s does not exist', $protocolClass)
+                );
+            }
 
             $protocol = new $protocolClass();
-            assert($protocol instanceof ProtocolInterface);
+
+            if (!$protocol instanceof ProtocolInterface) {
+                throw new InvalidArgumentException(
+                    sprintf(
+                        'Protocol class %s must implement %s',
+                        $protocolClass,
+                        ProtocolInterface::class
+                    )
+                );
+            }
 
             return $protocol;
         });
