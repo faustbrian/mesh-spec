@@ -33,6 +33,11 @@ use function is_string;
 final class CancelledException extends AbstractRequestException
 {
     /**
+     * Default cancellation reason message.
+     */
+    private const DEFAULT_REASON = 'Request was cancelled by client';
+
+    /**
      * Create a cancelled exception.
      *
      * Factory method that constructs a cancelled exception with optional token and
@@ -51,17 +56,17 @@ final class CancelledException extends AbstractRequestException
     {
         $details = [];
 
-        if ($token !== null) {
+        if ($token !== null && $token !== '') {
             $details['token'] = $token;
         }
 
-        if ($reason !== null) {
+        if ($reason !== null && $reason !== '') {
             $details['reason'] = $reason;
         }
 
         return self::new(
             ErrorCode::Cancelled,
-            $reason ?? 'Request was cancelled by client',
+            ($reason !== null && $reason !== '') ? $reason : self::DEFAULT_REASON,
             details: $details !== [] ? $details : null,
         );
     }
