@@ -57,5 +57,51 @@ final class ServerData extends AbstractData
         public readonly string $version,
         public readonly array $middleware,
         public readonly ?array $functions,
-    ) {}
+    ) {
+        self::validatePath($this->path);
+    }
+
+    /**
+     * Validate the server path to prevent directory traversal attacks.
+     *
+     * Ensures the path does not contain directory traversal sequences and
+     * is either an absolute filesystem path or a valid namespace.
+     *
+     * @param string $path The path to validate
+     *
+     * @throws \InvalidArgumentException If path contains traversal sequences or invalid format
+     */
+    private static function validatePath(string $path): void
+    {
+        // Prevent directory traversal
+        if (str_contains($path, '..')) {
+            throw new \InvalidArgumentException(
+                sprintf('Path traversal detected in path: "%s"', $path),
+            );
+        }
+
+        // Ensure absolute path or valid namespace
+        if (!str_starts_with($path, '/') && !str_starts_with($path, 'App\\')) {
+            throw new \InvalidArgumentException(
+                sprintf('Path must be absolute or valid namespace: "%s"', $path),
+            );
+        }
+
+        // If filesystem path, verify it exists and is within app
+        if (str_starts_with($path, '/')) {
+            $realPath = realpath($path);
+            if ($realPath === false) {
+                throw new \InvalidArgumentException(
+                    sprintf('Path does not exist: "%s"', $path),
+                );
+            }
+
+            $appPath = base_path();
+            if (!str_starts_with($realPath, $appPath)) {
+                throw new \InvalidArgumentException(
+                    sprintf('Path is outside application root: "%s"', $path),
+                );
+            }
+        }
+    }
 }
