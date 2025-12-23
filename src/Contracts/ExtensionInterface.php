@@ -40,6 +40,16 @@ interface ExtensionInterface
     /**
      * Get the extension URN.
      *
+     * MUST use Urn::extension() to ensure proper URN format.
+     *
+     * @example
+     * ```php
+     * public function getUrn(): string
+     * {
+     *     return Urn::extension('caching');
+     * }
+     * ```
+     *
      * @return string The URN identifying this extension (e.g., "urn:forrst:ext:caching")
      */
     public function getUrn(): string;
