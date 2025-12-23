@@ -265,4 +265,50 @@ final class ComponentsData extends Data
             resources: $this->resources,
         );
     }
+
+    /**
+     * Add a resource component.
+     *
+     * @param string       $name     Resource type identifier
+     * @param ResourceData $resource Resource definition
+     *
+     * @return self New instance with the resource added
+     */
+    public function withResource(string $name, ResourceData $resource): self
+    {
+        $resources = $this->resources ?? [];
+        $resources[$name] = $resource;
+
+        return new self(
+            schemas: $this->schemas,
+            contentDescriptors: $this->contentDescriptors,
+            errors: $this->errors,
+            examples: $this->examples,
+            examplePairings: $this->examplePairings,
+            links: $this->links,
+            tags: $this->tags,
+            resources: $resources,
+        );
+    }
+
+    /**
+     * Merge another ComponentsData instance into this one.
+     *
+     * @param ComponentsData $other Component data to merge
+     *
+     * @return self New instance with merged components
+     */
+    public function merge(ComponentsData $other): self
+    {
+        return new self(
+            schemas: \array_merge($this->schemas ?? [], $other->schemas ?? []),
+            contentDescriptors: \array_merge($this->contentDescriptors ?? [], $other->contentDescriptors ?? []),
+            errors: \array_merge($this->errors ?? [], $other->errors ?? []),
+            examples: \array_merge($this->examples ?? [], $other->examples ?? []),
+            examplePairings: \array_merge($this->examplePairings ?? [], $other->examplePairings ?? []),
+            links: \array_merge($this->links ?? [], $other->links ?? []),
+            tags: \array_merge($this->tags ?? [], $other->tags ?? []),
+            resources: \array_merge($this->resources ?? [], $other->resources ?? []),
+        );
+    }
 }
