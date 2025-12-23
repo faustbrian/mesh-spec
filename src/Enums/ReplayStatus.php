@@ -42,7 +42,12 @@ enum ReplayStatus: string
      * Replay operation completed successfully.
      *
      * Terminal state indicating successful execution. The replayed function
-     * executed without errors and returned a valid response.
+     * executed without errors and returned a valid response. The response
+     * is cached and available for retrieval, but may not have been delivered
+     * to the client yet (use Processed if delivery confirmation is needed).
+     *
+     * Use this state when the replay execution finished successfully but
+     * you don't need to track result delivery separately.
      */
     case Completed = 'completed';
 
@@ -71,10 +76,15 @@ enum ReplayStatus: string
     case Cancelled = 'cancelled';
 
     /**
-     * Replay operation has been processed and results are available.
+     * Replay operation has been processed and results delivered.
      *
-     * Terminal state indicating the replay has been fully executed and
-     * results have been made available to the client.
+     * Terminal state indicating the replay has been fully executed AND
+     * the results have been successfully delivered to the requesting client.
+     * This state confirms end-to-end completion including result delivery.
+     *
+     * Only use this state if your system tracks result delivery separately
+     * from execution completion. If you don't need to distinguish between
+     * execution and delivery, use Completed instead.
      */
     case Processed = 'processed';
 
