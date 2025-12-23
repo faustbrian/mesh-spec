@@ -82,6 +82,11 @@ final class AtomicLockExtension extends AbstractExtension implements ProvidesFun
     private const string LOCK_PREFIX = 'forrst_lock:';
 
     /**
+     * Maximum allowed TTL for locks (24 hours).
+     */
+    private const int MAX_TTL_SECONDS = 86_400;
+
+    /**
      * Context for current request (set in onExecutingFunction).
      *
      * @var null|array{key: string, full_key: string, scope: string, lock: Lock, owner: string, ttl: int, auto_release: bool, expires_at: string}
@@ -420,6 +425,7 @@ final class AtomicLockExtension extends AbstractExtension implements ProvidesFun
      * Parse a duration object into seconds.
      *
      * @param  array<string, mixed> $duration Duration with value and unit
+     * @throws LockTtlExceedsMaximumException If TTL exceeds maximum allowed
      * @return int                  Duration in seconds
      */
     private function parseDuration(array $duration): int
@@ -428,13 +434,23 @@ final class AtomicLockExtension extends AbstractExtension implements ProvidesFun
         $value = is_int($rawValue) ? $rawValue : (is_numeric($rawValue) ? (int) $rawValue : 0);
         $unit = $duration['unit'] ?? 'second';
 
-        return match ($unit) {
+        $seconds = match ($unit) {
             'second' => $value,
             'minute' => $value * 60,
             'hour' => $value * 3_600,
             'day' => $value * 86_400,
             default => $value,
         };
+
+        if ($seconds > self::MAX_TTL_SECONDS) {
+            throw LockTtlExceedsMaximumException::create($seconds, self::MAX_TTL_SECONDS);
+        }
+
+        if ($seconds <= 0) {
+            throw new \InvalidArgumentException('TTL must be positive');
+        }
+
+        return $seconds;
     }
 
     /**
