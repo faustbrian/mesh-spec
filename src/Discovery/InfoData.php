@@ -83,8 +83,35 @@ final class InfoData extends Data
         }
 
         $this->version = $version;
+
+        // Validate termsOfService URL if provided
+        if ($termsOfService !== null) {
+            $this->validateUrl($termsOfService, 'Terms of Service');
+        }
     }
 
     public readonly string $title;
     public readonly string $version;
+
+    /**
+     * Validate URL format.
+     *
+     * @throws InvalidArgumentException
+     */
+    private function validateUrl(string $url, string $fieldName): void
+    {
+        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+            throw new InvalidArgumentException(
+                "{$fieldName} must be valid URL. Got: '{$url}'"
+            );
+        }
+
+        $parsed = parse_url($url);
+
+        if (!isset($parsed['scheme']) || !in_array(strtolower($parsed['scheme']), ['http', 'https'], true)) {
+            throw new InvalidArgumentException(
+                "{$fieldName} URL must use http or https protocol"
+            );
+        }
+    }
 }
