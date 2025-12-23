@@ -89,6 +89,10 @@ interface ExtensionInterface
      * Returns a map of event class names to subscription config. Each config
      * must include 'priority' (lower = earlier) and 'method' (handler name).
      *
+     * PERFORMANCE: This method may be called multiple times during extension
+     * registration. Implementations should return a static array rather than
+     * building it dynamically on each call.
+     *
      * Priority ranges:
      * - 0-9: Infrastructure (tracing)
      * - 10-19: Fast-fail (deadline)
@@ -100,18 +104,14 @@ interface ExtensionInterface
      *
      * @example
      * ```php
+     * private const SUBSCRIPTIONS = [
+     *     RequestValidated::class => ['priority' => 20, 'method' => 'handleRequestValidated'],
+     *     ExecutingFunction::class => ['priority' => 25, 'method' => 'beforeExecution'],
+     * ];
+     *
      * public function getSubscribedEvents(): array
      * {
-     *     return [
-     *         RequestValidated::class => [
-     *             'priority' => 20,
-     *             'method' => 'handleRequestValidated',
-     *         ],
-     *         ExecutingFunction::class => [
-     *             'priority' => 25,
-     *             'method' => 'beforeExecution',
-     *         ],
-     *     ];
+     *     return self::SUBSCRIPTIONS;
      * }
      * ```
      *
