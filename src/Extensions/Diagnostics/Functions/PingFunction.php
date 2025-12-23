@@ -11,6 +11,7 @@ namespace Cline\Forrst\Extensions\Diagnostics\Functions;
 
 use Carbon\CarbonImmutable;
 use Cline\Forrst\Attributes\Descriptor;
+use Cline\Forrst\Enums\HealthStatus;
 use Cline\Forrst\Extensions\Diagnostics\Descriptors\PingDescriptor;
 use Cline\Forrst\Functions\AbstractFunction;
 
@@ -40,7 +41,7 @@ final class PingFunction extends AbstractFunction
     public function __invoke(): array
     {
         return [
-            'status' => 'healthy',
+            'status' => HealthStatus::Healthy->value,
             'timestamp' => CarbonImmutable::now()->toIso8601String(),
         ];
     }

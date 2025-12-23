@@ -12,6 +12,7 @@ namespace Cline\Forrst\Extensions\Diagnostics\Functions;
 use Carbon\CarbonImmutable;
 use Cline\Forrst\Attributes\Descriptor;
 use Cline\Forrst\Contracts\HealthCheckerInterface;
+use Cline\Forrst\Enums\HealthStatus;
 use Cline\Forrst\Exceptions\TooManyRequestsException;
 use Cline\Forrst\Exceptions\UnauthorizedException;
 use Cline\Forrst\Extensions\Diagnostics\Descriptors\HealthDescriptor;
@@ -107,7 +108,7 @@ final class HealthFunction extends AbstractFunction
         // Handle 'self' component check early (lightweight ping)
         if ($component === 'self') {
             return [
-                'status' => 'healthy',
+                'status' => HealthStatus::Healthy->value,
                 'timestamp' => CarbonImmutable::now()->toIso8601String(),
             ];
         }
@@ -136,7 +137,7 @@ final class HealthFunction extends AbstractFunction
     private function performHealthChecks(bool $includeDetails, ?string $component): array
     {
         $components = [];
-        $worstStatus = 'healthy';
+        $worstStatus = HealthStatus::Healthy;
         $startTime = microtime(true);
 
         foreach ($this->checkers as $checker) {
@@ -164,7 +165,7 @@ final class HealthFunction extends AbstractFunction
                     $this->isAuthenticated(),
                 );
 
-                $worstStatus = $this->worstStatus($worstStatus, $result['status']);
+                $worstStatus = $this->worstStatus($worstStatus, HealthStatus::from($result['status']));
             } catch (\Throwable $e) {
                 $this->logger?->error('Health checker failed', [
                     'checker' => $checker->getName(),
@@ -172,16 +173,16 @@ final class HealthFunction extends AbstractFunction
                 ]);
 
                 $components[$checker->getName()] = [
-                    'status' => 'unhealthy',
+                    'status' => HealthStatus::Unhealthy->value,
                     'error' => 'Health check failed',
                 ];
 
-                $worstStatus = $this->worstStatus($worstStatus, 'unhealthy');
+                $worstStatus = $this->worstStatus($worstStatus, HealthStatus::Unhealthy);
             }
         }
 
         $response = [
-            'status' => $worstStatus,
+            'status' => $worstStatus->value,
             'timestamp' => CarbonImmutable::now()->toIso8601String(),
         ];
 
@@ -270,11 +271,14 @@ final class HealthFunction extends AbstractFunction
 
     /**
      * Compare and return the worst status between current and new.
+     *
+     * @param HealthStatus $current Current worst status
+     * @param HealthStatus $new     New status to compare
+     *
+     * @return HealthStatus The worse of the two statuses
      */
-    private function worstStatus(string $current, string $new): string
+    private function worstStatus(HealthStatus $current, HealthStatus $new): HealthStatus
     {
-        $order = ['healthy' => 0, 'degraded' => 1, 'unhealthy' => 2];
-
-        return ($order[$new] ?? 0) > ($order[$current] ?? 0) ? $new : $current;
+        return $new->severity() > $current->severity() ? $new : $current;
     }
 }

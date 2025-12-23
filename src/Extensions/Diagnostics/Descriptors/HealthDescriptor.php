@@ -29,9 +29,12 @@ final class HealthDescriptor implements DescriptorInterface
             ->summary('Comprehensive health check with component-level status')
             ->argument(
                 name: 'component',
-                schema: ['type' => 'string'],
+                schema: [
+                    'type' => 'string',
+                    'description' => 'Specific component to check. Use "self" for basic server ping without running component checks.',
+                ],
                 required: false,
-                description: 'Check specific component only',
+                description: 'Check specific component only (use "self" for basic ping)',
             )
             ->argument(
                 name: 'include_details',
