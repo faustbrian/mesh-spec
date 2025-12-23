@@ -18,6 +18,11 @@ use Cline\Forrst\Enums\ErrorCode;
 use Cline\Forrst\Events\ExecutingFunction;
 use Cline\Forrst\Events\FunctionExecuted;
 use Cline\Forrst\Events\RequestValidated;
+use Cline\Forrst\Exceptions\EmptyFieldException;
+use Cline\Forrst\Exceptions\FieldExceedsMaxLengthException;
+use Cline\Forrst\Exceptions\FieldOutOfRangeException;
+use Cline\Forrst\Exceptions\InvalidFieldValueException;
+use Cline\Forrst\Exceptions\MustBePositiveException;
 use Cline\Forrst\Extensions\AbstractExtension;
 use Cline\Forrst\Extensions\Cancellation\Functions\CancelFunction;
 use Cline\Forrst\Extensions\ExtensionUrn;
@@ -74,13 +79,11 @@ final class CancellationExtension extends AbstractExtension implements ProvidesF
         private int $tokenTtl = self::DEFAULT_TTL,
     ) {
         if ($tokenTtl <= 0) {
-            throw new \InvalidArgumentException('Token TTL must be positive');
+            throw MustBePositiveException::forField('tokenTtl');
         }
 
         if ($tokenTtl > self::MAX_TTL) {
-            throw new \InvalidArgumentException(
-                'Token TTL cannot exceed '.self::MAX_TTL.' seconds',
-            );
+            throw FieldOutOfRangeException::forField('tokenTtl', 1, self::MAX_TTL);
         }
 
         $this->tokenTtl = $tokenTtl;
@@ -306,17 +309,18 @@ final class CancellationExtension extends AbstractExtension implements ProvidesF
     private function validateToken(string $token): string
     {
         if ($token === '') {
-            throw new \InvalidArgumentException('Cancellation token cannot be empty');
+            throw EmptyFieldException::forField('token');
         }
 
         if (\strlen($token) > 100) {
-            throw new \InvalidArgumentException('Cancellation token exceeds maximum length of 100 characters');
+            throw FieldExceedsMaxLengthException::forField('token', 100);
         }
 
         // Only allow alphanumeric, dash, underscore (UUID-like format recommended)
         if (!\preg_match('/^[a-zA-Z0-9\-_]+$/', $token)) {
-            throw new \InvalidArgumentException(
-                'Cancellation token contains invalid characters. Only alphanumeric, dash, and underscore allowed.',
+            throw InvalidFieldValueException::forField(
+                'token',
+                'Only alphanumeric, dash, and underscore characters allowed',
             );
         }
 

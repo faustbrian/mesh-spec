@@ -12,6 +12,7 @@ namespace Cline\Forrst;
 use Cline\Forrst\Contracts\ProtocolInterface;
 use Cline\Forrst\Contracts\ResourceInterface;
 use Cline\Forrst\Data\Configuration\ConfigurationData;
+use Cline\Forrst\Exceptions\InvalidConfigurationException;
 use Cline\Forrst\Extensions\ExtensionEventSubscriber;
 use Cline\Forrst\Mixins\RouteMixin;
 use Cline\Forrst\Repositories\ResourceRepository;
@@ -19,7 +20,6 @@ use Cline\Forrst\Servers\ConfigurationServer;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Route;
-use InvalidArgumentException;
 use Override;
 use Spatie\LaravelPackageTools\Commands\InstallCommand;
 use Spatie\LaravelPackageTools\Package;
@@ -72,7 +72,7 @@ final class ServiceProvider extends PackageServiceProvider
      * configuration setting. Other core services are automatically registered
      * via their #[Singleton] attributes, reducing boilerplate registration code.
      *
-     * @throws InvalidArgumentException If the configured protocol class is invalid
+     * @throws InvalidConfigurationException If the configured protocol class is invalid
      */
     #[Override()]
     public function packageRegistered(): void
@@ -82,37 +82,32 @@ final class ServiceProvider extends PackageServiceProvider
             $protocolClass = config('rpc.protocol');
 
             if (!is_string($protocolClass)) {
-                throw new InvalidArgumentException(
-                    sprintf(
-                        'Configuration rpc.protocol must be a class string, %s given',
-                        gettype($protocolClass)
-                    )
+                throw InvalidConfigurationException::forKey(
+                    'rpc.protocol',
+                    sprintf('must be a class string, %s given', gettype($protocolClass))
                 );
             }
 
             if (!class_exists($protocolClass)) {
-                throw new InvalidArgumentException(
-                    sprintf('Protocol class %s does not exist', $protocolClass)
+                throw InvalidConfigurationException::forKey(
+                    'rpc.protocol',
+                    sprintf('class %s does not exist', $protocolClass)
                 );
             }
 
             try {
                 $protocol = new $protocolClass();
             } catch (Throwable $e) {
-                throw new InvalidArgumentException(
-                    sprintf('Failed to instantiate protocol class %s: %s', $protocolClass, $e->getMessage()),
-                    0,
-                    $e
+                throw InvalidConfigurationException::forKey(
+                    'rpc.protocol',
+                    sprintf('failed to instantiate class %s: %s', $protocolClass, $e->getMessage())
                 );
             }
 
             if (!$protocol instanceof ProtocolInterface) {
-                throw new InvalidArgumentException(
-                    sprintf(
-                        'Protocol class %s must implement %s',
-                        $protocolClass,
-                        ProtocolInterface::class
-                    )
+                throw InvalidConfigurationException::forKey(
+                    'rpc.protocol',
+                    sprintf('class %s must implement %s', $protocolClass, ProtocolInterface::class)
                 );
             }
 
@@ -166,20 +161,23 @@ final class ServiceProvider extends PackageServiceProvider
             // Validate and register resources
             foreach ($configuration->resources as $model => $resource) {
                 if (!is_string($resource)) {
-                    throw new InvalidArgumentException(
-                        sprintf('Resource for model %s must be a class string, %s given', $model, gettype($resource))
+                    throw InvalidConfigurationException::forKey(
+                        'rpc.resources',
+                        sprintf('resource for model %s must be a class string, %s given', $model, gettype($resource))
                     );
                 }
 
                 if (!class_exists($resource)) {
-                    throw new InvalidArgumentException(
-                        sprintf('Resource class %s does not exist', $resource)
+                    throw InvalidConfigurationException::forKey(
+                        'rpc.resources',
+                        sprintf('resource class %s does not exist', $resource)
                     );
                 }
 
                 if (!is_a($resource, ResourceInterface::class, true)) {
-                    throw new InvalidArgumentException(
-                        sprintf('Resource class %s must implement %s', $resource, ResourceInterface::class)
+                    throw InvalidConfigurationException::forKey(
+                        'rpc.resources',
+                        sprintf('resource class %s must implement %s', $resource, ResourceInterface::class)
                     );
                 }
 
@@ -196,20 +194,16 @@ final class ServiceProvider extends PackageServiceProvider
                 $functionsNamespace = config('rpc.namespaces.functions');
 
                 if (!is_string($functionsPath)) {
-                    throw new InvalidArgumentException(
-                        sprintf(
-                            'Configuration rpc.paths.functions must be a string, %s given',
-                            gettype($functionsPath)
-                        )
+                    throw InvalidConfigurationException::forKey(
+                        'rpc.paths.functions',
+                        sprintf('must be a string, %s given', gettype($functionsPath))
                     );
                 }
 
                 if (!is_string($functionsNamespace)) {
-                    throw new InvalidArgumentException(
-                        sprintf(
-                            'Configuration rpc.namespaces.functions must be a string, %s given',
-                            gettype($functionsNamespace)
-                        )
+                    throw InvalidConfigurationException::forKey(
+                        'rpc.namespaces.functions',
+                        sprintf('must be a string, %s given', gettype($functionsNamespace))
                     );
                 }
 

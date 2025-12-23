@@ -15,6 +15,8 @@ use Cline\Forrst\Discovery\ErrorDefinitionData;
 use Cline\Forrst\Exceptions\ExactVersionNotFoundException;
 use Cline\Forrst\Exceptions\FunctionAlreadyRegisteredException;
 use Cline\Forrst\Exceptions\FunctionNotFoundException;
+use Cline\Forrst\Exceptions\InvalidFieldValueException;
+use Cline\Forrst\Exceptions\InvalidFunctionNameException;
 use Cline\Forrst\Exceptions\ReservedNamespaceException;
 use Cline\Forrst\Exceptions\StabilityVersionNotFoundException;
 use Cline\Forrst\Exceptions\VersionNotFoundException;
@@ -234,14 +236,16 @@ final class FunctionRepository
     {
         // Validate URN format
         if (!Urn::isValid($function->getUrn())) {
-            throw new \InvalidArgumentException(
-                sprintf('Invalid function URN: %s', $function->getUrn())
+            throw InvalidFunctionNameException::forName(
+                $function->getUrn(),
+                'URN format is invalid'
             );
         }
 
         // Validate semantic version format
         if (!preg_match('/^\d+\.\d+\.\d+(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$/', $function->getVersion())) {
-            throw new \InvalidArgumentException(
+            throw InvalidFieldValueException::forField(
+                'version',
                 sprintf('Invalid semantic version: %s', $function->getVersion())
             );
         }
@@ -249,12 +253,9 @@ final class FunctionRepository
         // Validate arguments are ArgumentData instances or arrays
         foreach ($function->getArguments() as $index => $argument) {
             if (!$argument instanceof ArgumentData && !is_array($argument)) {
-                throw new \InvalidArgumentException(
-                    sprintf(
-                        'Argument at index %d must be ArgumentData or array, %s given',
-                        $index,
-                        get_debug_type($argument)
-                    )
+                throw InvalidFieldValueException::forField(
+                    "argument at index {$index}",
+                    sprintf('must be ArgumentData or array, %s given', get_debug_type($argument))
                 );
             }
         }
@@ -262,12 +263,9 @@ final class FunctionRepository
         // Validate errors are ErrorDefinitionData instances or arrays
         foreach ($function->getErrors() as $index => $error) {
             if (!$error instanceof ErrorDefinitionData && !is_array($error)) {
-                throw new \InvalidArgumentException(
-                    sprintf(
-                        'Error at index %d must be ErrorDefinitionData or array, %s given',
-                        $index,
-                        get_debug_type($error)
-                    )
+                throw InvalidFieldValueException::forField(
+                    "error at index {$index}",
+                    sprintf('must be ErrorDefinitionData or array, %s given', get_debug_type($error))
                 );
             }
         }
@@ -277,12 +275,9 @@ final class FunctionRepository
             $validSideEffects = ['create', 'update', 'delete'];
             foreach ($function->getSideEffects() as $sideEffect) {
                 if (!in_array($sideEffect, $validSideEffects, true)) {
-                    throw new \InvalidArgumentException(
-                        sprintf(
-                            'Invalid side effect "%s". Must be one of: %s',
-                            $sideEffect,
-                            implode(', ', $validSideEffects)
-                        )
+                    throw InvalidFieldValueException::forField(
+                        'side effect',
+                        sprintf('"%s" is invalid. Must be one of: %s', $sideEffect, implode(', ', $validSideEffects))
                     );
                 }
             }

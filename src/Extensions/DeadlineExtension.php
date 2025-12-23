@@ -16,6 +16,7 @@ use Cline\Forrst\Data\ResponseData;
 use Cline\Forrst\Enums\ErrorCode;
 use Cline\Forrst\Events\ExecutingFunction;
 use Cline\Forrst\Events\FunctionExecuted;
+use Cline\Forrst\Exceptions\DeadlineExceededException;
 use DateTimeInterface;
 use Override;
 
@@ -242,7 +243,7 @@ final class DeadlineExtension extends AbstractExtension
      *
      * @return null|CarbonImmutable Deadline timestamp or null if not specified
      *
-     * @throws \InvalidArgumentException If deadline exceeds maximum allowed (1 hour)
+     * @throws DeadlineExceededException If deadline exceeds maximum allowed (1 hour)
      */
     private function resolveDeadline(?array $options): ?CarbonImmutable
     {
@@ -276,7 +277,7 @@ final class DeadlineExtension extends AbstractExtension
             $maxDeadline = CarbonImmutable::now()->addHour();
 
             if ($deadline->isAfter($maxDeadline)) {
-                throw new \InvalidArgumentException('Deadline cannot exceed 1 hour from now');
+                throw DeadlineExceededException::exceedsMaximum('1 hour');
             }
         }
 

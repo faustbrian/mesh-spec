@@ -10,6 +10,9 @@
 namespace Cline\Forrst\Data;
 
 use Carbon\CarbonImmutable;
+use Cline\Forrst\Exceptions\EmptyFieldException;
+use Cline\Forrst\Exceptions\InvalidFieldValueException;
+use Cline\Forrst\Exceptions\MissingRequiredFieldException;
 use Override;
 
 use function array_map;
@@ -87,18 +90,19 @@ final class OperationData extends AbstractData
     ) {
         // Validate required fields
         if (trim($id) === '') {
-            throw new \InvalidArgumentException('Operation ID cannot be empty');
+            throw EmptyFieldException::forField('id');
         }
 
         if (trim($function) === '') {
-            throw new \InvalidArgumentException('Operation function name cannot be empty');
+            throw EmptyFieldException::forField('function');
         }
 
         // Validate ID format (UUID/ULID pattern)
         if (!preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $id)) {
             // Try ULID format as well
             if (!preg_match('/^[0-9A-HJKMNP-TV-Z]{26}$/i', $id)) {
-                throw new \InvalidArgumentException(
+                throw InvalidFieldValueException::forField(
+                    'id',
                     sprintf('Operation ID must be a valid UUID or ULID, got: %s', $id),
                 );
             }
@@ -109,48 +113,40 @@ final class OperationData extends AbstractData
 
         // Validate progress bounds
         if ($progress !== null && ($progress < 0.0 || $progress > 1.0)) {
-            throw new \InvalidArgumentException(
-                sprintf(
-                    'Operation progress must be between 0.0 and 1.0, got: %.2f',
-                    $progress,
-                ),
+            throw InvalidFieldValueException::forField(
+                'progress',
+                sprintf('Operation progress must be between 0.0 and 1.0, got: %.2f', $progress),
             );
         }
 
         // Validate state-timestamp consistency
         if ($status === OperationStatus::Completed && $completedAt === null) {
-            throw new \InvalidArgumentException(
-                'Completed operations must have a completedAt timestamp',
-            );
+            throw MissingRequiredFieldException::forField('completedAt');
         }
 
         if ($status === OperationStatus::Failed && $errors === null) {
-            throw new \InvalidArgumentException(
-                'Failed operations must have errors array populated',
-            );
+            throw MissingRequiredFieldException::forField('errors');
         }
 
         if ($status === OperationStatus::Cancelled && $cancelledAt === null) {
-            throw new \InvalidArgumentException(
-                'Cancelled operations must have a cancelledAt timestamp',
-            );
+            throw MissingRequiredFieldException::forField('cancelledAt');
         }
 
         if ($status === OperationStatus::Processing && $startedAt === null) {
-            throw new \InvalidArgumentException(
-                'Processing operations must have a startedAt timestamp',
-            );
+            throw MissingRequiredFieldException::forField('startedAt');
         }
 
         // Validate timestamp logical ordering
         if ($startedAt && $completedAt && $completedAt->lt($startedAt)) {
-            throw new \InvalidArgumentException(
+            throw InvalidFieldValueException::forField(
+                'completedAt',
                 'Operation completedAt cannot be before startedAt',
             );
         }
 
         if ($startedAt && $cancelledAt && $cancelledAt->lt($startedAt)) {
-            throw new \InvalidArgumentException(
+            throw InvalidFieldValueException::forField(
+                'cancelledAt',
                 'Operation cancelledAt cannot be before startedAt',
             );
         }

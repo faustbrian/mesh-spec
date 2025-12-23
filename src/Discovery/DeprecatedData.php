@@ -9,6 +9,10 @@
 
 namespace Cline\Forrst\Discovery;
 
+use Cline\Forrst\Exceptions\HtmlNotAllowedException;
+use Cline\Forrst\Exceptions\InvalidFieldValueException;
+use Cline\Forrst\Exceptions\MissingRequiredFieldException;
+use Cline\Forrst\Exceptions\WhitespaceOnlyException;
 use Spatie\LaravelData\Data;
 
 /**
@@ -60,10 +64,9 @@ final class DeprecatedData extends Data
             try {
                 $sunset = new \DateTimeImmutable($sunsetDate);
             } catch (\Exception $e) {
-                throw new \InvalidArgumentException(
-                    sprintf('Invalid sunset date format "%s". Expected ISO 8601 format (e.g., "2025-12-31")', $sunsetDate),
-                    0,
-                    $e
+                throw InvalidFieldValueException::forField(
+                    'sunset',
+                    sprintf('Invalid date format "%s". Expected ISO 8601 format (e.g., "2025-12-31")', $sunsetDate)
                 );
             }
         }
@@ -99,24 +102,26 @@ final class DeprecatedData extends Data
         $trimmedReason = trim($this->reason);
 
         if ($trimmedReason === '') {
-            throw new \InvalidArgumentException('Deprecation reason cannot be empty or whitespace only');
+            throw WhitespaceOnlyException::forField('reason');
         }
 
         if (mb_strlen($trimmedReason) < 10) {
-            throw new \InvalidArgumentException(
+            throw InvalidFieldValueException::forField(
+                'reason',
                 'Deprecation reason must be at least 10 characters to provide meaningful context'
             );
         }
 
         if (mb_strlen($trimmedReason) > 1000) {
-            throw new \InvalidArgumentException(
+            throw InvalidFieldValueException::forField(
+                'reason',
                 sprintf('Deprecation reason cannot exceed 1000 characters, got %d', mb_strlen($trimmedReason))
             );
         }
 
         // Prevent HTML injection
         if ($trimmedReason !== strip_tags($trimmedReason)) {
-            throw new \InvalidArgumentException('Deprecation reason cannot contain HTML tags');
+            throw HtmlNotAllowedException::forField('reason');
         }
 
         // Check for suspicious patterns
@@ -129,7 +134,7 @@ final class DeprecatedData extends Data
 
         foreach ($suspiciousPatterns as $pattern) {
             if (preg_match($pattern, $trimmedReason)) {
-                throw new \InvalidArgumentException('Deprecation reason contains potentially malicious content');
+                throw InvalidFieldValueException::forField('reason', 'Contains potentially malicious content');
             }
         }
     }
@@ -144,7 +149,8 @@ final class DeprecatedData extends Data
         $now = new \DateTimeImmutable();
 
         if ($this->sunset < $now) {
-            throw new \InvalidArgumentException(
+            throw InvalidFieldValueException::forField(
+                'sunset',
                 sprintf(
                     'Sunset date "%s" is in the past. Deprecated elements with past sunset dates should be removed.',
                     $this->sunset->format('Y-m-d')
@@ -161,9 +167,7 @@ final class DeprecatedData extends Data
     private function validateAtLeastOneFieldPresent(): void
     {
         if ($this->reason === null && $this->sunset === null) {
-            throw new \InvalidArgumentException(
-                'DeprecatedData requires at least one field (reason or sunset) to be provided'
-            );
+            throw MissingRequiredFieldException::forField('reason or sunset');
         }
     }
 

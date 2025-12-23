@@ -10,8 +10,9 @@
 namespace Cline\Forrst\Data;
 
 use BackedEnum;
+use Cline\Forrst\Exceptions\EmptyFieldException;
+use Cline\Forrst\Exceptions\MutuallyExclusiveFieldsException;
 use Cline\Forrst\Validation\UrnValidator;
-use InvalidArgumentException;
 
 use function is_array;
 use function is_string;
@@ -69,10 +70,7 @@ final readonly class ExtensionData
 
         // Enforce mutual exclusivity
         if ($options !== null && $data !== null) {
-            throw new InvalidArgumentException(
-                'Extension cannot have both options (request) and data (response) set. ' .
-                'Use ExtensionData::request() for requests or ExtensionData::response() for responses.'
-            );
+            throw MutuallyExclusiveFieldsException::forFields('options', 'data');
         }
 
         // Validate arrays
@@ -128,9 +126,7 @@ final readonly class ExtensionData
     {
         // Validate URN is present and valid
         if (!isset($data['urn']) || !is_string($data['urn']) || $data['urn'] === '') {
-            throw new InvalidArgumentException(
-                'Extension data must contain a valid non-empty "urn" field'
-            );
+            throw EmptyFieldException::forField('urn');
         }
 
         $urn = $data['urn'];

@@ -9,6 +9,8 @@
 
 namespace Cline\Forrst\Discovery;
 
+use Cline\Forrst\Exceptions\InvalidFieldValueException;
+use Cline\Forrst\Exceptions\InvalidUrlException;
 use Spatie\LaravelData\Data;
 
 /**
@@ -76,14 +78,16 @@ final class ExampleData extends Data
     {
         // value and externalValue are mutually exclusive
         if ($this->value !== null && $this->externalValue !== null) {
-            throw new \InvalidArgumentException(
+            throw InvalidFieldValueException::forField(
+                'value',
                 'Cannot specify both "value" and "externalValue"—they are mutually exclusive'
             );
         }
 
         // result and error are mutually exclusive
         if ($this->result !== null && $this->error !== null) {
-            throw new \InvalidArgumentException(
+            throw InvalidFieldValueException::forField(
+                'result',
                 'Cannot specify both "result" and "error"—use separate examples for success/error cases'
             );
         }
@@ -98,9 +102,7 @@ final class ExampleData extends Data
     {
         if ($this->externalValue !== null) {
             if (filter_var($this->externalValue, \FILTER_VALIDATE_URL) === false) {
-                throw new \InvalidArgumentException(
-                    "Invalid URL in externalValue: '{$this->externalValue}'"
-                );
+                throw InvalidUrlException::invalidFormat('externalValue');
             }
 
             // Warn if not using HTTPS for security
@@ -124,7 +126,8 @@ final class ExampleData extends Data
         $hasFunctionFields = $this->arguments !== null || $this->result !== null || $this->error !== null;
 
         if ($hasValueFields && $hasFunctionFields) {
-            throw new \InvalidArgumentException(
+            throw InvalidFieldValueException::forField(
+                'value',
                 'Cannot mix value example fields (value/externalValue) with function example fields (arguments/result/error)'
             );
         }

@@ -12,6 +12,8 @@ namespace Cline\Forrst\Functions;
 use Cline\Forrst\Contracts\ResourceInterface;
 use Cline\Forrst\Data\DocumentData;
 use Cline\Forrst\Discovery\ArgumentData;
+use Cline\Forrst\Exceptions\InvalidFieldTypeException;
+use Cline\Forrst\Exceptions\InvalidFieldValueException;
 use Override;
 
 /**
@@ -73,7 +75,8 @@ abstract class AbstractListFunction extends AbstractFunction
             'offset' => $this->paginate($query),
             'simple' => $this->simplePaginate($query),
             'none' => $this->collection($query->get()),
-            default => throw new \InvalidArgumentException(
+            default => throw InvalidFieldValueException::forField(
+                'pagination strategy',
                 \sprintf(
                     'Invalid pagination strategy "%s". Must be one of: cursor, offset, simple, none',
                     $this->getPaginationStrategy(),
@@ -143,24 +146,19 @@ abstract class AbstractListFunction extends AbstractFunction
 
         // Validate it's actually a class
         if (!\class_exists($resourceClass)) {
-            throw new \InvalidArgumentException(
-                \sprintf(
-                    'Resource class "%s" does not exist in %s',
-                    $resourceClass,
-                    static::class,
-                ),
+            throw InvalidFieldTypeException::forField(
+                'resource class',
+                'existing class',
+                \sprintf('"%s" does not exist in %s', $resourceClass, static::class),
             );
         }
 
         // Validate it implements ResourceInterface
         if (!\is_subclass_of($resourceClass, ResourceInterface::class)) {
-            throw new \InvalidArgumentException(
-                \sprintf(
-                    'Resource class "%s" must implement %s in %s',
-                    $resourceClass,
-                    ResourceInterface::class,
-                    static::class,
-                ),
+            throw InvalidFieldTypeException::forField(
+                'resource class',
+                \sprintf('must implement %s', ResourceInterface::class),
+                \sprintf('"%s" in %s', $resourceClass, static::class),
             );
         }
 

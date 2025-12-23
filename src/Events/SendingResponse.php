@@ -11,6 +11,7 @@ namespace Cline\Forrst\Events;
 
 use Cline\Forrst\Data\RequestObjectData;
 use Cline\Forrst\Data\ResponseData;
+use Cline\Forrst\Exceptions\InvalidFieldValueException;
 use Override;
 
 /**
@@ -90,14 +91,15 @@ final class SendingResponse extends ExtensionEvent
      *
      * @param ResponseData $response New response to set
      *
-     * @throws \InvalidArgumentException If response fails final validation
+     * @throws InvalidFieldValueException If response fails final validation
      */
     #[Override()]
     public function setResponse(ResponseData $response): void
     {
         if (!$this->validateFinalResponse($response)) {
-            throw new \InvalidArgumentException(
-                'Response failed final validation checks before serialization'
+            throw InvalidFieldValueException::forField(
+                'response',
+                'failed final validation checks before serialization',
             );
         }
 

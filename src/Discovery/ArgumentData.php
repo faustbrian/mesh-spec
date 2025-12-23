@@ -9,6 +9,8 @@
 
 namespace Cline\Forrst\Discovery;
 
+use Cline\Forrst\Exceptions\InvalidFieldTypeException;
+use Cline\Forrst\Exceptions\UnknownSchemaTypeException;
 use Spatie\LaravelData\Data;
 
 /**
@@ -203,12 +205,14 @@ final class ArgumentData extends Data
         ];
 
         if (!isset($typeMap[$schemaType])) {
-            throw new \InvalidArgumentException("Unknown schema type: {$schemaType}");
+            throw UnknownSchemaTypeException::forType($schemaType);
         }
 
         if (!\in_array($actualType, $typeMap[$schemaType], true)) {
-            throw new \InvalidArgumentException(
-                "Default value type '{$actualType}' does not match schema type '{$schemaType}' for argument '{$this->name}'"
+            throw InvalidFieldTypeException::forField(
+                "default (for argument '{$this->name}')",
+                $schemaType,
+                $this->default
             );
         }
     }

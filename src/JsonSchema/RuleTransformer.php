@@ -9,6 +9,8 @@
 
 namespace Cline\Forrst\JsonSchema;
 
+use Cline\Forrst\Exceptions\EmptyFieldException;
+use Cline\Forrst\Exceptions\InvalidFieldValueException;
 use Cline\Forrst\Exceptions\JsonSchemaException;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\Intl\Timezones;
@@ -66,13 +68,14 @@ final class RuleTransformer
     public static function transform(string $field, array $rules): array
     {
         if (trim($field) === '') {
-            throw new \InvalidArgumentException('Field name cannot be empty');
+            throw EmptyFieldException::forField('field');
         }
 
         foreach ($rules as $rule) {
             if (!is_string($rule) && !is_object($rule)) {
-                throw new \InvalidArgumentException(
-                    sprintf('Rule must be string or object, %s given', get_debug_type($rule)),
+                throw InvalidFieldValueException::forField(
+                    'rule',
+                    sprintf('must be string or object, %s given', get_debug_type($rule))
                 );
             }
         }

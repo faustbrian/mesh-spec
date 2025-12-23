@@ -13,6 +13,7 @@ use Carbon\CarbonImmutable;
 use Cline\Forrst\Attributes\Descriptor;
 use Cline\Forrst\Contracts\HealthCheckerInterface;
 use Cline\Forrst\Enums\HealthStatus;
+use Cline\Forrst\Exceptions\InvalidFieldValueException;
 use Cline\Forrst\Exceptions\TooManyRequestsException;
 use Cline\Forrst\Exceptions\UnauthorizedException;
 use Cline\Forrst\Extensions\Diagnostics\Descriptors\HealthDescriptor;
@@ -213,8 +214,9 @@ final class HealthFunction extends AbstractFunction
     {
         // Validate component name format (alphanumeric, dash, underscore only)
         if (!preg_match('/^[a-zA-Z0-9_-]+$/', $component)) {
-            throw new \InvalidArgumentException(
-                "Invalid component name format: {$component}. Must contain only alphanumeric characters, dashes, and underscores.",
+            throw InvalidFieldValueException::forField(
+                'component',
+                'Must contain only alphanumeric characters, dashes, and underscores',
             );
         }
 
@@ -225,12 +227,9 @@ final class HealthFunction extends AbstractFunction
         );
 
         if (!in_array($component, $validComponents, true)) {
-            throw new \InvalidArgumentException(
-                sprintf(
-                    'Invalid component: %s. Valid components: %s',
-                    $component,
-                    implode(', ', $validComponents),
-                ),
+            throw InvalidFieldValueException::forField(
+                'component',
+                sprintf('Valid components: %s', implode(', ', $validComponents)),
             );
         }
     }

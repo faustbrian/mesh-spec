@@ -11,6 +11,10 @@ namespace Cline\Forrst\Discovery;
 
 use BackedEnum;
 use Cline\Forrst\Discovery\Query\QueryCapabilitiesData;
+use Cline\Forrst\Exceptions\InvalidFieldValueException;
+use Cline\Forrst\Exceptions\InvalidInputSchemaException;
+use Cline\Forrst\Exceptions\MissingRequiredFieldException;
+use Cline\Forrst\Exceptions\UnknownSchemaTypeException;
 
 /**
  * Fluent builder for function discovery descriptors.
@@ -92,10 +96,9 @@ final class FunctionDescriptor
 
         // Validate URN format: urn:namespace:forrst:fn:function:name
         if (!preg_match('/^urn:[a-z][a-z0-9-]*:forrst:fn:[a-z][a-z0-9:.]*$/i', $urnString)) {
-            throw new \InvalidArgumentException(
-                "Invalid function URN format: '{$urnString}'. " .
-                "Expected format: 'urn:namespace:forrst:fn:function:name' " .
-                "(e.g., 'urn:acme:forrst:fn:users:get')"
+            throw InvalidFieldValueException::forField(
+                'urn',
+                "Invalid format: '{$urnString}'. Expected format: 'urn:namespace:forrst:fn:function:name' (e.g., 'urn:acme:forrst:fn:users:get')"
             );
         }
 
@@ -120,10 +123,9 @@ final class FunctionDescriptor
             '(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/';
 
         if (!preg_match($semverPattern, $version)) {
-            throw new \InvalidArgumentException(
-                "Invalid semantic version: '{$version}'. " .
-                "Must follow semver format (e.g., '1.0.0', '2.1.0-beta.1', '3.0.0+build.123'). " .
-                "See: https://semver.org/"
+            throw InvalidFieldValueException::forField(
+                'version',
+                "Invalid semantic version: '{$version}'. Must follow semver format (e.g., '1.0.0', '2.1.0-beta.1', '3.0.0+build.123'). See: https://semver.org/"
             );
         }
 
@@ -454,9 +456,7 @@ final class FunctionDescriptor
     public function getUrn(): string
     {
         if (!isset($this->urn)) {
-            throw new \RuntimeException(
-                'URN not set. Call urn() before building function descriptor.'
-            );
+            throw MissingRequiredFieldException::forField('urn');
         }
 
         return $this->urn;
@@ -470,9 +470,7 @@ final class FunctionDescriptor
     public function getSummary(): string
     {
         if (!isset($this->summary)) {
-            throw new \RuntimeException(
-                'Summary not set. Call summary() before building function descriptor.'
-            );
+            throw MissingRequiredFieldException::forField('summary');
         }
 
         return $this->summary;
@@ -587,7 +585,8 @@ final class FunctionDescriptor
     private function validateJsonSchema(array $schema): void
     {
         if (!isset($schema['type']) && !isset($schema['$ref'])) {
-            throw new \InvalidArgumentException(
+            throw InvalidInputSchemaException::forField(
+                'schema',
                 'JSON Schema must include "type" or "$ref" property'
             );
         }
@@ -596,10 +595,7 @@ final class FunctionDescriptor
             $validTypes = ['null', 'boolean', 'object', 'array', 'number', 'string', 'integer'];
 
             if (!in_array($schema['type'], $validTypes, true)) {
-                throw new \InvalidArgumentException(
-                    "Invalid JSON Schema type: '{$schema['type']}'. " .
-                    'Must be one of: ' . implode(', ', $validTypes)
-                );
+                throw UnknownSchemaTypeException::forType($schema['type']);
             }
         }
     }

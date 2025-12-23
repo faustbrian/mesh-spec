@@ -25,6 +25,11 @@ use Cline\Forrst\Discovery\Query\QueryCapabilitiesData;
 use Cline\Forrst\Discovery\ResultDescriptorData;
 use Cline\Forrst\Discovery\SimulationScenarioData;
 use Cline\Forrst\Discovery\TagData;
+use Cline\Forrst\Exceptions\DataTransformationException;
+use Cline\Forrst\Exceptions\InvalidFieldTypeException;
+use Cline\Forrst\Exceptions\InvalidFieldValueException;
+use Cline\Forrst\Exceptions\InvalidMethodCallException;
+use Cline\Forrst\Exceptions\MissingMethodImplementationException;
 use Cline\Forrst\Functions\Concerns\InteractsWithAuthentication;
 use Cline\Forrst\Functions\Concerns\InteractsWithCancellation;
 use Cline\Forrst\Functions\Concerns\InteractsWithQueryBuilder;
@@ -113,7 +118,8 @@ abstract class AbstractFunction implements FunctionInterface
                 $vendor = config('rpc.vendor', 'app');
 
                 if (! \is_string($vendor)) {
-                    throw new \InvalidArgumentException(
+                    throw InvalidFieldValueException::forField(
+                        'rpc.vendor',
                         'Configuration key "rpc.vendor" must be a string, '.\gettype($vendor).' provided',
                     );
                 }
@@ -122,7 +128,9 @@ abstract class AbstractFunction implements FunctionInterface
                 $name = preg_replace('/-function$/', '', $name);
 
                 if ($name === null) {
-                    throw new \RuntimeException(
+                    throw DataTransformationException::cannotTransform(
+                        'class name',
+                        'URN component',
                         'Failed to process function name via regex for class '.static::class,
                     );
                 }
@@ -405,14 +413,14 @@ abstract class AbstractFunction implements FunctionInterface
     /**
      * Get the current request object.
      *
-     * @throws \LogicException When accessed before setRequest() is called
+     * @throws InvalidMethodCallException When accessed before setRequest() is called
      */
     protected function getRequestObject(): RequestObjectData
     {
         if ($this->requestObject === null) {
-            throw new \LogicException(
-                'Request object not available. '.
-                'Ensure setRequest() is called before accessing request data.',
+            throw InvalidMethodCallException::cannotCall(
+                'getRequestObject',
+                'Request object not available. Ensure setRequest() is called before accessing request data.',
             );
         }
 
@@ -449,22 +457,18 @@ abstract class AbstractFunction implements FunctionInterface
 
         // Validate the descriptor class implements the correct interface
         if (! is_subclass_of($descriptorClass, DescriptorInterface::class)) {
-            throw new \InvalidArgumentException(
-                sprintf(
-                    'Descriptor class %s must implement %s',
-                    $descriptorClass,
-                    DescriptorInterface::class,
-                ),
+            throw InvalidFieldTypeException::forField(
+                'descriptor class',
+                sprintf('must implement %s', DescriptorInterface::class),
+                $descriptorClass,
             );
         }
 
         // Validate create() method exists
         if (! method_exists($descriptorClass, 'create')) {
-            throw new \BadMethodCallException(
-                sprintf(
-                    'Descriptor class %s must implement static create() method',
-                    $descriptorClass,
-                ),
+            throw MissingMethodImplementationException::forMethod(
+                $descriptorClass,
+                'create',
             );
         }
 

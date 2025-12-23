@@ -9,7 +9,9 @@
 
 namespace Cline\Forrst\Discovery;
 
-use InvalidArgumentException;
+use Cline\Forrst\Exceptions\EmptyFieldException;
+use Cline\Forrst\Exceptions\InvalidFieldTypeException;
+use Cline\Forrst\Exceptions\InvalidFieldValueException;
 use Spatie\LaravelData\Data;
 
 /**
@@ -62,23 +64,19 @@ final class FunctionExtensionsData extends Data
     private function validateMutualExclusivity(): void
     {
         if ($this->supported !== null && $this->excluded !== null) {
-            throw new InvalidArgumentException(
-                'Cannot specify both "supported" and "excluded"—they are mutually exclusive. '
-                .'Use "supported" for allowlist or "excluded" for blocklist, not both.'
+            throw InvalidFieldValueException::forField(
+                'extensions',
+                'Cannot specify both "supported" and "excluded"—they are mutually exclusive. Use "supported" for allowlist or "excluded" for blocklist, not both.'
             );
         }
 
         // Validate arrays are not empty when specified
         if ($this->supported !== null && empty($this->supported)) {
-            throw new InvalidArgumentException(
-                'Supported extensions array cannot be empty—use null to inherit server defaults'
-            );
+            throw EmptyFieldException::forField('supported');
         }
 
         if ($this->excluded !== null && empty($this->excluded)) {
-            throw new InvalidArgumentException(
-                'Excluded extensions array cannot be empty—use null for no exclusions'
-            );
+            throw EmptyFieldException::forField('excluded');
         }
     }
 
@@ -93,17 +91,18 @@ final class FunctionExtensionsData extends Data
     {
         foreach ($extensions as $index => $name) {
             if (!\is_string($name)) {
-                throw new InvalidArgumentException(
-                    "Extension name at index {$index} must be a string, got: ".\gettype($name)
+                throw InvalidFieldTypeException::forField(
+                    "extension[{$index}]",
+                    'string',
+                    $name
                 );
             }
 
             // Extension names should follow kebab-case or URN format
             if (!\preg_match('/^[a-z][a-z0-9-]*$/', $name) && !\str_starts_with($name, 'urn:')) {
-                throw new InvalidArgumentException(
-                    "Invalid extension name '{$name}' at index {$index}. "
-                    ."Must be kebab-case (e.g., 'query', 'atomic-lock') or URN format "
-                    ."(e.g., 'urn:forrst:ext:query')"
+                throw InvalidFieldValueException::forField(
+                    "extension[{$index}]",
+                    "Invalid extension name '{$name}'. Must be kebab-case (e.g., 'query', 'atomic-lock') or URN format (e.g., 'urn:forrst:ext:query')"
                 );
             }
 
@@ -130,9 +129,9 @@ final class FunctionExtensionsData extends Data
         $unique = \array_unique($extensions);
         if (\count($unique) !== \count($extensions)) {
             $duplicates = \array_diff($extensions, $unique);
-            throw new InvalidArgumentException(
-                "Field '{$fieldName}' contains duplicate extension names: "
-                .\json_encode(\array_values($duplicates))
+            throw InvalidFieldValueException::forField(
+                $fieldName,
+                "Contains duplicate extension names: " . \json_encode(\array_values($duplicates))
             );
         }
     }
@@ -147,9 +146,7 @@ final class FunctionExtensionsData extends Data
     public static function allow(array $extensions): self
     {
         if (empty($extensions)) {
-            throw new InvalidArgumentException(
-                'Allow list must contain at least one extension'
-            );
+            throw EmptyFieldException::forField('extensions');
         }
 
         return new self(supported: $extensions, excluded: null);
@@ -165,9 +162,7 @@ final class FunctionExtensionsData extends Data
     public static function deny(array $extensions): self
     {
         if (empty($extensions)) {
-            throw new InvalidArgumentException(
-                'Deny list must contain at least one extension'
-            );
+            throw EmptyFieldException::forField('extensions');
         }
 
         return new self(supported: null, excluded: $extensions);

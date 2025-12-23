@@ -11,6 +11,10 @@ namespace Cline\Forrst\Data\Configuration;
 
 use Cline\Forrst\Contracts\FunctionInterface;
 use Cline\Forrst\Data\AbstractData;
+use Cline\Forrst\Exceptions\InvalidConfigurationException;
+use Cline\Forrst\Exceptions\InvalidFieldTypeException;
+use Cline\Forrst\Exceptions\InvalidFieldValueException;
+use Cline\Forrst\Exceptions\MissingRequiredFieldException;
 
 /**
  * Configuration data for a single Forrst server instance.
@@ -43,9 +47,9 @@ final class ServerData extends AbstractData
     public static function createFromArray(array $data): self
     {
         return new self(
-            name: $data['name'] ?? throw new \InvalidArgumentException('Server name is required'),
-            path: $data['path'] ?? throw new \InvalidArgumentException('Server path is required'),
-            route: $data['route'] ?? throw new \InvalidArgumentException('Server route is required'),
+            name: $data['name'] ?? throw MissingRequiredFieldException::forField('name'),
+            path: $data['path'] ?? throw MissingRequiredFieldException::forField('path'),
+            route: $data['route'] ?? throw MissingRequiredFieldException::forField('route'),
             version: $data['version'] ?? '1.0.0',
             middleware: $data['middleware'] ?? [],
             functions: $data['functions'] ?? null,
@@ -101,14 +105,16 @@ final class ServerData extends AbstractData
     {
         // Prevent directory traversal
         if (str_contains($path, '..')) {
-            throw new \InvalidArgumentException(
+            throw InvalidFieldValueException::forField(
+                'path',
                 sprintf('Path traversal detected in path: "%s"', $path),
             );
         }
 
         // Ensure absolute path or valid namespace
         if (!str_starts_with($path, '/') && !str_starts_with($path, 'App\\')) {
-            throw new \InvalidArgumentException(
+            throw InvalidFieldValueException::forField(
+                'path',
                 sprintf('Path must be absolute or valid namespace: "%s"', $path),
             );
         }
@@ -117,14 +123,16 @@ final class ServerData extends AbstractData
         if (str_starts_with($path, '/')) {
             $realPath = realpath($path);
             if ($realPath === false) {
-                throw new \InvalidArgumentException(
+                throw InvalidFieldValueException::forField(
+                    'path',
                     sprintf('Path does not exist: "%s"', $path),
                 );
             }
 
             $appPath = base_path();
             if (!str_starts_with($realPath, $appPath)) {
-                throw new \InvalidArgumentException(
+                throw InvalidFieldValueException::forField(
+                    'path',
                     sprintf('Path is outside application root: "%s"', $path),
                 );
             }
@@ -144,13 +152,15 @@ final class ServerData extends AbstractData
     private static function validateRoute(string $route): void
     {
         if (!str_starts_with($route, '/')) {
-            throw new \InvalidArgumentException(
+            throw InvalidFieldValueException::forField(
+                'route',
                 sprintf('Route "%s" must start with "/"', $route),
             );
         }
 
         if (!preg_match('#^/[\w\-/{}\*]+$#', $route)) {
-            throw new \InvalidArgumentException(
+            throw InvalidFieldValueException::forField(
+                'route',
                 sprintf('Invalid route format: "%s"', $route),
             );
         }
@@ -170,15 +180,18 @@ final class ServerData extends AbstractData
     {
         foreach ($middleware as $index => $middlewareClass) {
             if (!is_string($middlewareClass)) {
-                throw new \InvalidArgumentException(
-                    sprintf('Middleware at index %d must be a string, got %s', $index, get_debug_type($middlewareClass)),
+                throw InvalidFieldTypeException::forField(
+                    sprintf('middleware[%d]', $index),
+                    'string',
+                    $middlewareClass,
                 );
             }
 
             // Validate class exists (in local/testing environments)
             if (app()->environment(['local', 'testing'])) {
                 if (!class_exists($middlewareClass)) {
-                    throw new \InvalidArgumentException(
+                    throw InvalidFieldValueException::forField(
+                        'middleware',
                         sprintf('Middleware class "%s" does not exist', $middlewareClass),
                     );
                 }

@@ -9,7 +9,8 @@
 
 namespace Cline\Forrst\Discovery;
 
-use InvalidArgumentException;
+use Cline\Forrst\Exceptions\EmptyFieldException;
+use Cline\Forrst\Exceptions\FieldExceedsMaxLengthException;
 use Spatie\LaravelData\Data;
 
 /**
@@ -58,13 +59,11 @@ final class LinkData extends Data
         // Validate name
         $trimmedName = trim($this->name);
         if ($trimmedName === '') {
-            throw new InvalidArgumentException('Link name cannot be empty');
+            throw EmptyFieldException::forField('name');
         }
 
         if (mb_strlen($trimmedName) > 100) {
-            throw new InvalidArgumentException(
-                'Link name too long (max 100 characters, got ' . mb_strlen($trimmedName) . ')'
-            );
+            throw FieldExceedsMaxLengthException::forField('name', 100);
         }
 
         // Validate params structure if provided
@@ -87,13 +86,13 @@ final class LinkData extends Data
      * Validate params structure.
      *
      * @param array<string, mixed> $params
-     * @throws InvalidArgumentException
+     * @throws EmptyFieldException
      */
     private function validateParams(array $params): void
     {
         foreach ($params as $paramName => $paramValue) {
             if (!is_string($paramName) || trim($paramName) === '') {
-                throw new InvalidArgumentException('Parameter names must be non-empty strings');
+                throw EmptyFieldException::forField('parameter name');
             }
 
             // Check for runtime expression syntax: $result.field

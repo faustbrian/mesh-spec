@@ -9,6 +9,11 @@
 
 namespace Cline\Forrst\Data;
 
+use Cline\Forrst\Exceptions\InvalidEnumValueException;
+use Cline\Forrst\Exceptions\InvalidFieldTypeException;
+use Cline\Forrst\Exceptions\InvalidFieldValueException;
+use Cline\Forrst\Exceptions\MissingRequiredFieldException;
+
 /**
  * Health status value object.
  *
@@ -28,7 +33,11 @@ final readonly class HealthStatus
      * @param string|null $message Optional diagnostic message
      * @param string|null $lastCheck Optional last check timestamp
      *
-     * @throws \InvalidArgumentException If status or latency values are invalid
+     * @throws InvalidEnumValueException If status value is invalid
+     * @throws MissingRequiredFieldException If required latency fields are missing
+     * @throws InvalidFieldTypeException If latency value is not an integer
+     * @throws InvalidFieldValueException If latency value is negative
+     * @throws InvalidEnumValueException If latency unit is invalid
      */
     public function __construct(
         public string $status,
@@ -37,26 +46,21 @@ final readonly class HealthStatus
         public ?string $lastCheck = null,
     ) {
         if (!in_array($status, ['healthy', 'degraded', 'unhealthy'], true)) {
-            throw new \InvalidArgumentException(
-                "Invalid status '{$status}'. Must be: healthy, degraded, or unhealthy"
-            );
+            throw InvalidEnumValueException::forField('status', ['healthy', 'degraded', 'unhealthy']);
         }
 
         if ($latency !== null) {
             if (!isset($latency['value'], $latency['unit'])) {
-                throw new \InvalidArgumentException(
-                    "Latency must have 'value' and 'unit' keys"
-                );
+                throw MissingRequiredFieldException::forField('latency.value and latency.unit');
             }
-            if (!is_int($latency['value']) || $latency['value'] < 0) {
-                throw new \InvalidArgumentException(
-                    'Latency value must be a non-negative integer'
-                );
+            if (!is_int($latency['value'])) {
+                throw InvalidFieldTypeException::forField('latency.value', 'integer', $latency['value']);
+            }
+            if ($latency['value'] < 0) {
+                throw InvalidFieldValueException::forField('latency.value', 'must be non-negative');
             }
             if (!in_array($latency['unit'], ['ms', 'us', 's'], true)) {
-                throw new \InvalidArgumentException(
-                    "Invalid latency unit '{$latency['unit']}'. Must be: ms, us, or s"
-                );
+                throw InvalidEnumValueException::forField('latency.unit', ['ms', 'us', 's']);
             }
         }
     }

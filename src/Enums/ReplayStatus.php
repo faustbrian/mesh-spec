@@ -194,15 +194,12 @@ enum ReplayStatus: string
     public function transitionTo(self $newStatus): self
     {
         if (!$this->canTransitionTo($newStatus)) {
-            throw new \Cline\Forrst\Exceptions\InvalidStatusTransitionException(
-                sprintf(
-                    'Invalid status transition from %s to %s. %s',
-                    $this->value,
-                    $newStatus->value,
-                    $this->isTerminal()
-                        ? 'Terminal states cannot transition.'
-                        : 'This transition is not allowed by the replay lifecycle.'
-                )
+            throw \Cline\Forrst\Exceptions\InvalidStatusTransitionException::fromTo(
+                $this->value,
+                $newStatus->value,
+                $this->isTerminal()
+                    ? 'Terminal states cannot transition.'
+                    : 'This transition is not allowed by the replay lifecycle.'
             );
         }
 

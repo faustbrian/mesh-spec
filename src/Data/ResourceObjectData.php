@@ -9,6 +9,10 @@
 
 namespace Cline\Forrst\Data;
 
+use Cline\Forrst\Exceptions\EmptyFieldException;
+use Cline\Forrst\Exceptions\InvalidFieldValueException;
+use Cline\Forrst\Exceptions\MissingRequiredFieldException;
+
 /**
  * JSON:API compliant resource object structure.
  *
@@ -53,17 +57,18 @@ final class ResourceObjectData extends AbstractData
         public readonly ?array $meta = null,
     ) {
         if ($type === '') {
-            throw new \InvalidArgumentException('Resource type cannot be empty');
+            throw EmptyFieldException::forField('type');
         }
 
         if ($id === '') {
-            throw new \InvalidArgumentException('Resource id cannot be empty');
+            throw EmptyFieldException::forField('id');
         }
 
         // JSON:API spec recommends lowercase, hyphenated or underscored type names
         if (!preg_match('/^[a-z][a-z0-9_-]*$/', $type)) {
-            throw new \InvalidArgumentException(
-                sprintf('Resource type "%s" must be lowercase and contain only letters, numbers, hyphens, or underscores', $type)
+            throw InvalidFieldValueException::forField(
+                'type',
+                'must be lowercase and contain only letters, numbers, hyphens, or underscores'
             );
         }
     }
@@ -73,13 +78,13 @@ final class ResourceObjectData extends AbstractData
      *
      * @param array<string, mixed> $data The array data containing resource object information
      * @return self Configured ResourceObjectData instance
-     * @throws \InvalidArgumentException If required fields are missing
+     * @throws MissingRequiredFieldException If required fields are missing
      */
     public static function createFromArray(array $data): self
     {
         return new self(
-            type: $data['type'] ?? throw new \InvalidArgumentException('Resource type is required'),
-            id: $data['id'] ?? throw new \InvalidArgumentException('Resource id is required'),
+            type: $data['type'] ?? throw MissingRequiredFieldException::forField('type'),
+            id: $data['id'] ?? throw MissingRequiredFieldException::forField('id'),
             attributes: isset($data['attributes']) && is_array($data['attributes']) ? $data['attributes'] : [],
             relationships: isset($data['relationships']) && is_array($data['relationships']) ? $data['relationships'] : null,
             meta: isset($data['meta']) && is_array($data['meta']) ? $data['meta'] : null,

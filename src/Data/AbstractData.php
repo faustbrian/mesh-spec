@@ -12,7 +12,7 @@ namespace Cline\Forrst\Data;
 use Override;
 use Spatie\LaravelData\Data;
 
-use RuntimeException;
+use Cline\Forrst\Exceptions\DataTransformationException;
 
 use function is_array;
 use function sprintf;
@@ -149,13 +149,15 @@ abstract class AbstractData extends Data
      * @param  int                  $depth Current recursion depth
      * @return array<string, mixed> Filtered array with null values removed
      *
-     * @throws RuntimeException If maximum recursion depth is exceeded
+     * @throws DataTransformationException If maximum recursion depth is exceeded
      */
     private function removeNullValuesRecursively(array $array, int $depth = 0): array
     {
         if ($depth > self::MAX_RECURSION_DEPTH) {
-            throw new RuntimeException(
-                sprintf('Maximum recursion depth of %d exceeded during null value removal', self::MAX_RECURSION_DEPTH),
+            throw DataTransformationException::cannotTransform(
+                'array',
+                'filtered array',
+                sprintf('Maximum recursion depth of %d exceeded', self::MAX_RECURSION_DEPTH)
             );
         }
 

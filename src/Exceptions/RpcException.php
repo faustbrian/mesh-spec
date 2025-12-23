@@ -9,7 +9,6 @@
 
 namespace Cline\Forrst\Exceptions;
 
-use Throwable;
 
 /**
  * Marker interface for all Forrst RPC exceptions.
@@ -35,7 +34,7 @@ use Throwable;
  * @author Brian Faust <brian@cline.sh>
  * @see https://docs.cline.sh/forrst/errors Error handling specification
  */
-interface RpcException extends Throwable
+interface RpcException extends ForrstException
 {
     // Marker interface - no methods required
 }

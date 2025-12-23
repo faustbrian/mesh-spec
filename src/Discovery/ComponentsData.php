@@ -10,6 +10,7 @@
 namespace Cline\Forrst\Discovery;
 
 use Cline\Forrst\Discovery\Resource\ResourceData;
+use Cline\Forrst\Exceptions\ComponentReferenceNotFoundException;
 use Spatie\LaravelData\Data;
 
 /**
@@ -108,12 +109,12 @@ final class ComponentsData extends Data
      *
      * @return mixed The resolved component data
      *
-     * @throws \InvalidArgumentException If reference doesn't exist
+     * @throws ComponentReferenceNotFoundException If reference doesn't exist
      */
     public function resolveReference(string $ref): mixed
     {
         if (!$this->hasReference($ref)) {
-            throw new \InvalidArgumentException("Component reference '{$ref}' does not exist");
+            throw ComponentReferenceNotFoundException::forRef($ref);
         }
 
         $parts = \explode('/', \substr($ref, 13));

@@ -9,6 +9,9 @@
 
 namespace Cline\Forrst\Enums;
 
+use Cline\Forrst\Exceptions\NegativeValueException;
+use Cline\Forrst\Exceptions\OverflowException;
+
 /**
  * Time unit values for duration and time-to-live specifications.
  *
@@ -71,13 +74,7 @@ enum TimeUnit: string
     {
         // Validate non-negative constraint
         if ($value < 0) {
-            throw new \InvalidArgumentException(
-                sprintf(
-                    'Duration value must be non-negative, got %d %s',
-                    $value,
-                    $this->value
-                )
-            );
+            throw NegativeValueException::forField("Duration value ({$value} {$this->value})");
         }
 
         // Check for potential overflow before multiplication
@@ -92,14 +89,7 @@ enum TimeUnit: string
         $maxSafeValue = (int) floor(PHP_INT_MAX / $multiplier);
 
         if ($value > $maxSafeValue) {
-            throw new \InvalidArgumentException(
-                sprintf(
-                    'Duration value %d %s would cause integer overflow (max: %d)',
-                    $value,
-                    $this->value,
-                    $maxSafeValue
-                )
-            );
+            throw OverflowException::forOperation("toSeconds conversion ({$value} {$this->value})");
         }
 
         return $value * $multiplier;
@@ -121,9 +111,7 @@ enum TimeUnit: string
     public function fromSeconds(int $seconds): float
     {
         if ($seconds < 0) {
-            throw new \InvalidArgumentException(
-                sprintf('Seconds must be non-negative, got %d', $seconds)
-            );
+            throw NegativeValueException::forField("Seconds ({$seconds})");
         }
 
         return match ($this) {
@@ -149,9 +137,7 @@ enum TimeUnit: string
     public static function bestFit(int $seconds): self
     {
         if ($seconds < 0) {
-            throw new \InvalidArgumentException(
-                sprintf('Seconds must be non-negative, got %d', $seconds)
-            );
+            throw NegativeValueException::forField("Seconds ({$seconds})");
         }
 
         return match (true) {

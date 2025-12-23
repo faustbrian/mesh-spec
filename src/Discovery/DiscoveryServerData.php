@@ -9,7 +9,10 @@
 
 namespace Cline\Forrst\Discovery;
 
-use InvalidArgumentException;
+use Cline\Forrst\Exceptions\InvalidFieldTypeException;
+use Cline\Forrst\Exceptions\InvalidFieldValueException;
+use Cline\Forrst\Exceptions\InvalidUrlException;
+use Cline\Forrst\Exceptions\MissingRequiredFieldException;
 use Spatie\LaravelData\Data;
 
 /**
@@ -68,15 +71,14 @@ final class DiscoveryServerData extends Data
     /**
      * Validate RFC 6570 URI template syntax.
      *
-     * @throws InvalidArgumentException
+     * @throws InvalidUrlException
+     * @throws InvalidFieldValueException
      */
     private function validateUrlTemplate(string $url): void
     {
         // Check for basic template syntax errors
         if (substr_count($url, '{') !== substr_count($url, '}')) {
-            throw new InvalidArgumentException(
-                "Invalid URI template: Mismatched braces in URL '{$url}'"
-            );
+            throw InvalidUrlException::invalidFormat('url');
         }
 
         // Extract and validate variable names
@@ -84,9 +86,10 @@ final class DiscoveryServerData extends Data
         foreach ($matches[1] as $varName) {
             // RFC 6570: variable names must be [A-Za-z0-9_]+ (no hyphens, dots, etc.)
             if (!preg_match('/^[A-Za-z0-9_]+$/', $varName)) {
-                throw new InvalidArgumentException(
-                    "Invalid variable name '{$varName}' in URI template. "
-                    .'Variable names must contain only letters, numbers, and underscores.'
+                throw InvalidFieldValueException::forField(
+                    "url.variable.{$varName}",
+                    "Invalid variable name '{$varName}' in URI template. " .
+                    'Variable names must contain only letters, numbers, and underscores.'
                 );
             }
         }
@@ -94,9 +97,7 @@ final class DiscoveryServerData extends Data
         // Validate URL structure (basic sanity check)
         $testUrl = preg_replace('/\{[^}]+\}/', 'test', $url);
         if (!filter_var($testUrl, FILTER_VALIDATE_URL)) {
-            throw new InvalidArgumentException(
-                "Invalid URL structure: '{$url}' is not a valid URL template"
-            );
+            throw InvalidUrlException::invalidFormat('url');
         }
     }
 
@@ -105,7 +106,8 @@ final class DiscoveryServerData extends Data
      *
      * @param array<string, ServerVariableData>|null $variables
      *
-     * @throws InvalidArgumentException
+     * @throws MissingRequiredFieldException
+     * @throws InvalidFieldValueException
      */
     private function validateVariableConsistency(string $url, ?array $variables): void
     {
@@ -117,18 +119,16 @@ final class DiscoveryServerData extends Data
         }
 
         if ($variables === null) {
-            throw new InvalidArgumentException(
-                'URL template contains variables '.json_encode($urlVars)
-                .' but no variable definitions provided'
-            );
+            throw MissingRequiredFieldException::forField('variables');
         }
 
         $definedVars = array_keys($variables);
         $undefinedVars = array_diff($urlVars, $definedVars);
 
         if (!empty($undefinedVars)) {
-            throw new InvalidArgumentException(
-                'URL template references undefined variables: '.json_encode($undefinedVars)
+            throw InvalidFieldValueException::forField(
+                'variables',
+                'URL template references undefined variables: ' . json_encode($undefinedVars)
             );
         }
     }
@@ -139,7 +139,8 @@ final class DiscoveryServerData extends Data
      * @param array<string, ServerVariableData>|null          $variables
      * @param array<int, ServerExtensionDeclarationData>|null $extensions
      *
-     * @throws InvalidArgumentException
+     * @throws InvalidFieldTypeException
+     * @throws InvalidFieldValueException
      */
     private function validateArrayStructure(?array $variables, ?array $extensions): void
     {
@@ -147,14 +148,17 @@ final class DiscoveryServerData extends Data
         if ($variables !== null) {
             foreach ($variables as $key => $value) {
                 if (!is_string($key)) {
-                    throw new InvalidArgumentException(
-                        'Variables array must be keyed by variable name (string), got: '.gettype($key)
+                    throw InvalidFieldValueException::forField(
+                        'variables',
+                        'Variables array must be keyed by variable name (string), got: ' . gettype($key)
                     );
                 }
 
                 if (!$value instanceof ServerVariableData) {
-                    throw new InvalidArgumentException(
-                        "Variable '{$key}' must be an instance of ServerVariableData, got: ".get_debug_type($value)
+                    throw InvalidFieldTypeException::forField(
+                        "variables.{$key}",
+                        'ServerVariableData',
+                        $value
                     );
                 }
             }
@@ -164,14 +168,17 @@ final class DiscoveryServerData extends Data
         if ($extensions !== null) {
             foreach ($extensions as $index => $value) {
                 if (!is_int($index)) {
-                    throw new InvalidArgumentException(
-                        'Extensions array must be indexed by integers, got: '.gettype($index)
+                    throw InvalidFieldValueException::forField(
+                        'extensions',
+                        'Extensions array must be indexed by integers, got: ' . gettype($index)
                     );
                 }
 
                 if (!$value instanceof ServerExtensionDeclarationData) {
-                    throw new InvalidArgumentException(
-                        "Extension at index {$index} must be an instance of ServerExtensionDeclarationData, got: ".get_debug_type($value)
+                    throw InvalidFieldTypeException::forField(
+                        "extensions[{$index}]",
+                        'ServerExtensionDeclarationData',
+                        $value
                     );
                 }
             }

@@ -9,6 +9,13 @@
 
 namespace Cline\Forrst\Discovery;
 
+use Cline\Forrst\Exceptions\FieldExceedsMaxLengthException;
+use Cline\Forrst\Exceptions\HtmlNotAllowedException;
+use Cline\Forrst\Exceptions\InvalidEmailException;
+use Cline\Forrst\Exceptions\InvalidProtocolException;
+use Cline\Forrst\Exceptions\InvalidUrlException;
+use Cline\Forrst\Exceptions\MissingRequiredFieldException;
+use Cline\Forrst\Exceptions\WhitespaceOnlyException;
 use Spatie\LaravelData\Data;
 
 /**
@@ -115,7 +122,13 @@ final class ContactData extends Data
      *                           Used for support inquiries, bug reports, and general communication.
      *                           Should be a monitored email address.
      *
-     * @throws \InvalidArgumentException if validation fails
+     * @throws WhitespaceOnlyException if name is empty or whitespace only
+     * @throws FieldExceedsMaxLengthException if name or email exceeds max length
+     * @throws HtmlNotAllowedException if name contains HTML tags
+     * @throws InvalidUrlException if URL format is invalid
+     * @throws InvalidProtocolException if URL doesn't use HTTP/HTTPS or uses unsafe protocol
+     * @throws InvalidEmailException if email format is invalid
+     * @throws MissingRequiredFieldException if no fields are provided
      */
     public function __construct(
         public readonly ?string $name = null,
@@ -128,7 +141,13 @@ final class ContactData extends Data
     /**
      * Validate contact information fields.
      *
-     * @throws \InvalidArgumentException
+     * @throws WhitespaceOnlyException
+     * @throws FieldExceedsMaxLengthException
+     * @throws HtmlNotAllowedException
+     * @throws InvalidUrlException
+     * @throws InvalidProtocolException
+     * @throws InvalidEmailException
+     * @throws MissingRequiredFieldException
      */
     private function validate(): void
     {
@@ -150,91 +169,81 @@ final class ContactData extends Data
     /**
      * Validate the name field.
      *
-     * @throws \InvalidArgumentException
+     * @throws WhitespaceOnlyException
+     * @throws FieldExceedsMaxLengthException
+     * @throws HtmlNotAllowedException
      */
     private function validateName(): void
     {
         $trimmedName = trim($this->name);
 
         if ($trimmedName === '') {
-            throw new \InvalidArgumentException('Contact name cannot be empty or whitespace only');
+            throw WhitespaceOnlyException::forField('name');
         }
 
         if (mb_strlen($trimmedName) > 255) {
-            throw new \InvalidArgumentException(
-                sprintf('Contact name cannot exceed 255 characters, got %d', mb_strlen($trimmedName)),
-            );
+            throw FieldExceedsMaxLengthException::forField('name', 255);
         }
 
         // Prevent HTML/script injection
         if ($trimmedName !== strip_tags($trimmedName)) {
-            throw new \InvalidArgumentException('Contact name cannot contain HTML tags');
+            throw HtmlNotAllowedException::forField('name');
         }
     }
 
     /**
      * Validate the URL field.
      *
-     * @throws \InvalidArgumentException
+     * @throws InvalidUrlException
+     * @throws InvalidProtocolException
      */
     private function validateUrl(): void
     {
         if (!filter_var($this->url, FILTER_VALIDATE_URL)) {
-            throw new \InvalidArgumentException(
-                sprintf('Invalid contact URL format: %s', $this->url),
-            );
+            throw InvalidUrlException::invalidFormat('url');
         }
 
         $parsedUrl = parse_url($this->url);
 
         if (!isset($parsedUrl['scheme']) || !\in_array($parsedUrl['scheme'], ['http', 'https'], true)) {
-            throw new \InvalidArgumentException(
-                sprintf('Contact URL must use HTTP or HTTPS protocol, got: %s', $parsedUrl['scheme'] ?? 'none'),
-            );
+            throw InvalidProtocolException::forUrl('url');
         }
 
         // Prevent javascript: and data: URLs
         $scheme = strtolower($parsedUrl['scheme']);
 
         if (\in_array($scheme, ['javascript', 'data', 'vbscript', 'file'], true)) {
-            throw new \InvalidArgumentException(
-                sprintf('Contact URL scheme "%s" is not allowed for security reasons', $scheme),
-            );
+            throw InvalidProtocolException::forUrl('url');
         }
     }
 
     /**
      * Validate the email field.
      *
-     * @throws \InvalidArgumentException
+     * @throws InvalidEmailException
+     * @throws FieldExceedsMaxLengthException
      */
     private function validateEmail(): void
     {
         if (!filter_var($this->email, FILTER_VALIDATE_EMAIL)) {
-            throw new \InvalidArgumentException(
-                sprintf('Invalid email address format: %s', $this->email),
-            );
+            throw InvalidEmailException::forField('email');
         }
 
         // Additional RFC 5322 validation
         if (mb_strlen($this->email) > 254) {
-            throw new \InvalidArgumentException(
-                sprintf('Email address cannot exceed 254 characters, got %d', mb_strlen($this->email)),
-            );
+            throw FieldExceedsMaxLengthException::forField('email', 254);
         }
     }
 
     /**
      * Validate that at least one contact method is provided.
      *
-     * @throws \InvalidArgumentException
+     * @throws MissingRequiredFieldException
      */
     private function validateAtLeastOneFieldPresent(): void
     {
         if ($this->name === null && $this->url === null && $this->email === null) {
-            throw new \InvalidArgumentException(
-                'ContactData requires at least one field (name, url, or email) to be provided',
-            );
+            throw MissingRequiredFieldException::forField('name, url, or email');
         }
     }
 }

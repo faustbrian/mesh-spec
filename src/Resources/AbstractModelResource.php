@@ -15,7 +15,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Override;
-use RuntimeException;
+use Cline\Forrst\Exceptions\InvalidModelException;
 
 use function array_keys;
 use function class_basename;
@@ -128,7 +128,7 @@ abstract class AbstractModelResource extends AbstractResource
     {
         $model = resolve(static::getModel());
 
-        throw_unless($model instanceof Model, RuntimeException::class, 'Resolved model is not an instance of Model');
+        throw_unless($model instanceof Model, InvalidModelException::notInstanceOf(Model::class));
 
         return $model->getTable();
     }

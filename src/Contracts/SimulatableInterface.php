@@ -82,7 +82,7 @@ interface SimulatableInterface extends FunctionInterface
      *
      * @return string Default scenario name (e.g., "default", "success")
      *
-     * @throws \InvalidArgumentException If default scenario doesn't exist
+     * @throws \Cline\Forrst\Exceptions\InvalidConfigurationException If default scenario doesn't exist
      */
     public function getDefaultScenario(): string;
 
@@ -103,7 +103,8 @@ interface SimulatableInterface extends FunctionInterface
      *     $scenarioNames = array_map(fn($s) => $s->name, $scenarios);
      *
      *     if (!in_array($default, $scenarioNames, true)) {
-     *         throw new \InvalidArgumentException(
+     *         throw InvalidConfigurationException::forKey(
+     *             'simulation.default_scenario',
      *             sprintf(
      *                 'Default scenario "%s" does not exist. Available: %s',
      *                 $default,
@@ -114,7 +115,7 @@ interface SimulatableInterface extends FunctionInterface
      * }
      * ```
      *
-     * @throws \InvalidArgumentException If default scenario doesn't exist in available scenarios
+     * @throws \Cline\Forrst\Exceptions\InvalidConfigurationException If default scenario doesn't exist in available scenarios
      */
     public function validateSimulation(): void;
 }

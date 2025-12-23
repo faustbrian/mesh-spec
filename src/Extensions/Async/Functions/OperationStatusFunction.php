@@ -12,6 +12,8 @@ namespace Cline\Forrst\Extensions\Async\Functions;
 use Cline\Forrst\Attributes\Descriptor;
 use Cline\Forrst\Contracts\OperationRepositoryInterface;
 use Cline\Forrst\Data\OperationData;
+use Cline\Forrst\Exceptions\InvalidFieldTypeException;
+use Cline\Forrst\Exceptions\InvalidFieldValueException;
 use Cline\Forrst\Exceptions\OperationNotFoundException;
 use Cline\Forrst\Extensions\Async\Descriptors\OperationStatusDescriptor;
 use Cline\Forrst\Functions\AbstractFunction;
@@ -56,7 +58,7 @@ final class OperationStatusFunction extends AbstractFunction
         $operationId = $this->requestObject->getArgument('operation_id');
 
         if (!is_string($operationId)) {
-            throw new \InvalidArgumentException('Operation ID must be a string');
+            throw InvalidFieldTypeException::forField('operation_id', 'string', $operationId);
         }
 
         $this->validateOperationId($operationId);
@@ -90,8 +92,9 @@ final class OperationStatusFunction extends AbstractFunction
     private function validateOperationId(string $operationId): void
     {
         if (!preg_match('/^op_[0-9a-f]{24}$/', $operationId)) {
-            throw new \InvalidArgumentException(
-                "Invalid operation ID format: {$operationId}. Expected format: op_<24 hex characters>",
+            throw InvalidFieldValueException::forField(
+                'operation_id',
+                'Expected format: op_<24 hex characters>',
             );
         }
     }

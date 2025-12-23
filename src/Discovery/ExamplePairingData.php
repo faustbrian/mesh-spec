@@ -9,7 +9,10 @@
 
 namespace Cline\Forrst\Discovery;
 
-use InvalidArgumentException;
+use Cline\Forrst\Exceptions\EmptyFieldException;
+use Cline\Forrst\Exceptions\InvalidFieldTypeException;
+use Cline\Forrst\Exceptions\InvalidFieldValueException;
+use Cline\Forrst\Exceptions\MissingRequiredFieldException;
 use Spatie\LaravelData\Data;
 
 /**
@@ -64,45 +67,47 @@ final class ExamplePairingData extends Data
      *
      * @param array<int, array<string, mixed>> $params
      *
-     * @throws InvalidArgumentException
+     * @throws EmptyFieldException
+     * @throws InvalidFieldTypeException
+     * @throws InvalidFieldValueException
+     * @throws MissingRequiredFieldException
      */
     private function validateParams(array $params): void
     {
         if (empty($params)) {
-            throw new InvalidArgumentException(
-                'Example pairing must have at least one parameter',
-            );
+            throw EmptyFieldException::forField('params');
         }
 
         foreach ($params as $index => $param) {
             if (!\is_array($param)) {
-                throw new InvalidArgumentException(
-                    "Parameter at index {$index} must be an array, got: ".\gettype($param),
+                throw InvalidFieldTypeException::forField(
+                    "params[{$index}]",
+                    'array',
+                    $param
                 );
             }
 
             if (!isset($param['name'])) {
-                throw new InvalidArgumentException(
-                    "Parameter at index {$index} is missing required 'name' key",
-                );
+                throw MissingRequiredFieldException::forField("params[{$index}].name");
             }
 
             if (!\array_key_exists('value', $param)) {
-                throw new InvalidArgumentException(
-                    "Parameter at index {$index} is missing required 'value' key",
-                );
+                throw MissingRequiredFieldException::forField("params[{$index}].value");
             }
 
             if (!\is_string($param['name'])) {
-                throw new InvalidArgumentException(
-                    "Parameter 'name' at index {$index} must be a string",
+                throw InvalidFieldTypeException::forField(
+                    "params[{$index}].name",
+                    'string',
+                    $param['name']
                 );
             }
 
             // Validate parameter name follows conventions
             if (!\preg_match('/^[a-z][a-zA-Z0-9_]*$/', $param['name'])) {
-                throw new InvalidArgumentException(
-                    "Parameter name '{$param['name']}' must follow camelCase/snake_case convention",
+                throw InvalidFieldValueException::forField(
+                    "params[{$index}].name",
+                    "Parameter name '{$param['name']}' must follow camelCase/snake_case convention"
                 );
             }
         }
@@ -113,25 +118,24 @@ final class ExamplePairingData extends Data
      *
      * @param array<string, mixed> $result
      *
-     * @throws InvalidArgumentException
+     * @throws InvalidFieldTypeException
+     * @throws MissingRequiredFieldException
      */
     private function validateResult(array $result): void
     {
         if (!isset($result['name'])) {
-            throw new InvalidArgumentException(
-                "Result is missing required 'name' key",
-            );
+            throw MissingRequiredFieldException::forField('result.name');
         }
 
         if (!\array_key_exists('value', $result)) {
-            throw new InvalidArgumentException(
-                "Result is missing required 'value' key",
-            );
+            throw MissingRequiredFieldException::forField('result.value');
         }
 
         if (!\is_string($result['name'])) {
-            throw new InvalidArgumentException(
-                "Result 'name' must be a string",
+            throw InvalidFieldTypeException::forField(
+                'result.name',
+                'string',
+                $result['name']
             );
         }
     }

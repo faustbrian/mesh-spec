@@ -10,6 +10,13 @@
 namespace Cline\Forrst\Data;
 
 use Cline\Forrst\Exceptions\AbstractRequestException;
+use Cline\Forrst\Exceptions\EmptyArrayException;
+use Cline\Forrst\Exceptions\EmptyFieldException;
+use Cline\Forrst\Exceptions\InvalidArrayElementException;
+use Cline\Forrst\Exceptions\InvalidFieldTypeException;
+use Cline\Forrst\Exceptions\InvalidFieldValueException;
+use Cline\Forrst\Exceptions\MissingRequiredFieldException;
+use Cline\Forrst\Exceptions\MutuallyExclusiveFieldsException;
 use Override;
 
 use function array_any;
@@ -18,8 +25,6 @@ use function count;
 use function is_array;
 use function is_string;
 use function sprintf;
-
-use InvalidArgumentException;
 
 /**
  * Forrst protocol compliant response object.
@@ -81,29 +86,30 @@ final class ResponseData extends AbstractData
     ) {
         // Validate ID is not empty
         if ($id === '') {
-            throw new InvalidArgumentException('Response ID cannot be empty');
+            throw EmptyFieldException::forField('id');
         }
 
         // Validate that result and errors are mutually exclusive
         if ($result !== null && $errors !== null && $errors !== []) {
-            throw new InvalidArgumentException('Response cannot have both result and errors');
+            throw MutuallyExclusiveFieldsException::forFields('result', 'errors');
         }
 
         // Validate errors array size and content
         if ($errors !== null) {
             if (count($errors) > self::MAX_ERRORS_COUNT) {
-                throw new InvalidArgumentException(
-                    sprintf('Errors array cannot exceed %d items', self::MAX_ERRORS_COUNT)
+                throw InvalidFieldValueException::forField(
+                    'errors',
+                    sprintf('cannot exceed %d items', self::MAX_ERRORS_COUNT)
                 );
             }
 
             if ($errors !== [] && count($errors) === 0) {
-                throw new InvalidArgumentException('Errors array cannot be empty when set');
+                throw EmptyArrayException::forField('errors');
             }
 
             foreach ($errors as $error) {
                 if (!$error instanceof ErrorData) {
-                    throw new InvalidArgumentException('All errors must be instances of ErrorData');
+                    throw InvalidArrayElementException::forField('errors', 'ErrorData');
                 }
             }
         }
@@ -111,14 +117,15 @@ final class ResponseData extends AbstractData
         // Validate extensions array size and content
         if ($extensions !== null) {
             if (count($extensions) > self::MAX_EXTENSIONS_COUNT) {
-                throw new InvalidArgumentException(
-                    sprintf('Extensions array cannot exceed %d items', self::MAX_EXTENSIONS_COUNT)
+                throw InvalidFieldValueException::forField(
+                    'extensions',
+                    sprintf('cannot exceed %d items', self::MAX_EXTENSIONS_COUNT)
                 );
             }
 
             foreach ($extensions as $extension) {
                 if (!$extension instanceof ExtensionData) {
-                    throw new InvalidArgumentException('All extensions must be instances of ExtensionData');
+                    throw InvalidArrayElementException::forField('extensions', 'ExtensionData');
                 }
             }
         }
@@ -145,17 +152,17 @@ final class ResponseData extends AbstractData
     {
         // Validate required fields
         if (!isset($data['id']) || !is_string($data['id']) || $data['id'] === '') {
-            throw new InvalidArgumentException('Response ID is required and must be a non-empty string');
+            throw MissingRequiredFieldException::forField('id');
         }
 
         if (!isset($data['protocol'])) {
-            throw new InvalidArgumentException('Protocol data is required');
+            throw MissingRequiredFieldException::forField('protocol');
         }
 
         // Build protocol data
         $protocolData = $data['protocol'];
         if (!is_array($protocolData)) {
-            throw new InvalidArgumentException('Protocol must be an array');
+            throw InvalidFieldTypeException::forField('protocol', 'array', $protocolData);
         }
 
         $protocol = ProtocolData::from($protocolData);
@@ -165,22 +172,23 @@ final class ResponseData extends AbstractData
         $hasErrors = isset($data['errors']) && is_array($data['errors']) && $data['errors'] !== [];
 
         if ($hasResult && $hasErrors) {
-            throw new InvalidArgumentException('Response cannot have both result and errors');
+            throw MutuallyExclusiveFieldsException::forFields('result', 'errors');
         }
 
         // Build errors array
         $errors = null;
         if (isset($data['errors']) && is_array($data['errors'])) {
             if (count($data['errors']) > self::MAX_ERRORS_COUNT) {
-                throw new InvalidArgumentException(
-                    sprintf('Errors array cannot exceed %d items', self::MAX_ERRORS_COUNT)
+                throw InvalidFieldValueException::forField(
+                    'errors',
+                    sprintf('cannot exceed %d items', self::MAX_ERRORS_COUNT)
                 );
             }
 
             $errors = array_map(
                 function (mixed $errorData): ErrorData {
                     if (!is_array($errorData)) {
-                        throw new InvalidArgumentException('Each error must be an array');
+                        throw InvalidFieldTypeException::forField('errors', 'array', $errorData);
                     }
 
                     return ErrorData::from($errorData);
@@ -193,15 +201,16 @@ final class ResponseData extends AbstractData
         $extensions = null;
         if (isset($data['extensions']) && is_array($data['extensions'])) {
             if (count($data['extensions']) > self::MAX_EXTENSIONS_COUNT) {
-                throw new InvalidArgumentException(
-                    sprintf('Extensions array cannot exceed %d items', self::MAX_EXTENSIONS_COUNT)
+                throw InvalidFieldValueException::forField(
+                    'extensions',
+                    sprintf('cannot exceed %d items', self::MAX_EXTENSIONS_COUNT)
                 );
             }
 
             $extensions = array_map(
                 function (mixed $extensionData): ExtensionData {
                     if (!is_array($extensionData)) {
-                        throw new InvalidArgumentException('Each extension must be an array');
+                        throw InvalidFieldTypeException::forField('extensions', 'array', $extensionData);
                     }
 
                     return ExtensionData::from($extensionData);
@@ -577,8 +586,9 @@ final class ResponseData extends AbstractData
     private function validateArrayDepth(array $array, int $maxDepth, string $fieldName, int $current = 0): void
     {
         if ($current >= $maxDepth) {
-            throw new InvalidArgumentException(
-                sprintf('Field "%s" exceeds maximum depth of %d', $fieldName, $maxDepth)
+            throw InvalidFieldValueException::forField(
+                $fieldName,
+                sprintf('exceeds maximum depth of %d', $maxDepth)
             );
         }
 
@@ -602,8 +612,9 @@ final class ResponseData extends AbstractData
     private static function validateArrayDepthStatic(array $array, int $maxDepth, string $fieldName, int $current = 0): void
     {
         if ($current >= $maxDepth) {
-            throw new InvalidArgumentException(
-                sprintf('Field "%s" exceeds maximum depth of %d', $fieldName, $maxDepth)
+            throw InvalidFieldValueException::forField(
+                $fieldName,
+                sprintf('exceeds maximum depth of %d', $maxDepth)
             );
         }
 

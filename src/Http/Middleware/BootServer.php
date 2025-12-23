@@ -11,6 +11,7 @@ namespace Cline\Forrst\Http\Middleware;
 
 use Cline\Forrst\Contracts\ServerInterface;
 use Cline\Forrst\Exceptions\RouteNameRequiredException;
+use Cline\Forrst\Exceptions\ServerBootException;
 use Cline\Forrst\Repositories\ServerRepository;
 use Closure;
 use Illuminate\Container\Container;
@@ -85,11 +86,10 @@ final readonly class BootServer
         $server = $this->serverRepository->findByName($routeName);
 
         if (!$server instanceof ServerInterface) {
-            throw new \RuntimeException(
+            throw ServerBootException::forServer(
+                $routeName,
                 sprintf(
-                    'Server repository returned invalid instance for route "%s". '.
-                    'Expected %s, got %s',
-                    $routeName,
+                    'Server repository returned invalid instance. Expected %s, got %s',
                     ServerInterface::class,
                     get_debug_type($server)
                 )

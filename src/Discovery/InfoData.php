@@ -9,7 +9,11 @@
 
 namespace Cline\Forrst\Discovery;
 
-use InvalidArgumentException;
+use Cline\Forrst\Exceptions\EmptyFieldException;
+use Cline\Forrst\Exceptions\FieldExceedsMaxLengthException;
+use Cline\Forrst\Exceptions\InvalidProtocolException;
+use Cline\Forrst\Exceptions\InvalidSemanticVersionException;
+use Cline\Forrst\Exceptions\InvalidUrlException;
 use Spatie\LaravelData\Data;
 
 /**
@@ -59,13 +63,11 @@ final class InfoData extends Data
         // Validate title
         $trimmedTitle = trim($title);
         if ($trimmedTitle === '') {
-            throw new InvalidArgumentException('Service title cannot be empty');
+            throw EmptyFieldException::forField('title');
         }
 
         if (mb_strlen($trimmedTitle) > 200) {
-            throw new InvalidArgumentException(
-                'Service title too long (max 200 characters, got ' . mb_strlen($trimmedTitle) . ')'
-            );
+            throw FieldExceedsMaxLengthException::forField('title', 200);
         }
 
         $this->title = $trimmedTitle;
@@ -77,9 +79,7 @@ final class InfoData extends Data
             '(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/';
 
         if (!preg_match($semverPattern, $version)) {
-            throw new InvalidArgumentException(
-                "Invalid semantic version: '{$version}'. Must follow semver format (e.g., '2.1.0')"
-            );
+            throw InvalidSemanticVersionException::forVersion($version);
         }
 
         $this->version = $version;
@@ -91,9 +91,7 @@ final class InfoData extends Data
 
         // Validate description length if provided
         if ($description !== null && mb_strlen($description) > 5000) {
-            throw new InvalidArgumentException(
-                'Description too long (max 5000 characters, got ' . mb_strlen($description) . ')'
-            );
+            throw FieldExceedsMaxLengthException::forField('description', 5000);
         }
     }
 
@@ -103,22 +101,19 @@ final class InfoData extends Data
     /**
      * Validate URL format.
      *
-     * @throws InvalidArgumentException
+     * @throws InvalidUrlException
+     * @throws InvalidProtocolException
      */
     private function validateUrl(string $url, string $fieldName): void
     {
         if (!filter_var($url, FILTER_VALIDATE_URL)) {
-            throw new InvalidArgumentException(
-                "{$fieldName} must be valid URL. Got: '{$url}'"
-            );
+            throw InvalidUrlException::invalidFormat('termsOfService');
         }
 
         $parsed = parse_url($url);
 
         if (!isset($parsed['scheme']) || !in_array(strtolower($parsed['scheme']), ['http', 'https'], true)) {
-            throw new InvalidArgumentException(
-                "{$fieldName} URL must use http or https protocol"
-            );
+            throw InvalidProtocolException::forUrl('termsOfService');
         }
     }
 }

@@ -18,6 +18,10 @@ use Cline\Forrst\Data\OperationData;
 use Cline\Forrst\Data\OperationStatus;
 use Cline\Forrst\Data\RequestObjectData;
 use Cline\Forrst\Data\ResponseData;
+use Cline\Forrst\Exceptions\DataTransformationException;
+use Cline\Forrst\Exceptions\FieldExceedsMaxLengthException;
+use Cline\Forrst\Exceptions\InvalidFieldTypeException;
+use Cline\Forrst\Exceptions\InvalidFieldValueException;
 use Cline\Forrst\Extensions\AbstractExtension;
 use Cline\Forrst\Extensions\Async\Exceptions\InvalidOperationStateException;
 use Cline\Forrst\Extensions\Async\Exceptions\OperationNotFoundException;
@@ -234,53 +238,46 @@ final class AsyncExtension extends AbstractExtension implements ProvidesFunction
         }
 
         if (!is_string($callbackUrl)) {
-            throw new \InvalidArgumentException(
-                'Callback URL must be a string',
-            );
+            throw InvalidFieldTypeException::forField('callback_url', 'string', $callbackUrl);
         }
 
         // Validate max URL length (prevent DoS)
         if (strlen($callbackUrl) > self::MAX_CALLBACK_URL_LENGTH) {
-            throw new \InvalidArgumentException(
-                'Callback URL exceeds maximum length of 2048 characters',
-            );
+            throw FieldExceedsMaxLengthException::forField('callback_url', self::MAX_CALLBACK_URL_LENGTH);
         }
 
         // Validate URL format
         $parts = parse_url($callbackUrl);
 
         if ($parts === false) {
-            throw new \InvalidArgumentException(sprintf(
-                'Invalid callback URL format: %s',
-                $callbackUrl,
-            ));
+            throw InvalidFieldValueException::forField('callback_url', 'Invalid URL format');
         }
 
         // Enforce HTTPS only
         if (!isset($parts['scheme']) || !in_array($parts['scheme'], self::ALLOWED_CALLBACK_SCHEMES, true)) {
-            throw new \InvalidArgumentException(sprintf(
-                'Callback URL must use HTTPS scheme, got: %s',
-                $parts['scheme'] ?? 'none',
-            ));
+            throw InvalidFieldValueException::forField(
+                'callback_url',
+                sprintf('Must use HTTPS scheme, got: %s', $parts['scheme'] ?? 'none'),
+            );
         }
 
         // Block internal/private IPs (SSRF protection)
         $host = $parts['host'] ?? '';
 
         if (in_array(strtolower($host), self::BLOCKED_CALLBACK_HOSTS, true)) {
-            throw new \InvalidArgumentException(sprintf(
-                'Callback URL host is not allowed: %s',
-                $host,
-            ));
+            throw InvalidFieldValueException::forField(
+                'callback_url',
+                sprintf('Host is not allowed: %s', $host),
+            );
         }
 
         // Block private IP ranges
         if (filter_var($host, FILTER_VALIDATE_IP)) {
             if (!filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
-                throw new \InvalidArgumentException(sprintf(
-                    'Callback URL cannot use private/reserved IP addresses: %s',
-                    $host,
-                ));
+                throw InvalidFieldValueException::forField(
+                    'callback_url',
+                    sprintf('Cannot use private/reserved IP addresses: %s', $host),
+                );
             }
         }
 
@@ -327,11 +324,10 @@ final class AsyncExtension extends AbstractExtension implements ProvidesFunction
             $metadataSize = strlen($metadataJson);
 
             if ($metadataSize > self::MAX_METADATA_SIZE_BYTES) {
-                throw new \InvalidArgumentException(sprintf(
-                    'Operation metadata size (%d bytes) exceeds maximum allowed (%d bytes)',
-                    $metadataSize,
-                    self::MAX_METADATA_SIZE_BYTES,
-                ));
+                throw InvalidFieldValueException::forField(
+                    'metadata',
+                    sprintf('Size (%d bytes) exceeds maximum allowed (%d bytes)', $metadataSize, self::MAX_METADATA_SIZE_BYTES),
+                );
             }
         }
 
@@ -400,25 +396,25 @@ final class AsyncExtension extends AbstractExtension implements ProvidesFunction
     private function validateOperationId(string $operationId): void
     {
         if (strlen($operationId) !== self::OPERATION_ID_LENGTH) {
-            throw new \InvalidArgumentException(sprintf(
-                'Invalid operation ID length: expected %d, got %d',
-                self::OPERATION_ID_LENGTH,
-                strlen($operationId),
-            ));
+            throw InvalidFieldValueException::forField(
+                'operation_id',
+                sprintf('Invalid length: expected %d, got %d', self::OPERATION_ID_LENGTH, strlen($operationId)),
+            );
         }
 
         if (!str_starts_with($operationId, self::OPERATION_ID_PREFIX)) {
-            throw new \InvalidArgumentException(sprintf(
-                'Invalid operation ID prefix: expected "%s"',
-                self::OPERATION_ID_PREFIX,
-            ));
+            throw InvalidFieldValueException::forField(
+                'operation_id',
+                sprintf('Invalid prefix: expected "%s"', self::OPERATION_ID_PREFIX),
+            );
         }
 
         $hex = substr($operationId, strlen(self::OPERATION_ID_PREFIX));
 
         if (!ctype_xdigit($hex)) {
-            throw new \InvalidArgumentException(
-                'Invalid operation ID: must contain only hexadecimal characters after prefix',
+            throw InvalidFieldValueException::forField(
+                'operation_id',
+                'Must contain only hexadecimal characters after prefix',
             );
         }
     }
@@ -645,21 +641,17 @@ final class AsyncExtension extends AbstractExtension implements ProvidesFunction
         $newProgress = max(0.0, min(1.0, $progress));
 
         if ($newProgress < $currentProgress) {
-            throw new \InvalidArgumentException(sprintf(
-                'Progress cannot decrease from %.2f to %.2f for operation %s',
-                $currentProgress,
-                $newProgress,
-                $operationId,
-            ));
+            throw InvalidFieldValueException::forField(
+                'progress',
+                sprintf('Cannot decrease from %.2f to %.2f for operation %s', $currentProgress, $newProgress, $operationId),
+            );
         }
 
         $metadata = $operation->metadata ?? [];
 
         if ($message !== null) {
             if (strlen($message) > 1000) {
-                throw new \InvalidArgumentException(
-                    'Progress message cannot exceed 1000 characters',
-                );
+                throw FieldExceedsMaxLengthException::forField('message', 1000);
             }
             $metadata['progress_message'] = $message;
             $metadata['progress_updated_at'] = now()->toIso8601String();

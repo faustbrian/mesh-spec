@@ -11,7 +11,7 @@ namespace Cline\Forrst\Exceptions;
 
 use RuntimeException;
 
-final class LockTtlExceedsMaximumException extends RuntimeException
+final class LockTtlExceedsMaximumException extends RuntimeException implements ForrstException
 {
     public static function create(int $requested, int $maximum): self
     {

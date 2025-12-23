@@ -11,6 +11,8 @@ namespace Cline\Forrst\Exceptions;
 
 use RuntimeException;
 
+use function sprintf;
+
 /**
  * Exception thrown when attempting an invalid replay status transition.
  *
@@ -21,6 +23,17 @@ use RuntimeException;
  *
  * @author Brian Faust <brian@cline.sh>
  */
-final class InvalidStatusTransitionException extends RuntimeException
+final class InvalidStatusTransitionException extends RuntimeException implements ForrstException
 {
+    public static function fromTo(string $from, string $to, string $reason): self
+    {
+        return new self(
+            sprintf(
+                'Invalid status transition from %s to %s. %s',
+                $from,
+                $to,
+                $reason
+            )
+        );
+    }
 }

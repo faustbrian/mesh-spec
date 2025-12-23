@@ -15,6 +15,8 @@ use Cline\Forrst\Data\RequestObjectData;
 use Cline\Forrst\Data\ResponseData;
 use Cline\Forrst\Exceptions\ExceptionMapper;
 use Cline\Forrst\Exceptions\InvalidDataException;
+use Cline\Forrst\Exceptions\InvalidFieldTypeException;
+use Cline\Forrst\Exceptions\InvalidFieldValueException;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Arr;
@@ -171,7 +173,8 @@ final readonly class CallFunction
         }
 
         if (count($resolutionErrors) > 0) {
-            throw new \InvalidArgumentException(
+            throw InvalidFieldValueException::forField(
+                'parameters',
                 'Parameter resolution failed: '.implode('; ', $resolutionErrors),
             );
         }
@@ -202,12 +205,10 @@ final readonly class CallFunction
                 $payload = $parameter->getName() === 'data' ? $arguments : $parameterValue;
 
                 if (!is_array($payload)) {
-                    throw new \InvalidArgumentException(
-                        sprintf(
-                            'Parameter "%s" expects array payload, got %s',
-                            $parameterName,
-                            get_debug_type($payload),
-                        ),
+                    throw InvalidFieldTypeException::forField(
+                        $parameterName,
+                        'array',
+                        $payload,
                     );
                 }
 
@@ -281,11 +282,9 @@ final readonly class CallFunction
         }
 
         if ($type instanceof ReflectionIntersectionType) {
-            throw new \InvalidArgumentException(
-                sprintf(
-                    'Parameter "%s" uses intersection type which is not supported for automatic resolution',
-                    $parameter->getName(),
-                ),
+            throw InvalidFieldValueException::forField(
+                $parameter->getName(),
+                'intersection type is not supported for automatic resolution',
             );
         }
 

@@ -13,6 +13,7 @@ use Carbon\CarbonImmutable;
 use Cline\Forrst\Data\ExtensionData;
 use Cline\Forrst\Data\RequestObjectData;
 use Cline\Forrst\Data\ResponseData;
+use Cline\Forrst\Exceptions\NegativeValueException;
 use DateTimeInterface;
 use Illuminate\Contracts\Cache\Repository as CacheRepository;
 use Override;
@@ -375,7 +376,7 @@ final class CachingExtension extends AbstractExtension
      * @param ResponseData $response Response to cache
      * @param null|int     $ttl      Time-to-live in seconds (uses default if null, clamped to maximum)
      *
-     * @throws \InvalidArgumentException If TTL is negative
+     * @throws NegativeValueException If TTL is negative
      */
     public function setCached(string $cacheKey, ResponseData $response, ?int $ttl = null): void
     {
@@ -386,7 +387,7 @@ final class CachingExtension extends AbstractExtension
         $effectiveTtl = $ttl ?? $this->defaultTtl;
 
         if ($effectiveTtl < 0) {
-            throw new \InvalidArgumentException('Cache TTL cannot be negative');
+            throw NegativeValueException::forField('ttl');
         }
 
         // Enforce maximum TTL to prevent abuse

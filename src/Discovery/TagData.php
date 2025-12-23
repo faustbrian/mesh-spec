@@ -9,7 +9,8 @@
 
 namespace Cline\Forrst\Discovery;
 
-use InvalidArgumentException;
+use Cline\Forrst\Exceptions\EmptyFieldException;
+use Cline\Forrst\Exceptions\FieldExceedsMaxLengthException;
 use Spatie\LaravelData\Data;
 
 /**
@@ -47,7 +48,8 @@ final class TagData extends Data
      *                                            guides, tutorials, or architectural documentation that explains
      *                                            the tagged functions in greater depth.
      *
-     * @throws InvalidArgumentException If tag name is empty or exceeds maximum length
+     * @throws EmptyFieldException If tag name is empty
+     * @throws FieldExceedsMaxLengthException If tag name exceeds maximum length
      */
     public function __construct(
         public readonly string $name,
@@ -58,13 +60,11 @@ final class TagData extends Data
         // Validate name
         $trimmedName = trim($name);
         if ($trimmedName === '') {
-            throw new InvalidArgumentException('Tag name cannot be empty');
+            throw EmptyFieldException::forField('name');
         }
 
         if (mb_strlen($trimmedName) > 50) {
-            throw new InvalidArgumentException(
-                'Tag name too long (max 50 characters, got ' . mb_strlen($trimmedName) . ')'
-            );
+            throw FieldExceedsMaxLengthException::forField('name', 50);
         }
 
         // Recommend kebab-case or snake_case for consistency

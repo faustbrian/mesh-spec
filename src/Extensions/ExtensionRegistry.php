@@ -10,6 +10,10 @@
 namespace Cline\Forrst\Extensions;
 
 use Cline\Forrst\Contracts\ExtensionInterface;
+use Cline\Forrst\Exceptions\InvalidConfigurationException;
+use Cline\Forrst\Exceptions\InvalidFieldTypeException;
+use Cline\Forrst\Exceptions\InvalidFieldValueException;
+use Cline\Forrst\Exceptions\MissingRequiredFieldException;
 
 use function array_keys;
 use function array_map;
@@ -53,53 +57,36 @@ final class ExtensionRegistry
         foreach ($extension->getSubscribedEvents() as $eventClass => $config) {
             // Validate event class exists
             if (!class_exists($eventClass)) {
-                throw new \InvalidArgumentException(
-                    sprintf('Event class %s does not exist', $eventClass)
-                );
+                throw InvalidFieldValueException::forField('eventClass', sprintf('class %s does not exist', $eventClass));
             }
 
             // Validate subscription config structure
             if (!isset($config['priority']) || !isset($config['method'])) {
-                throw new \InvalidArgumentException(
-                    sprintf(
-                        'Event subscription for %s must include "priority" and "method" keys',
-                        $eventClass
-                    )
-                );
+                throw MissingRequiredFieldException::forField(sprintf('Event subscription for %s: priority and method', $eventClass));
             }
 
             // Validate handler method exists and is callable
             $method = $config['method'];
             if (!method_exists($extension, $method)) {
-                throw new \InvalidArgumentException(
-                    sprintf(
-                        'Extension %s references non-existent method %s for event %s',
-                        get_class($extension),
-                        $method,
-                        $eventClass
-                    )
+                throw InvalidFieldValueException::forField(
+                    'method',
+                    sprintf('Extension %s references non-existent method %s for event %s', get_class($extension), $method, $eventClass),
                 );
             }
 
             if (!is_callable([$extension, $method])) {
-                throw new \InvalidArgumentException(
-                    sprintf(
-                        'Method %s::%s is not callable (check visibility)',
-                        get_class($extension),
-                        $method
-                    )
+                throw InvalidFieldValueException::forField(
+                    'method',
+                    sprintf('Method %s::%s is not callable (check visibility)', get_class($extension), $method),
                 );
             }
 
             // Validate priority is an integer
             if (!is_int($config['priority'])) {
-                throw new \InvalidArgumentException(
-                    sprintf(
-                        'Priority for %s::%s must be an integer, %s given',
-                        $eventClass,
-                        $method,
-                        gettype($config['priority'])
-                    )
+                throw InvalidFieldTypeException::forField(
+                    sprintf('%s::%s priority', $eventClass, $method),
+                    'integer',
+                    $config['priority'],
                 );
             }
         }

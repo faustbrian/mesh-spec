@@ -9,7 +9,8 @@
 
 namespace Cline\Forrst\Discovery;
 
-use InvalidArgumentException;
+use Cline\Forrst\Exceptions\InvalidProtocolException;
+use Cline\Forrst\Exceptions\InvalidUrlException;
 use Spatie\LaravelData\Data;
 
 /**
@@ -50,21 +51,18 @@ final class ExternalDocsData extends Data
     /**
      * Validate URL is well-formed and uses HTTP/HTTPS protocol.
      *
-     * @throws InvalidArgumentException If URL is malformed or uses invalid protocol
+     * @throws InvalidUrlException If URL is malformed
+     * @throws InvalidProtocolException If URL uses invalid protocol
      */
     private function validateUrl(string $url): void
     {
         if (!filter_var($url, FILTER_VALIDATE_URL)) {
-            throw new InvalidArgumentException(
-                "Invalid URL format: '{$url}'"
-            );
+            throw InvalidUrlException::invalidFormat('url');
         }
 
         $scheme = parse_url($url, PHP_URL_SCHEME);
         if (!in_array($scheme, ['http', 'https'], true)) {
-            throw new InvalidArgumentException(
-                "URL must use HTTP or HTTPS protocol. Got: '{$scheme}'"
-            );
+            throw InvalidProtocolException::forUrl('url');
         }
 
         // Strongly recommend HTTPS for security

@@ -9,7 +9,10 @@
 
 namespace Cline\Forrst\Discovery;
 
-use InvalidArgumentException;
+use Cline\Forrst\Exceptions\EmptyArrayException;
+use Cline\Forrst\Exceptions\EmptyFieldException;
+use Cline\Forrst\Exceptions\InvalidFieldValueException;
+use Cline\Forrst\Exceptions\MissingRequiredFieldException;
 use Spatie\LaravelData\Data;
 
 /**
@@ -65,17 +68,18 @@ final class SimulationScenarioData extends Data
     ) {
         // Validate scenario name
         if (trim($name) === '') {
-            throw new InvalidArgumentException('Scenario name cannot be empty');
+            throw EmptyFieldException::forField('name');
         }
 
         // Validate input array is non-empty
         if (empty($input)) {
-            throw new InvalidArgumentException('Scenario input cannot be empty');
+            throw EmptyArrayException::forField('input');
         }
 
         // Validate mutually exclusive output/error fields
         if ($output !== null && $error !== null) {
-            throw new InvalidArgumentException(
+            throw InvalidFieldValueException::forField(
+                'output/error',
                 'Cannot specify both "output" and "error". Success scenarios use output, error scenarios use error field.'
             );
         }
@@ -152,7 +156,8 @@ final class SimulationScenarioData extends Data
      *
      * @param array<string, mixed> $error
      *
-     * @throws InvalidArgumentException
+     * @throws MissingRequiredFieldException
+     * @throws InvalidFieldValueException
      */
     private function validateErrorStructure(array $error): void
     {
@@ -160,19 +165,18 @@ final class SimulationScenarioData extends Data
         $missingFields = array_diff($requiredFields, array_keys($error));
 
         if (!empty($missingFields)) {
-            throw new InvalidArgumentException(
-                'Error structure must include: '.implode(', ', $requiredFields)
-            );
+            throw MissingRequiredFieldException::forField(implode(', ', $missingFields));
         }
 
         if (!\is_string($error['code']) || !preg_match('/^[A-Z][A-Z0-9_]*$/', $error['code'])) {
-            throw new InvalidArgumentException(
+            throw InvalidFieldValueException::forField(
+                'error.code',
                 'Error code must be SCREAMING_SNAKE_CASE string'
             );
         }
 
         if (!\is_string($error['message']) || trim($error['message']) === '') {
-            throw new InvalidArgumentException('Error message must be non-empty string');
+            throw EmptyFieldException::forField('error.message');
         }
     }
 }

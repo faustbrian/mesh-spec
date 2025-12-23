@@ -15,6 +15,10 @@ use Cline\Forrst\Data\ResponseData;
 use Cline\Forrst\Enums\ErrorCode;
 use Cline\Forrst\Events\ExecutingFunction;
 use Cline\Forrst\Events\FunctionExecuted;
+use Cline\Forrst\Exceptions\EmptyFieldException;
+use Cline\Forrst\Exceptions\FieldExceedsMaxLengthException;
+use Cline\Forrst\Exceptions\InvalidFieldValueException;
+use Cline\Forrst\Exceptions\MustBePositiveException;
 use Illuminate\Contracts\Cache\Lock;
 use Illuminate\Contracts\Cache\Repository as CacheRepository;
 use Illuminate\Support\Facades\Cache;
@@ -321,23 +325,23 @@ final class IdempotencyExtension extends AbstractExtension
      * @param  string $key The idempotency key to validate
      * @return string The validated key
      *
-     * @throws \InvalidArgumentException If the key is invalid
+     * @throws EmptyFieldException If the key is empty
+     * @throws FieldExceedsMaxLengthException If the key is too long
+     * @throws InvalidFieldValueException If the key contains invalid characters
      */
     private function validateIdempotencyKey(string $key): string
     {
         if ($key === '') {
-            throw new \InvalidArgumentException('Idempotency key cannot be empty');
+            throw EmptyFieldException::forField('key');
         }
 
         if (mb_strlen($key) > 255) {
-            throw new \InvalidArgumentException('Idempotency key exceeds maximum length of 255 characters');
+            throw FieldExceedsMaxLengthException::forField('key', 255);
         }
 
         // Only allow safe characters to prevent injection attacks
         if (!\preg_match('/^[a-zA-Z0-9\-_:.]+$/', $key)) {
-            throw new \InvalidArgumentException(
-                'Idempotency key contains invalid characters',
-            );
+            throw InvalidFieldValueException::forField('key', 'contains invalid characters');
         }
 
         return $key;
@@ -353,7 +357,8 @@ final class IdempotencyExtension extends AbstractExtension
      * @param  null|array<string, mixed> $options Extension options from request
      * @return int                       TTL in seconds
      *
-     * @throws \InvalidArgumentException If TTL exceeds maximum or is not positive
+     * @throws InvalidFieldValueException If TTL exceeds maximum
+     * @throws MustBePositiveException If TTL is not positive
      */
     public function getTtl(?array $options): int
     {
@@ -377,13 +382,14 @@ final class IdempotencyExtension extends AbstractExtension
         };
 
         if ($seconds > self::MAX_TTL_SECONDS) {
-            throw new \InvalidArgumentException(
-                'TTL cannot exceed '.self::MAX_TTL_SECONDS.' seconds (30 days)',
+            throw InvalidFieldValueException::forField(
+                'ttl',
+                'cannot exceed '.self::MAX_TTL_SECONDS.' seconds (30 days)',
             );
         }
 
         if ($seconds <= 0) {
-            throw new \InvalidArgumentException('TTL must be positive');
+            throw MustBePositiveException::forField('ttl');
         }
 
         return $seconds;

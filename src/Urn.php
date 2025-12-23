@@ -9,6 +9,9 @@
 
 namespace Cline\Forrst;
 
+use Cline\Forrst\Exceptions\EmptyFieldException;
+use Cline\Forrst\Exceptions\FieldExceedsMaxLengthException;
+use Cline\Forrst\Exceptions\InvalidFieldValueException;
 use Cline\Forrst\Exceptions\InvalidUrnFormatException;
 
 use function implode;
@@ -201,28 +204,26 @@ final class Urn
      * @param string $name Name to validate
      * @param string $type Type of component (for error message)
      *
-     * @throws \InvalidArgumentException If name format is invalid
+     * @throws EmptyFieldException               If name is empty
+     * @throws FieldExceedsMaxLengthException    If name exceeds max length
+     * @throws InvalidFieldValueException        If name format is invalid
      */
     private static function validateName(string $name, string $type): void
     {
         if (empty($name)) {
-            throw new \InvalidArgumentException(
-                sprintf('%s name cannot be empty', ucfirst($type))
-            );
+            throw EmptyFieldException::forField(sprintf('%s name', ucfirst($type)));
         }
 
         if (strlen($name) > 100) {
-            throw new \InvalidArgumentException(
-                sprintf('%s name cannot exceed 100 characters', ucfirst($type))
-            );
+            throw FieldExceedsMaxLengthException::forField(sprintf('%s name', ucfirst($type)), 100);
         }
 
         // Allow alphanumeric, hyphens, and colons (for hierarchical names)
         if (!preg_match('/^[a-z][a-z0-9:-]*$/', $name)) {
-            throw new \InvalidArgumentException(
+            throw InvalidFieldValueException::forField(
+                sprintf('%s name', ucfirst($type)),
                 sprintf(
-                    '%s name "%s" is invalid. Must start with a letter and contain only lowercase letters, numbers, hyphens, and colons',
-                    ucfirst($type),
+                    'name "%s" must start with a letter and contain only lowercase letters, numbers, hyphens, and colons',
                     $name
                 )
             );
@@ -234,22 +235,25 @@ final class Urn
      *
      * @param string $vendor Vendor identifier
      *
-     * @throws \InvalidArgumentException If vendor format is invalid
+     * @throws EmptyFieldException               If vendor is empty
+     * @throws FieldExceedsMaxLengthException    If vendor exceeds max length
+     * @throws InvalidFieldValueException        If vendor format is invalid
      */
     private static function validateVendor(string $vendor): void
     {
         if (empty($vendor)) {
-            throw new \InvalidArgumentException('Vendor cannot be empty');
+            throw EmptyFieldException::forField('Vendor');
         }
 
         if (strlen($vendor) > 50) {
-            throw new \InvalidArgumentException('Vendor cannot exceed 50 characters');
+            throw FieldExceedsMaxLengthException::forField('Vendor', 50);
         }
 
         if (!preg_match('/^[a-z][a-z0-9-]*$/', $vendor)) {
-            throw new \InvalidArgumentException(
+            throw InvalidFieldValueException::forField(
+                'Vendor',
                 sprintf(
-                    'Vendor "%s" is invalid. Must start with a letter and contain only lowercase letters, numbers, and hyphens',
+                    '"%s" must start with a letter and contain only lowercase letters, numbers, and hyphens',
                     $vendor
                 )
             );

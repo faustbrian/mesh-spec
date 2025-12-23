@@ -9,7 +9,9 @@
 
 namespace Cline\Forrst\Discovery;
 
-use InvalidArgumentException;
+use Cline\Forrst\Exceptions\InvalidFieldValueException;
+use Cline\Forrst\Exceptions\InvalidResultSchemaException;
+use Cline\Forrst\Exceptions\MissingRequiredFieldException;
 use Spatie\LaravelData\Data;
 
 /**
@@ -50,7 +52,8 @@ final class ResultDescriptorData extends Data
     ) {
         // Validate mutually exclusive fields
         if ($this->resource !== null && $this->schema !== null) {
-            throw new InvalidArgumentException(
+            throw InvalidFieldValueException::forField(
+                'resource/schema',
                 'Cannot specify both "resource" and "schema". Use resource for resource objects ' .
                 'or schema for custom return types, but not both.'
             );
@@ -58,15 +61,14 @@ final class ResultDescriptorData extends Data
 
         // At least one must be specified
         if ($this->resource === null && $this->schema === null) {
-            throw new InvalidArgumentException(
-                'Must specify either "resource" or "schema" to define return type'
-            );
+            throw MissingRequiredFieldException::forField('resource or schema');
         }
 
         // Validate resource name format if provided
         if ($this->resource !== null) {
             if (!preg_match('/^[a-z][a-z0-9_]*$/', $this->resource)) {
-                throw new InvalidArgumentException(
+                throw InvalidFieldValueException::forField(
+                    'resource',
                     "Invalid resource name: '{$this->resource}'. Must be snake_case lowercase (e.g., 'user', 'order_item')"
                 );
             }
@@ -82,12 +84,12 @@ final class ResultDescriptorData extends Data
      * Validate JSON Schema structure.
      *
      * @param array<string, mixed> $schema
-     * @throws InvalidArgumentException
+     * @throws InvalidResultSchemaException
      */
     private function validateJsonSchema(array $schema): void
     {
         if (!isset($schema['type']) && !isset($schema['$ref'])) {
-            throw new InvalidArgumentException(
+            throw InvalidResultSchemaException::forSchema(
                 'JSON Schema must include "type" or "$ref" property'
             );
         }
@@ -95,7 +97,7 @@ final class ResultDescriptorData extends Data
         if (isset($schema['type'])) {
             $validTypes = ['null', 'boolean', 'object', 'array', 'number', 'string', 'integer'];
             if (!in_array($schema['type'], $validTypes, true)) {
-                throw new InvalidArgumentException(
+                throw InvalidResultSchemaException::forSchema(
                     "Invalid JSON Schema type: '{$schema['type']}'"
                 );
             }

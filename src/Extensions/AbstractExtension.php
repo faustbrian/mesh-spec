@@ -10,6 +10,8 @@
 namespace Cline\Forrst\Extensions;
 
 use Cline\Forrst\Contracts\ExtensionInterface;
+use Cline\Forrst\Exceptions\EmptyFieldException;
+use Cline\Forrst\Exceptions\InvalidFieldValueException;
 
 /**
  * Base implementation for Forrst extension handlers.
@@ -103,25 +105,19 @@ abstract class AbstractExtension implements ExtensionInterface
      *
      * @return array{urn: string, documentation?: string} Capability information
      *
-     * @throws \RuntimeException If URN is empty or has invalid format
+     * @throws EmptyFieldException If URN is empty
+     * @throws InvalidFieldValueException If URN has invalid format
      */
     final public function toCapabilities(): array
     {
         $urn = $this->getUrn();
 
         if (empty($urn)) {
-            throw new \RuntimeException(sprintf(
-                'Extension %s returned empty URN from getUrn()',
-                static::class
-            ));
+            throw EmptyFieldException::forField('urn');
         }
 
         if (!str_starts_with($urn, 'forrst.ext.')) {
-            throw new \RuntimeException(sprintf(
-                'Invalid URN format "%s" from %s: must start with "forrst.ext."',
-                $urn,
-                static::class
-            ));
+            throw InvalidFieldValueException::forField('urn', 'must start with "forrst.ext."');
         }
 
         return array_merge(

@@ -9,6 +9,8 @@
 
 namespace Cline\Forrst\Data;
 
+use Cline\Forrst\Exceptions\MissingRequiredFieldException;
+
 /**
  * Represents the call object within a Forrst protocol request.
  *
@@ -51,12 +53,12 @@ final class CallData extends AbstractData
      *
      * @param array<string, mixed> $data The array data containing call information
      * @return self Configured CallData instance
-     * @throws \InvalidArgumentException If function name is missing
+     * @throws MissingRequiredFieldException If function name is missing
      */
     public static function createFromArray(array $data): self
     {
         return new self(
-            function: $data['function'] ?? throw new \InvalidArgumentException('Function name is required'),
+            function: $data['function'] ?? throw MissingRequiredFieldException::forField('function'),
             version: $data['version'] ?? null,
             arguments: isset($data['arguments']) && is_array($data['arguments']) ? $data['arguments'] : null,
         );

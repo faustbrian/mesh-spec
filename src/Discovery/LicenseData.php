@@ -9,7 +9,10 @@
 
 namespace Cline\Forrst\Discovery;
 
-use InvalidArgumentException;
+use Cline\Forrst\Exceptions\EmptyFieldException;
+use Cline\Forrst\Exceptions\FieldExceedsMaxLengthException;
+use Cline\Forrst\Exceptions\InvalidProtocolException;
+use Cline\Forrst\Exceptions\InvalidUrlException;
 use Spatie\LaravelData\Data;
 
 /**
@@ -38,8 +41,10 @@ final class LicenseData extends Data
      *                          legal terms and conditions. Enables developers to review detailed
      *                          licensing requirements before integration.
      *
-     * @throws InvalidArgumentException If name is empty or exceeds 100 characters
-     * @throws InvalidArgumentException If URL is provided but invalid or not http/https
+     * @throws EmptyFieldException If name is empty
+     * @throws FieldExceedsMaxLengthException If name exceeds 100 characters
+     * @throws InvalidUrlException If URL is provided but invalid
+     * @throws InvalidProtocolException If URL is not http/https
      */
     public function __construct(
         public readonly string $name,
@@ -48,26 +53,22 @@ final class LicenseData extends Data
         // Validate name
         $trimmedName = trim($name);
         if ($trimmedName === '') {
-            throw new InvalidArgumentException('License name cannot be empty');
+            throw EmptyFieldException::forField('name');
         }
 
         if (mb_strlen($trimmedName) > 100) {
-            throw new InvalidArgumentException(
-                'License name too long (max 100 characters, got ' . mb_strlen($trimmedName) . ')'
-            );
+            throw FieldExceedsMaxLengthException::forField('name', 100);
         }
 
         // Validate URL if provided
         if ($this->url !== null && !filter_var($this->url, FILTER_VALIDATE_URL)) {
-            throw new InvalidArgumentException(
-                "License URL must be valid URL. Got: '{$this->url}'"
-            );
+            throw InvalidUrlException::invalidFormat('url');
         }
 
         if ($this->url !== null) {
             $parsed = parse_url($this->url);
             if (!isset($parsed['scheme']) || !in_array(strtolower($parsed['scheme']), ['http', 'https'], true)) {
-                throw new InvalidArgumentException('License URL must use http or https protocol');
+                throw InvalidProtocolException::forUrl('url');
             }
         }
     }

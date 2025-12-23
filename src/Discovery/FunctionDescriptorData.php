@@ -10,7 +10,10 @@
 namespace Cline\Forrst\Discovery;
 
 use Cline\Forrst\Discovery\Query\QueryCapabilitiesData;
-use InvalidArgumentException;
+use Cline\Forrst\Exceptions\EmptyFieldException;
+use Cline\Forrst\Exceptions\InvalidFieldTypeException;
+use Cline\Forrst\Exceptions\InvalidFieldValueException;
+use Cline\Forrst\Exceptions\InvalidFunctionNameException;
 use Spatie\LaravelData\Data;
 
 /**
@@ -124,12 +127,13 @@ final class FunctionDescriptorData extends Data
     ) {
         // Validate name (URN format)
         if (trim($name) === '') {
-            throw new InvalidArgumentException('Function name cannot be empty');
+            throw EmptyFieldException::forField('name');
         }
 
         if (!preg_match('/^urn:[a-z][a-z0-9-]*:forrst:fn:[a-z][a-z0-9:.]*$/i', $name)) {
-            throw new InvalidArgumentException(
-                "Invalid function URN: '{$name}'. Expected format: 'urn:namespace:forrst:fn:function:name'"
+            throw InvalidFunctionNameException::forName(
+                $name,
+                "Expected format: 'urn:namespace:forrst:fn:function:name'"
             );
         }
 
@@ -140,7 +144,8 @@ final class FunctionDescriptorData extends Data
             '(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/';
 
         if (!preg_match($semverPattern, $version)) {
-            throw new InvalidArgumentException(
+            throw InvalidFieldValueException::forField(
+                'version',
                 "Invalid semantic version: '{$version}'. Must follow semver format (e.g., '1.0.0')"
             );
         }
@@ -148,8 +153,10 @@ final class FunctionDescriptorData extends Data
         // Validate arguments array type
         foreach ($arguments as $index => $argument) {
             if (!$argument instanceof ArgumentData) {
-                throw new InvalidArgumentException(
-                    "Argument at index {$index} must be instanceof ArgumentData"
+                throw InvalidFieldTypeException::forField(
+                    "arguments[{$index}]",
+                    ArgumentData::class,
+                    $argument
                 );
             }
         }
@@ -167,8 +174,10 @@ final class FunctionDescriptorData extends Data
         if ($this->tags !== null) {
             foreach ($this->tags as $index => $tag) {
                 if (!\is_array($tag) && !$tag instanceof TagData) {
-                    throw new InvalidArgumentException(
-                        "Tag at index {$index} must be array or TagData instance"
+                    throw InvalidFieldTypeException::forField(
+                        "tags[{$index}]",
+                        'array or ' . TagData::class,
+                        $tag
                     );
                 }
             }
@@ -178,8 +187,10 @@ final class FunctionDescriptorData extends Data
         if ($this->errors !== null) {
             foreach ($this->errors as $index => $error) {
                 if (!\is_array($error) && !$error instanceof ErrorDefinitionData) {
-                    throw new InvalidArgumentException(
-                        "Error at index {$index} must be array or ErrorDefinitionData instance"
+                    throw InvalidFieldTypeException::forField(
+                        "errors[{$index}]",
+                        'array or ' . ErrorDefinitionData::class,
+                        $error
                     );
                 }
             }
@@ -189,8 +200,10 @@ final class FunctionDescriptorData extends Data
         if ($this->links !== null) {
             foreach ($this->links as $index => $link) {
                 if (!\is_array($link) && !$link instanceof LinkData) {
-                    throw new InvalidArgumentException(
-                        "Link at index {$index} must be array or LinkData instance"
+                    throw InvalidFieldTypeException::forField(
+                        "links[{$index}]",
+                        'array or ' . LinkData::class,
+                        $link
                     );
                 }
             }
@@ -201,8 +214,9 @@ final class FunctionDescriptorData extends Data
             $validEffects = ['create', 'update', 'delete', 'read'];
             foreach ($this->sideEffects as $effect) {
                 if (!\in_array($effect, $validEffects, true)) {
-                    throw new InvalidArgumentException(
-                        "Invalid side effect: '{$effect}'. Must be one of: " . implode(', ', $validEffects)
+                    throw InvalidFieldValueException::forField(
+                        'sideEffects',
+                        "Invalid value: '{$effect}'. Must be one of: " . implode(', ', $validEffects)
                     );
                 }
             }

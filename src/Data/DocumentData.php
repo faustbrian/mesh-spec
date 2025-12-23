@@ -9,6 +9,8 @@
 
 namespace Cline\Forrst\Data;
 
+use Cline\Forrst\Exceptions\MissingRequiredFieldException;
+
 /**
  * Document wrapper for Forrst responses following JSON:API patterns.
  *
@@ -76,7 +78,7 @@ final class DocumentData extends AbstractData
     public static function createFromArray(array $data): self
     {
         return new self(
-            data: $data['data'] ?? throw new \InvalidArgumentException('Data field is required'),
+            data: $data['data'] ?? throw MissingRequiredFieldException::forField('data'),
             included: isset($data['included']) && \is_array($data['included']) ? $data['included'] : null,
             errors: isset($data['errors']) && \is_array($data['errors']) ? $data['errors'] : null,
             meta: isset($data['meta']) && \is_array($data['meta']) ? $data['meta'] : null,

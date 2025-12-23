@@ -12,6 +12,8 @@ namespace Cline\Forrst\Extensions\Async\Functions;
 use Cline\Forrst\Attributes\Descriptor;
 use Cline\Forrst\Contracts\OperationRepositoryInterface;
 use Cline\Forrst\Data\OperationData;
+use Cline\Forrst\Exceptions\FieldOutOfRangeException;
+use Cline\Forrst\Exceptions\InvalidFieldTypeException;
 use Cline\Forrst\Extensions\Async\Descriptors\OperationListDescriptor;
 use Cline\Forrst\Functions\AbstractFunction;
 use Psr\Log\LoggerInterface;
@@ -61,26 +63,26 @@ final class OperationListFunction extends AbstractFunction
         $cursor = $this->requestObject->getArgument('cursor');
 
         if ($status !== null && !is_string($status)) {
-            throw new \InvalidArgumentException('Status must be a string or null');
+            throw InvalidFieldTypeException::forField('status', 'string', $status);
         }
 
         if ($function !== null && !is_string($function)) {
-            throw new \InvalidArgumentException('Function must be a string or null');
+            throw InvalidFieldTypeException::forField('function', 'string', $function);
         }
 
         if (!is_int($limit)) {
-            throw new \InvalidArgumentException('Limit must be an integer');
+            throw InvalidFieldTypeException::forField('limit', 'integer', $limit);
         }
 
         if ($limit < 1 || $limit > 100) {
-            throw new \InvalidArgumentException('Limit must be between 1 and 100');
+            throw FieldOutOfRangeException::forField('limit', 1, 100);
         }
 
         // Enforce safe maximum
         $limit = min($limit, 50);
 
         if ($cursor !== null && !is_string($cursor)) {
-            throw new \InvalidArgumentException('Cursor must be a string or null');
+            throw InvalidFieldTypeException::forField('cursor', 'string', $cursor);
         }
 
         $result = $this->repository->list($status, $function, $limit, $cursor);

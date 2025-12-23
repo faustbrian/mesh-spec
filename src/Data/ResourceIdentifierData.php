@@ -9,6 +9,10 @@
 
 namespace Cline\Forrst\Data;
 
+use Cline\Forrst\Exceptions\EmptyFieldException;
+use Cline\Forrst\Exceptions\FieldExceedsMaxLengthException;
+use Cline\Forrst\Exceptions\InvalidFieldTypeException;
+
 /**
  * JSON:API compliant resource identifier for relationship linkage.
  *
@@ -43,26 +47,27 @@ final class ResourceIdentifierData extends AbstractData
      *                     the primary key value cast as a string. Must be unique within the
      *                     resource type namespace.
      *
-     * @throws \InvalidArgumentException If type or id are empty or exceed maximum length
+     * @throws EmptyFieldException If type or id are empty
+     * @throws FieldExceedsMaxLengthException If type or id exceed maximum length
      */
     public function __construct(
         public readonly string $type,
         public readonly string $id,
     ) {
         if ($type === '') {
-            throw new \InvalidArgumentException('Resource type cannot be empty');
+            throw EmptyFieldException::forField('type');
         }
 
         if (strlen($type) > self::MAX_TYPE_LENGTH) {
-            throw new \InvalidArgumentException(sprintf('Resource type cannot exceed %d characters', self::MAX_TYPE_LENGTH));
+            throw FieldExceedsMaxLengthException::forField('type', self::MAX_TYPE_LENGTH);
         }
 
         if ($id === '') {
-            throw new \InvalidArgumentException('Resource id cannot be empty');
+            throw EmptyFieldException::forField('id');
         }
 
         if (strlen($id) > self::MAX_ID_LENGTH) {
-            throw new \InvalidArgumentException(sprintf('Resource id cannot exceed %d characters', self::MAX_ID_LENGTH));
+            throw FieldExceedsMaxLengthException::forField('id', self::MAX_ID_LENGTH);
         }
     }
 
@@ -75,12 +80,13 @@ final class ResourceIdentifierData extends AbstractData
      * @param array<string, mixed> $data Array containing type and id fields
      *
      * @return self Resource identifier instance
+     * @throws InvalidFieldTypeException If type or id are missing or not strings
      */
     public static function createFromArray(array $data): self
     {
         return new self(
-            type: isset($data['type']) && is_string($data['type']) ? $data['type'] : throw new \InvalidArgumentException('Missing or invalid type'),
-            id: isset($data['id']) && is_string($data['id']) ? $data['id'] : throw new \InvalidArgumentException('Missing or invalid id'),
+            type: isset($data['type']) && is_string($data['type']) ? $data['type'] : throw InvalidFieldTypeException::forField('type', 'string', $data['type'] ?? null),
+            id: isset($data['id']) && is_string($data['id']) ? $data['id'] : throw InvalidFieldTypeException::forField('id', 'string', $data['id'] ?? null),
         );
     }
 

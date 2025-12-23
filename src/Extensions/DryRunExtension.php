@@ -12,6 +12,7 @@ namespace Cline\Forrst\Extensions;
 use Cline\Forrst\Data\ExtensionData;
 use Cline\Forrst\Data\RequestObjectData;
 use Cline\Forrst\Data\ResponseData;
+use Cline\Forrst\Exceptions\MissingRequiredFieldException;
 use Override;
 
 /**
@@ -123,9 +124,7 @@ final class DryRunExtension extends AbstractExtension
         // Validate wouldAffect entries
         foreach ($wouldAffect as $entry) {
             if (!isset($entry['type']) || !isset($entry['action'])) {
-                throw new \InvalidArgumentException(
-                    'would_affect entries must have type and action fields',
-                );
+                throw MissingRequiredFieldException::forField('would_affect[].type and action');
             }
         }
         $data = [

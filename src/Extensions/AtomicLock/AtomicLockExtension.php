@@ -15,6 +15,10 @@ use Cline\Forrst\Data\ExtensionData;
 use Cline\Forrst\Data\ResponseData;
 use Cline\Forrst\Events\ExecutingFunction;
 use Cline\Forrst\Events\FunctionExecuted;
+use Cline\Forrst\Exceptions\FieldExceedsMaxLengthException;
+use Cline\Forrst\Exceptions\InvalidFieldTypeException;
+use Cline\Forrst\Exceptions\InvalidFieldValueException;
+use Cline\Forrst\Exceptions\InvalidTimeUnitException;
 use Cline\Forrst\Exceptions\LockAcquisitionFailedException;
 use Cline\Forrst\Exceptions\LockKeyRequiredException;
 use Cline\Forrst\Exceptions\LockNotFoundException;
@@ -22,6 +26,7 @@ use Cline\Forrst\Exceptions\LockOwnershipMismatchException;
 use Cline\Forrst\Exceptions\LockTimeoutException;
 use Cline\Forrst\Exceptions\LockTtlExceedsMaximumException;
 use Cline\Forrst\Exceptions\LockTtlRequiredException;
+use Cline\Forrst\Exceptions\MustBePositiveException;
 use Cline\Forrst\Exceptions\UnauthorizedException;
 use Cline\Forrst\Extensions\AbstractExtension;
 use Cline\Forrst\Extensions\AtomicLock\Functions\LockForceReleaseFunction;
@@ -188,21 +193,21 @@ final class AtomicLockExtension extends AbstractExtension implements ProvidesFun
 
             // Validate key format and length
             if (\strlen($key) > self::MAX_KEY_LENGTH) {
-                throw new \InvalidArgumentException(
-                    'Lock key exceeds maximum length of '.self::MAX_KEY_LENGTH.' characters',
-                );
+                throw FieldExceedsMaxLengthException::forField('key', self::MAX_KEY_LENGTH);
             }
 
             if (!\preg_match(self::KEY_PATTERN, $key)) {
-                throw new \InvalidArgumentException(
-                    'Lock key contains invalid characters. Only alphanumeric, dash, underscore, colon, and dot allowed',
+                throw InvalidFieldValueException::forField(
+                    'key',
+                    'Only alphanumeric, dash, underscore, colon, and dot characters allowed',
                 );
             }
 
             // Prevent key injection attacks
             if (\str_contains($key, ':meta:')) {
-                throw new \InvalidArgumentException(
-                    "Lock key cannot contain ':meta:' sequence (reserved for internal use)",
+                throw InvalidFieldValueException::forField(
+                    'key',
+                    "Cannot contain ':meta:' sequence (reserved for internal use)",
                 );
             }
 
@@ -485,7 +490,7 @@ final class AtomicLockExtension extends AbstractExtension implements ProvidesFun
         $unit = $duration['unit'] ?? 'second';
 
         if (!is_string($unit)) {
-            throw new \InvalidArgumentException('Duration unit must be a string');
+            throw InvalidFieldTypeException::forField('unit', 'string', $unit);
         }
 
         $seconds = match ($unit) {
@@ -493,9 +498,7 @@ final class AtomicLockExtension extends AbstractExtension implements ProvidesFun
             'minute' => $value * 60,
             'hour' => $value * 3_600,
             'day' => $value * 86_400,
-            default => throw new \InvalidArgumentException(
-                "Invalid duration unit: {$unit}. Allowed: second, minute, hour, day",
-            ),
+            default => throw InvalidTimeUnitException::forUnit($unit),
         };
 
         if ($seconds > self::MAX_TTL_SECONDS) {
@@ -503,7 +506,7 @@ final class AtomicLockExtension extends AbstractExtension implements ProvidesFun
         }
 
         if ($seconds <= 0) {
-            throw new \InvalidArgumentException('TTL must be positive');
+            throw MustBePositiveException::forField('ttl');
         }
 
         return $seconds;

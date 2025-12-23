@@ -10,6 +10,9 @@
 namespace Cline\Forrst\Discovery;
 
 use BackedEnum;
+use Cline\Forrst\Exceptions\InvalidFieldTypeException;
+use Cline\Forrst\Exceptions\InvalidFieldValueException;
+use Cline\Forrst\Exceptions\MissingRequiredFieldException;
 use Spatie\LaravelData\Data;
 
 /**
@@ -127,12 +130,13 @@ final class ErrorDefinitionData extends Data
     /**
      * Validate error code follows SCREAMING_SNAKE_CASE convention.
      *
-     * @throws \InvalidArgumentException
+     * @throws InvalidFieldValueException
      */
     private function validateCode(string $code): string
     {
         if (!preg_match('/^[A-Z][A-Z0-9_]*$/', $code)) {
-            throw new \InvalidArgumentException(
+            throw InvalidFieldValueException::forField(
+                'code',
                 "Error code must follow SCREAMING_SNAKE_CASE convention. Got: '{$code}'"
             );
         }
@@ -143,7 +147,7 @@ final class ErrorDefinitionData extends Data
     /**
      * Validate message uses safe numbered placeholders.
      *
-     * @throws \InvalidArgumentException
+     * @throws InvalidFieldValueException
      */
     private function validateMessagePlaceholders(string $message): void
     {
@@ -164,7 +168,8 @@ final class ErrorDefinitionData extends Data
             $expected = range(0, \count($indices) - 1);
 
             if ($indices !== $expected) {
-                throw new \InvalidArgumentException(
+                throw InvalidFieldValueException::forField(
+                    'message',
                     'Message placeholders must be sequential starting from {0}. '
                     .'Found: '.implode(', ', array_map(fn ($i) => "{{$i}}", $indices))
                 );
@@ -178,25 +183,27 @@ final class ErrorDefinitionData extends Data
      * @param array<string, mixed> $details
      * @param int                  $depth  Current nesting depth (for DoS prevention)
      *
-     * @throws \InvalidArgumentException
+     * @throws InvalidFieldTypeException
+     * @throws InvalidFieldValueException
+     * @throws MissingRequiredFieldException
      */
     private function validateJsonSchema(array $details, int $depth = 0): void
     {
         if ($depth > 10) {
-            throw new \InvalidArgumentException(
+            throw InvalidFieldValueException::forField(
+                'details',
                 'JSON Schema nesting too deep (max 10 levels)'
             );
         }
 
         if (!isset($details['type'])) {
-            throw new \InvalidArgumentException(
-                'JSON Schema in details must specify a "type" property'
-            );
+            throw MissingRequiredFieldException::forField('details.type');
         }
 
         $validTypes = ['object', 'array', 'string', 'number', 'integer', 'boolean', 'null'];
         if (!\in_array($details['type'], $validTypes, true)) {
-            throw new \InvalidArgumentException(
+            throw InvalidFieldValueException::forField(
+                'details.type',
                 "Invalid JSON Schema type '{$details['type']}'. "
                 .'Must be one of: '.implode(', ', $validTypes)
             );
@@ -205,16 +212,19 @@ final class ErrorDefinitionData extends Data
         // If type is object, validate properties exist
         if ($details['type'] === 'object' && isset($details['properties'])) {
             if (!\is_array($details['properties'])) {
-                throw new \InvalidArgumentException(
-                    'JSON Schema "properties" must be an object/array'
+                throw InvalidFieldTypeException::forField(
+                    'details.properties',
+                    'array',
+                    $details['properties']
                 );
             }
 
             // Recursively validate nested schemas
             foreach ($details['properties'] as $propName => $propSchema) {
                 if (!\is_array($propSchema) || !isset($propSchema['type'])) {
-                    throw new \InvalidArgumentException(
-                        "Property '{$propName}' must have a valid JSON Schema with 'type'"
+                    throw InvalidFieldValueException::forField(
+                        "details.properties.{$propName}",
+                        "Property must have a valid JSON Schema with 'type'"
                     );
                 }
                 $this->validateJsonSchema($propSchema, $depth + 1);
@@ -224,7 +234,8 @@ final class ErrorDefinitionData extends Data
         // If type is array, validate items exist
         if ($details['type'] === 'array' && isset($details['items'])) {
             if (!\is_array($details['items']) || !isset($details['items']['type'])) {
-                throw new \InvalidArgumentException(
+                throw InvalidFieldValueException::forField(
+                    'details.items',
                     'JSON Schema "items" must be a valid schema with "type"'
                 );
             }

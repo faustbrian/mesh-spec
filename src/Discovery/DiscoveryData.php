@@ -10,6 +10,9 @@
 namespace Cline\Forrst\Discovery;
 
 use Cline\Forrst\Discovery\Resource\ResourceData;
+use Cline\Forrst\Exceptions\EmptyArrayException;
+use Cline\Forrst\Exceptions\InvalidFieldTypeException;
+use Cline\Forrst\Exceptions\InvalidFieldValueException;
 use Spatie\LaravelData\Data;
 
 /**
@@ -80,22 +83,22 @@ final class DiscoveryData extends Data
      * Validate that functions array contains valid FunctionDescriptorData instances
      * and that function names are unique.
      *
-     * @throws \InvalidArgumentException
+     * @throws EmptyArrayException
+     * @throws InvalidFieldTypeException
+     * @throws InvalidFieldValueException
      */
     private function validateFunctions(): void
     {
         if (empty($this->functions)) {
-            throw new \InvalidArgumentException('Discovery document must define at least one function');
+            throw EmptyArrayException::forField('functions');
         }
 
         foreach ($this->functions as $index => $function) {
             if (!$function instanceof FunctionDescriptorData) {
-                throw new \InvalidArgumentException(
-                    sprintf(
-                        'All functions must be instances of FunctionDescriptorData, got %s at index %d',
-                        get_debug_type($function),
-                        $index
-                    )
+                throw InvalidFieldTypeException::forField(
+                    "functions[{$index}]",
+                    'FunctionDescriptorData',
+                    $function
                 );
             }
         }
@@ -105,11 +108,9 @@ final class DiscoveryData extends Data
         $duplicates = array_filter(array_count_values($names), fn ($count) => $count > 1);
 
         if (!empty($duplicates)) {
-            throw new \InvalidArgumentException(
-                sprintf(
-                    'Duplicate function names found: %s',
-                    implode(', ', array_keys($duplicates))
-                )
+            throw InvalidFieldValueException::forField(
+                'functions',
+                'Duplicate function names found: ' . implode(', ', array_keys($duplicates))
             );
         }
     }
@@ -117,7 +118,7 @@ final class DiscoveryData extends Data
     /**
      * Validate that servers array contains valid DiscoveryServerData instances.
      *
-     * @throws \InvalidArgumentException
+     * @throws InvalidFieldTypeException
      */
     private function validateServers(): void
     {
@@ -127,12 +128,10 @@ final class DiscoveryData extends Data
 
         foreach ($this->servers as $index => $server) {
             if (!$server instanceof DiscoveryServerData) {
-                throw new \InvalidArgumentException(
-                    sprintf(
-                        'All servers must be instances of DiscoveryServerData, got %s at index %d',
-                        get_debug_type($server),
-                        $index
-                    )
+                throw InvalidFieldTypeException::forField(
+                    "servers[{$index}]",
+                    'DiscoveryServerData',
+                    $server
                 );
             }
         }
@@ -141,12 +140,12 @@ final class DiscoveryData extends Data
     /**
      * Validate semantic versioning for forrst and discovery fields.
      *
-     * @throws \InvalidArgumentException
+     * @throws InvalidFieldValueException
      */
     private function validateVersions(): void
     {
-        $this->validateSemanticVersion($this->forrst, 'Forrst protocol version');
-        $this->validateSemanticVersion($this->discovery, 'Discovery document version');
+        $this->validateSemanticVersion($this->forrst, 'forrst');
+        $this->validateSemanticVersion($this->discovery, 'discovery');
     }
 
     /**
@@ -155,7 +154,7 @@ final class DiscoveryData extends Data
      * @param string $version   The version string to validate
      * @param string $fieldName The field name for error messages
      *
-     * @throws \InvalidArgumentException
+     * @throws InvalidFieldValueException
      */
     private function validateSemanticVersion(string $version, string $fieldName): void
     {
@@ -163,12 +162,9 @@ final class DiscoveryData extends Data
         $pattern = '/^\d+\.\d+\.\d+(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$/';
 
         if (!preg_match($pattern, $version)) {
-            throw new \InvalidArgumentException(
-                sprintf(
-                    '%s "%s" must follow semantic versioning (e.g., "1.0.0", "2.1.0-beta.1")',
-                    $fieldName,
-                    $version
-                )
+            throw InvalidFieldValueException::forField(
+                $fieldName,
+                "Version \"{$version}\" must follow semantic versioning (e.g., \"1.0.0\", \"2.1.0-beta.1\")"
             );
         }
     }

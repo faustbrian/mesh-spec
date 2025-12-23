@@ -11,6 +11,8 @@ namespace Cline\Forrst\Functions\Concerns;
 
 use Cline\Forrst\Contracts\ResourceInterface;
 use Cline\Forrst\Data\RequestObjectData;
+use Cline\Forrst\Exceptions\InvalidFieldTypeException;
+use Cline\Forrst\Exceptions\MissingMethodImplementationException;
 use Cline\Forrst\QueryBuilders\QueryBuilder;
 
 /**
@@ -48,33 +50,31 @@ trait InteractsWithQueryBuilder
      * @param  class-string<ResourceInterface> $class The resource class to query
      * @return QueryBuilder                    QueryBuilder instance with request parameters applied
      *
-     * @throws \InvalidArgumentException If the class does not exist or does not implement ResourceInterface
-     * @throws \BadMethodCallException   If the class does not have a static query() method
+     * @throws InvalidFieldTypeException If the class does not exist or does not implement ResourceInterface
+     * @throws MissingMethodImplementationException If the class does not have a static query() method
      */
     protected function query(string $class): QueryBuilder
     {
         if (!class_exists($class)) {
-            throw new \InvalidArgumentException(
-                sprintf('Resource class "%s" does not exist', $class),
+            throw InvalidFieldTypeException::forField(
+                'resource class',
+                'existing class',
+                sprintf('"%s" does not exist', $class),
             );
         }
 
         if (!method_exists($class, 'query')) {
-            throw new \BadMethodCallException(
-                sprintf(
-                    'Resource class "%s" must implement static query() method',
-                    $class,
-                ),
+            throw MissingMethodImplementationException::forMethod(
+                $class,
+                'query',
             );
         }
 
         if (!is_subclass_of($class, ResourceInterface::class)) {
-            throw new \InvalidArgumentException(
-                sprintf(
-                    'Class "%s" must implement %s',
-                    $class,
-                    ResourceInterface::class,
-                ),
+            throw InvalidFieldTypeException::forField(
+                'resource class',
+                sprintf('must implement %s', ResourceInterface::class),
+                $class,
             );
         }
 

@@ -10,6 +10,10 @@
 namespace Cline\Forrst\Data\Configuration;
 
 use Cline\Forrst\Data\AbstractData;
+use Cline\Forrst\Exceptions\EmptyArrayException;
+use Cline\Forrst\Exceptions\InvalidConfigurationException;
+use Cline\Forrst\Exceptions\InvalidFieldTypeException;
+use Cline\Forrst\Exceptions\InvalidFieldValueException;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
 use Spatie\LaravelData\Attributes\Validation\Present;
 use Spatie\LaravelData\DataCollection;
@@ -105,58 +109,73 @@ final class ConfigurationData extends AbstractData
     {
         // Validate namespaces
         if ($this->namespaces === []) {
-            throw new \InvalidArgumentException('Namespaces configuration cannot be empty');
+            throw EmptyArrayException::forField('namespaces');
         }
 
         foreach ($this->namespaces as $key => $namespace) {
             if (!is_string($key) || !is_string($namespace)) {
-                throw new \InvalidArgumentException('Namespace mappings must be string => string');
+                throw InvalidFieldTypeException::forField(
+                    'namespaces',
+                    'array<string, string>',
+                    $this->namespaces,
+                );
             }
 
             if (!class_exists($namespace) && !str_starts_with($namespace, 'App\\')) {
-                throw new \InvalidArgumentException(
-                    sprintf('Invalid namespace "%s" for key "%s"', $namespace, $key)
+                throw InvalidConfigurationException::forKey(
+                    $key,
+                    sprintf('Invalid namespace "%s"', $namespace),
                 );
             }
         }
 
         // Validate paths
         if ($this->paths === []) {
-            throw new \InvalidArgumentException('Paths configuration cannot be empty');
+            throw EmptyArrayException::forField('paths');
         }
 
         foreach ($this->paths as $key => $path) {
             if (!is_string($key) || !is_string($path)) {
-                throw new \InvalidArgumentException('Path mappings must be string => string');
+                throw InvalidFieldTypeException::forField(
+                    'paths',
+                    'array<string, string>',
+                    $this->paths,
+                );
             }
 
             // Check for path traversal attempts
             if (str_contains($path, '..')) {
-                throw new \InvalidArgumentException(
-                    sprintf('Path traversal detected in path "%s" for key "%s"', $path, $key)
+                throw InvalidConfigurationException::forKey(
+                    $key,
+                    sprintf('Path traversal detected in path "%s"', $path),
                 );
             }
 
             // Normalize and validate path exists
             $realPath = realpath($path);
             if ($realPath === false) {
-                throw new \InvalidArgumentException(
-                    sprintf('Path "%s" for key "%s" does not exist', $path, $key)
+                throw InvalidConfigurationException::forKey(
+                    $key,
+                    sprintf('Path "%s" does not exist', $path),
                 );
             }
 
             // Ensure path is within application root
             $appPath = base_path();
             if (!str_starts_with($realPath, $appPath)) {
-                throw new \InvalidArgumentException(
-                    sprintf('Path "%s" is outside application root for key "%s"', $path, $key)
+                throw InvalidConfigurationException::forKey(
+                    $key,
+                    sprintf('Path "%s" is outside application root', $path),
                 );
             }
         }
 
         // Validate servers
         if ($this->servers->isEmpty()) {
-            throw new \InvalidArgumentException('At least one server must be configured');
+            throw InvalidConfigurationException::forKey(
+                'servers',
+                'At least one server must be configured',
+            );
         }
     }
 }
