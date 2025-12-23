@@ -49,13 +49,18 @@ abstract class AbstractListFunction extends AbstractFunction
      * - 'simple': Simple next/prev pagination (best for large datasets)
      * - 'none': Return all results without pagination (use cautiously)
      *
+     * Provides lifecycle hooks for customization:
+     * - beforePagination(): Apply custom query modifications before pagination
+     * - afterPagination(): Post-process the paginated result before returning
+     *
      * @return DocumentData The paginated resource collection with pagination metadata and links
      */
     public function handle(): DocumentData
     {
         $query = $this->query($this->getValidatedResourceClass());
+        $query = $this->beforePagination($query);
 
-        return match ($this->getPaginationStrategy()) {
+        $result = match ($this->getPaginationStrategy()) {
             'cursor' => $this->cursorPaginate($query),
             'offset' => $this->paginate($query),
             'simple' => $this->simplePaginate($query),
@@ -67,6 +72,50 @@ abstract class AbstractListFunction extends AbstractFunction
                 ),
             ),
         };
+
+        return $this->afterPagination($result);
+    }
+
+    /**
+     * Apply custom query modifications before pagination.
+     *
+     * Override this method to add custom scopes, eager loading, or filters
+     * that should always apply to this list function regardless of request parameters.
+     *
+     * Example use cases:
+     * - Always filter to published/active records
+     * - Apply tenant-specific filtering
+     * - Add time-based filters (e.g., published_at <= now())
+     * - Optimize with additional eager loading
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query The query builder to modify
+     *
+     * @return \Illuminate\Database\Eloquent\Builder The modified query builder
+     */
+    protected function beforePagination(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
+    {
+        return $query;
+    }
+
+    /**
+     * Post-process the paginated result before returning.
+     *
+     * Override this to add custom metadata, inject additional data,
+     * or transform the result structure.
+     *
+     * Example use cases:
+     * - Add aggregated statistics to metadata
+     * - Inject computed totals or counts
+     * - Add custom pagination metadata
+     * - Transform result structure for specific client needs
+     *
+     * @param DocumentData $result The paginated result
+     *
+     * @return DocumentData The modified result
+     */
+    protected function afterPagination(DocumentData $result): DocumentData
+    {
+        return $result;
     }
 
     /**
