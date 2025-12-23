@@ -28,6 +28,11 @@ final class OperationStatusDescriptor implements DescriptorInterface
         return FunctionDescriptor::make()
             ->urn(FunctionUrn::OperationStatus)
             ->summary('Check status of an async operation')
+            ->security([
+                'authentication' => 'required',
+                'authorization' => 'owner_only',
+                'scope' => 'operations:read',
+            ])
             ->argument(
                 name: 'operation_id',
                 schema: [

@@ -28,6 +28,11 @@ final class OperationCancelDescriptor implements DescriptorInterface
         return FunctionDescriptor::make()
             ->urn(FunctionUrn::OperationCancel)
             ->summary('Cancel a pending async operation')
+            ->security([
+                'authentication' => 'required',
+                'authorization' => 'owner_only',
+                'scope' => 'operations:cancel',
+            ])
             ->argument(
                 name: 'operation_id',
                 schema: [

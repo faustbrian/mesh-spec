@@ -27,6 +27,11 @@ final class OperationListDescriptor implements DescriptorInterface
         return FunctionDescriptor::make()
             ->urn(FunctionUrn::OperationList)
             ->summary('List operations for the current caller')
+            ->security([
+                'authentication' => 'required',
+                'authorization' => 'owner_only',
+                'scope' => 'operations:read',
+            ])
             ->argument(
                 name: 'status',
                 schema: [
