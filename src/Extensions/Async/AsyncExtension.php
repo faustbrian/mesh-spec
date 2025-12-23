@@ -130,6 +130,29 @@ final class AsyncExtension extends AbstractExtension implements ProvidesFunction
     private const int OPERATION_ID_LENGTH = 27; // 'op_' (3 chars) + 24 hex chars (12 bytes)
 
     /**
+     * Default TTL for operations in seconds (24 hours).
+     *
+     * After this duration, operations can be safely purged from storage.
+     * Prevents unlimited storage growth and ensures compliance with data retention policies.
+     */
+    private const int DEFAULT_OPERATION_TTL_SECONDS = 86400;
+
+    /**
+     * Maximum allowed TTL for operations in seconds (7 days).
+     *
+     * Limits how long operations can be retained to prevent storage bloat
+     * and ensure timely cleanup of stale data.
+     */
+    private const int MAX_OPERATION_TTL_SECONDS = 604800;
+
+    /**
+     * Minimum allowed TTL for operations in seconds (1 minute).
+     *
+     * Ensures operations remain available long enough for clients to poll results.
+     */
+    private const int MIN_OPERATION_TTL_SECONDS = 60;
+
+    /**
      * Create a new async extension instance.
      *
      * @param OperationRepositoryInterface $operations Repository for persisting and retrieving
@@ -279,6 +302,7 @@ final class AsyncExtension extends AbstractExtension implements ProvidesFunction
      * @param ExtensionData             $extension    Async extension data from request
      * @param null|array<string, mixed> $metadata     Optional metadata stored with operation
      * @param int                       $retrySeconds Suggested seconds between poll attempts
+     * @param null|int                  $ttlSeconds   Time-to-live in seconds (clamped to min/max bounds)
      *
      * @return array{response: ResponseData, operation: OperationData} Tuple of response and operation
      *
@@ -289,7 +313,14 @@ final class AsyncExtension extends AbstractExtension implements ProvidesFunction
         ExtensionData $extension,
         ?array $metadata = null,
         int $retrySeconds = self::DEFAULT_RETRY_SECONDS,
+        ?int $ttlSeconds = null,
     ): array {
+        // Validate and clamp TTL to allowed bounds
+        $ttl = $ttlSeconds ?? self::DEFAULT_OPERATION_TTL_SECONDS;
+        $ttl = max(self::MIN_OPERATION_TTL_SECONDS, min($ttl, self::MAX_OPERATION_TTL_SECONDS));
+
+        $expiresAt = now()->addSeconds($ttl)->toImmutable();
+
         // Validate metadata size
         if ($metadata !== null) {
             $metadataJson = json_encode($metadata, JSON_THROW_ON_ERROR);
@@ -308,6 +339,8 @@ final class AsyncExtension extends AbstractExtension implements ProvidesFunction
             'original_request_id' => $request->id,
             'callback_url' => $this->getCallbackUrl($extension->options),
             'created_at' => now()->toIso8601String(),
+            'expires_at' => $expiresAt->toIso8601String(),
+            'ttl_seconds' => $ttl,
         ];
 
         $finalMetadata = $metadata !== null
