@@ -13,8 +13,8 @@ use function sprintf;
  */
 final class DataTransformationException extends RuntimeException implements ForrstException
 {
-    public static function cannotTransform(string $from, string $to, string $reason): self
+    public static function cannotTransform(string $from, string $to, string $reason, ?\Throwable $previous = null): self
     {
-        return new self(sprintf('Cannot transform %s to %s: %s', $from, $to, $reason));
+        return new self(sprintf('Cannot transform %s to %s: %s', $from, $to, $reason), 0, $previous);
     }
 }

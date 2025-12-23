@@ -15,6 +15,7 @@ use Cline\Forrst\Data\ResponseData;
 use Cline\Forrst\Enums\ErrorCode;
 use Cline\Forrst\Events\ExecutingFunction;
 use Cline\Forrst\Events\FunctionExecuted;
+use Cline\Forrst\Exceptions\DataTransformationException;
 use Cline\Forrst\Exceptions\EmptyFieldException;
 use Cline\Forrst\Exceptions\FieldExceedsMaxLengthException;
 use Cline\Forrst\Exceptions\InvalidFieldValueException;
@@ -548,11 +549,7 @@ final class IdempotencyExtension extends AbstractExtension
         try {
             $encoded = json_encode($arguments ?? [], JSON_THROW_ON_ERROR);
         } catch (\JsonException $e) {
-            throw new \RuntimeException(
-                'Failed to hash arguments: arguments are not JSON-serializable',
-                0,
-                $e,
-            );
+            throw DataTransformationException::cannotTransform('arguments', 'hash', 'arguments are not JSON-serializable', $e);
         }
 
         return 'sha256:'.hash('sha256', $encoded);

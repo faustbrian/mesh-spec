@@ -702,9 +702,6 @@ final class AsyncExtension extends AbstractExtension implements ProvidesFunction
             // Collision detected (extremely rare), try again
         }
 
-        throw new \RuntimeException(sprintf(
-            'Failed to generate unique operation ID after %d attempts',
-            $maxAttempts,
-        ));
+        throw DataTransformationException::cannotTransform('', 'operation ID', sprintf('exhausted %d unique ID generation attempts', $maxAttempts));
     }
 }
