@@ -257,7 +257,46 @@ final class IdempotencyExtension extends AbstractExtension
     {
         $key = $options['key'] ?? null;
 
-        return is_string($key) ? $key : null;
+        if (!is_string($key)) {
+            return null;
+        }
+
+        try {
+            return $this->validateIdempotencyKey($key);
+        } catch (\InvalidArgumentException) {
+            return null;
+        }
+    }
+
+    /**
+     * Validate the idempotency key format and characters.
+     *
+     * Ensures the key is not empty, within size limits, and contains only safe
+     * characters to prevent cache key injection, protocol injection, and DoS attacks.
+     *
+     * @param  string $key The idempotency key to validate
+     * @return string The validated key
+     *
+     * @throws \InvalidArgumentException If the key is invalid
+     */
+    private function validateIdempotencyKey(string $key): string
+    {
+        if ($key === '') {
+            throw new \InvalidArgumentException('Idempotency key cannot be empty');
+        }
+
+        if (mb_strlen($key) > 255) {
+            throw new \InvalidArgumentException('Idempotency key exceeds maximum length of 255 characters');
+        }
+
+        // Only allow safe characters to prevent injection attacks
+        if (!\preg_match('/^[a-zA-Z0-9\-_:.]+$/', $key)) {
+            throw new \InvalidArgumentException(
+                'Idempotency key contains invalid characters',
+            );
+        }
+
+        return $key;
     }
 
     /**
