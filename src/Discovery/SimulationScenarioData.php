@@ -9,6 +9,7 @@
 
 namespace Cline\Forrst\Discovery;
 
+use InvalidArgumentException;
 use Spatie\LaravelData\Data;
 
 /**
@@ -61,7 +62,29 @@ final class SimulationScenarioData extends Data
         public readonly ?string $description = null,
         public readonly ?array $error = null,
         public readonly ?array $metadata = null,
-    ) {}
+    ) {
+        // Validate scenario name
+        if (trim($name) === '') {
+            throw new InvalidArgumentException('Scenario name cannot be empty');
+        }
+
+        // Validate input array is non-empty
+        if (empty($input)) {
+            throw new InvalidArgumentException('Scenario input cannot be empty');
+        }
+
+        // Validate mutually exclusive output/error fields
+        if ($output !== null && $error !== null) {
+            throw new InvalidArgumentException(
+                'Cannot specify both "output" and "error". Success scenarios use output, error scenarios use error field.'
+            );
+        }
+
+        // Validate error structure if provided
+        if ($error !== null) {
+            $this->validateErrorStructure($error);
+        }
+    }
 
     /**
      * Create a success scenario.
@@ -122,5 +145,34 @@ final class SimulationScenarioData extends Data
             description: $description,
             error: $error,
         );
+    }
+
+    /**
+     * Validate error array structure.
+     *
+     * @param array<string, mixed> $error
+     *
+     * @throws InvalidArgumentException
+     */
+    private function validateErrorStructure(array $error): void
+    {
+        $requiredFields = ['code', 'message'];
+        $missingFields = array_diff($requiredFields, array_keys($error));
+
+        if (!empty($missingFields)) {
+            throw new InvalidArgumentException(
+                'Error structure must include: '.implode(', ', $requiredFields)
+            );
+        }
+
+        if (!\is_string($error['code']) || !preg_match('/^[A-Z][A-Z0-9_]*$/', $error['code'])) {
+            throw new InvalidArgumentException(
+                'Error code must be SCREAMING_SNAKE_CASE string'
+            );
+        }
+
+        if (!\is_string($error['message']) || trim($error['message']) === '') {
+            throw new InvalidArgumentException('Error message must be non-empty string');
+        }
     }
 }
