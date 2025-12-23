@@ -23,6 +23,17 @@ namespace Cline\Forrst\Contracts;
  * Resource transformers handle the mapping of model data to a structured
  * format including type identifiers, attributes, and relationship loading.
  *
+ * CONVENTION: Implementations SHOULD provide static methods for resource metadata:
+ * - getFields(): array - Available field definitions for sparse fieldsets
+ * - getFilters(): array - Available filter criteria for resource queries
+ * - getRelationships(): array - Available relationships that can be included
+ * - getSorts(): array - Available sort parameters for ordering results
+ * - getModel(): string - Fully qualified model class name
+ *
+ * These static methods cannot be enforced by the interface but are required by
+ * the framework for resource introspection and query building. Implementations
+ * MUST provide these methods to ensure proper integration with the resource system.
+ *
  * @author Brian Faust <brian@cline.sh>
  *
  * @method static array<int, string> getFields()        Get available field definitions for sparse fieldsets
@@ -75,6 +86,12 @@ interface ResourceInterface
      * Returns an array of related resource data that has been eagerly loaded
      * or explicitly included in the request. Relationships are represented
      * as nested resource objects or arrays of resource objects.
+     *
+     * PERFORMANCE: Only returns relationships that have been EAGER LOADED.
+     * Never performs lazy loading. Implementations MUST check if a relation
+     * is loaded before accessing it to prevent N+1 queries. Use model methods
+     * like relationLoaded() or similar checks to verify eager loading status
+     * before including relationship data in the response.
      *
      * @return array<string, mixed> Loaded relationship data indexed by relation name
      */
