@@ -88,6 +88,13 @@ final class InfoData extends Data
         if ($termsOfService !== null) {
             $this->validateUrl($termsOfService, 'Terms of Service');
         }
+
+        // Validate description length if provided
+        if ($description !== null && mb_strlen($description) > 5000) {
+            throw new InvalidArgumentException(
+                'Description too long (max 5000 characters, got ' . mb_strlen($description) . ')'
+            );
+        }
     }
 
     public readonly string $title;
