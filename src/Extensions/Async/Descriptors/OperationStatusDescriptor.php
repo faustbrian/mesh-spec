@@ -30,9 +30,15 @@ final class OperationStatusDescriptor implements DescriptorInterface
             ->summary('Check status of an async operation')
             ->argument(
                 name: 'operation_id',
-                schema: ['type' => 'string'],
+                schema: [
+                    'type' => 'string',
+                    'pattern' => '^op_[a-f0-9]{24}$',
+                    'minLength' => 27,
+                    'maxLength' => 27,
+                    'description' => 'Operation identifier (format: op_ followed by 24 hex characters)',
+                ],
                 required: true,
-                description: 'Operation ID to check',
+                description: 'Unique operation identifier',
             )
             ->result(
                 schema: [
