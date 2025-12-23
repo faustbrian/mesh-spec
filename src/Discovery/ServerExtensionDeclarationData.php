@@ -9,6 +9,7 @@
 
 namespace Cline\Forrst\Discovery;
 
+use InvalidArgumentException;
 use Spatie\LaravelData\Data;
 
 /**
@@ -38,5 +39,25 @@ final class ServerExtensionDeclarationData extends Data
     public function __construct(
         public readonly string $urn,
         public readonly string $version,
-    ) {}
+    ) {
+        // Validate URN format: urn:forrst:ext:name
+        if (!preg_match('/^urn:forrst:ext:[a-z][a-z0-9-]*$/', $this->urn)) {
+            throw new InvalidArgumentException(
+                "Invalid extension URN: '{$this->urn}'. " .
+                "Expected format: 'urn:forrst:ext:extensionname' (e.g., 'urn:forrst:ext:async')"
+            );
+        }
+
+        // Validate semantic version
+        $semverPattern = '/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)' .
+            '(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)' .
+            '(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?'  .
+            '(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/';
+
+        if (!preg_match($semverPattern, $this->version)) {
+            throw new InvalidArgumentException(
+                "Invalid semantic version: '{$this->version}'. Must follow semver format"
+            );
+        }
+    }
 }

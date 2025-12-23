@@ -151,10 +151,28 @@ final class ServiceProvider extends PackageServiceProvider
         try {
             $configuration = ConfigurationData::validateAndCreate((array) config('rpc'));
 
+            // Validate and register resources
             foreach ($configuration->resources as $model => $resource) {
-                assert(is_string($resource));
-                assert(class_exists($resource));
-                assert(is_a($resource, ResourceInterface::class, true));
+                if (!is_string($resource)) {
+                    throw new InvalidArgumentException(
+                        sprintf('Resource for model %s must be a class string, %s given', $model, gettype($resource))
+                    );
+                }
+
+                if (!class_exists($resource)) {
+                    throw new InvalidArgumentException(
+                        sprintf('Resource class %s does not exist', $resource)
+                    );
+                }
+
+                if (!is_a($resource, ResourceInterface::class, true)) {
+                    throw new InvalidArgumentException(
+                        sprintf('Resource class %s must implement %s', $resource, ResourceInterface::class)
+                    );
+                }
+
+                assert(is_string($model));
+                assert(class_exists($model));
 
                 /** @var class-string $model */
                 /** @var class-string<ResourceInterface> $resource */

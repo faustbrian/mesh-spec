@@ -9,6 +9,7 @@
 
 namespace Cline\Forrst\Discovery;
 
+use InvalidArgumentException;
 use Spatie\LaravelData\Data;
 
 /**
@@ -45,5 +46,34 @@ final class ServerVariableData extends Data
         public readonly string $default,
         public readonly ?array $enum = null,
         public readonly ?string $description = null,
-    ) {}
+    ) {
+        // Validate default is not empty
+        if (trim($this->default) === '') {
+            throw new InvalidArgumentException('Default value cannot be empty');
+        }
+
+        // Validate enum list if provided
+        if ($this->enum !== null) {
+            if (empty($this->enum)) {
+                throw new InvalidArgumentException('Enum array cannot be empty if provided');
+            }
+
+            // Enum must contain only strings
+            foreach ($this->enum as $index => $value) {
+                if (!is_string($value)) {
+                    throw new InvalidArgumentException(
+                        "Enum value at index {$index} must be string. Got: " . gettype($value)
+                    );
+                }
+            }
+
+            // Default MUST be in enum list
+            if (!in_array($this->default, $this->enum, true)) {
+                throw new InvalidArgumentException(
+                    "Default value '{$this->default}' must be one of the enum values: " .
+                    implode(', ', $this->enum)
+                );
+            }
+        }
+    }
 }
