@@ -185,6 +185,26 @@ final class AtomicLockExtension extends AbstractExtension implements ProvidesFun
                 throw LockKeyRequiredException::create();
             }
 
+            // Validate key format and length
+            if (\strlen($key) > self::MAX_KEY_LENGTH) {
+                throw new \InvalidArgumentException(
+                    'Lock key exceeds maximum length of '.self::MAX_KEY_LENGTH.' characters',
+                );
+            }
+
+            if (!\preg_match(self::KEY_PATTERN, $key)) {
+                throw new \InvalidArgumentException(
+                    'Lock key contains invalid characters. Only alphanumeric, dash, underscore, colon, and dot allowed',
+                );
+            }
+
+            // Prevent key injection attacks
+            if (\str_contains($key, ':meta:')) {
+                throw new \InvalidArgumentException(
+                    "Lock key cannot contain ':meta:' sequence (reserved for internal use)",
+                );
+            }
+
             $ttlOption = $options['ttl'] ?? null;
 
             if ($ttlOption === null) {

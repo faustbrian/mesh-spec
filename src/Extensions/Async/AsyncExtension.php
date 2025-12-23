@@ -109,6 +109,14 @@ final class AsyncExtension extends AbstractExtension implements ProvidesFunction
     private const int MAX_METADATA_SIZE_BYTES = 65536;
 
     /**
+     * Number of random bytes for operation ID (96 bits of entropy).
+     *
+     * Provides 2^96 possible IDs (~7.9 × 10^28), making collisions
+     * astronomically unlikely even with billions of operations.
+     */
+    private const int OPERATION_ID_BYTES = 12;
+
+    /**
      * Create a new async extension instance.
      *
      * @param OperationRepositoryInterface $operations Repository for persisting and retrieving
@@ -596,7 +604,7 @@ final class AsyncExtension extends AbstractExtension implements ProvidesFunction
         $maxAttempts = 10;
 
         for ($attempt = 0; $attempt < $maxAttempts; $attempt++) {
-            $operationId = 'op_'.bin2hex(random_bytes(12));
+            $operationId = 'op_'.bin2hex(random_bytes(self::OPERATION_ID_BYTES));
 
             // Check if ID already exists
             $existing = $this->operations->find($operationId);
