@@ -87,7 +87,7 @@ final class ExamplePairingData extends Data
                 );
             }
 
-            if (!isset($param['value'])) {
+            if (!\array_key_exists('value', $param)) {
                 throw new InvalidArgumentException(
                     "Parameter at index {$index} is missing required 'value' key",
                 );
@@ -123,7 +123,7 @@ final class ExamplePairingData extends Data
             );
         }
 
-        if (!isset($result['value'])) {
+        if (!\array_key_exists('value', $result)) {
             throw new InvalidArgumentException(
                 "Result is missing required 'value' key",
             );
