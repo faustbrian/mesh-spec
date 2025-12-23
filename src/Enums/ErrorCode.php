@@ -339,6 +339,31 @@ enum ErrorCode: string
     }
 
     /**
+     * Determine if this is a resource-related error.
+     *
+     * Resource errors indicate issues with locating or accessing specific
+     * resources like functions, operations, or entities.
+     *
+     * @return bool True if this is a resource error, false otherwise
+     */
+    public function isResourceError(): bool
+    {
+        return match ($this) {
+            self::FunctionNotFound,
+            self::VersionNotFound,
+            self::NotFound,
+            self::Gone,
+            self::AsyncOperationNotFound,
+            self::ReplayNotFound,
+            self::ReplayExpired,
+            self::LockNotFound,
+            self::SimulationScenarioNotFound,
+            self::CancellationTokenUnknown => true,
+            default => false,
+        };
+    }
+
+    /**
      * Convert the error code to an HTTP status code.
      *
      * Maps protocol error codes to their corresponding HTTP status codes for
