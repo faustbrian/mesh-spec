@@ -129,6 +129,29 @@ final class ConfigurationData extends AbstractData
             if (!is_string($key) || !is_string($path)) {
                 throw new \InvalidArgumentException('Path mappings must be string => string');
             }
+
+            // Check for path traversal attempts
+            if (str_contains($path, '..')) {
+                throw new \InvalidArgumentException(
+                    sprintf('Path traversal detected in path "%s" for key "%s"', $path, $key)
+                );
+            }
+
+            // Normalize and validate path exists
+            $realPath = realpath($path);
+            if ($realPath === false) {
+                throw new \InvalidArgumentException(
+                    sprintf('Path "%s" for key "%s" does not exist', $path, $key)
+                );
+            }
+
+            // Ensure path is within application root
+            $appPath = base_path();
+            if (!str_starts_with($realPath, $appPath)) {
+                throw new \InvalidArgumentException(
+                    sprintf('Path "%s" is outside application root for key "%s"', $path, $key)
+                );
+            }
         }
 
         // Validate servers

@@ -193,20 +193,26 @@ final readonly class CallFunction
     {
         $parameterName = $parameter->getName();
         $parameterType = $parameter->getType();
-
-        if ($parameterType instanceof ReflectionNamedType) {
-            $parameterType = $parameterType->getName();
-        }
+        $parameterTypeName = $this->extractTypeName($parameter, $parameterType);
 
         $parameterValue = Arr::get($arguments, $parameterName) ?? Arr::get($arguments, Str::snake($parameterName, '.'));
 
-        if (is_subclass_of((string) $parameterType, Data::class)) {
+        if ($parameterTypeName !== null && is_subclass_of($parameterTypeName, Data::class)) {
             try {
                 $payload = $parameter->getName() === 'data' ? $arguments : $parameterValue;
-                assert(is_array($payload));
+
+                if (!is_array($payload)) {
+                    throw new \InvalidArgumentException(
+                        sprintf(
+                            'Parameter "%s" expects array payload, got %s',
+                            $parameterName,
+                            get_debug_type($payload),
+                        ),
+                    );
+                }
 
                 return call_user_func(
-                    [(string) $parameterType, 'validateAndCreate'],
+                    [$parameterTypeName, 'validateAndCreate'],
                     $payload,
                 );
             } catch (ValidationException $exception) {
@@ -214,10 +220,75 @@ final readonly class CallFunction
             }
         }
 
-        if ($parameterType === 'array' && $parameter->getName() === 'data') {
+        if ($parameterTypeName === 'array' && $parameter->getName() === 'data') {
             return $arguments;
         }
 
         return $parameterValue;
+    }
+
+    /**
+     * Extract the type name from a reflection type.
+     *
+     * Handles named types, union types, and intersection types.
+     * For union types, prefers Data subclasses, then array, then first type.
+     *
+     * @param \ReflectionParameter                                                                            $parameter The parameter being resolved
+     * @param \ReflectionNamedType|\ReflectionUnionType|\ReflectionIntersectionType|\ReflectionType|null $type      The reflection type
+     *
+     * @throws \InvalidArgumentException When intersection types are encountered
+     *
+     * @return string|null The extracted type name, or null if no type hint
+     */
+    private function extractTypeName(\ReflectionParameter $parameter, $type): ?string
+    {
+        if ($type === null) {
+            return null;
+        }
+
+        if ($type instanceof ReflectionNamedType) {
+            return $type->getName();
+        }
+
+        if ($type instanceof ReflectionUnionType) {
+            $preferredType = null;
+
+            foreach ($type->getTypes() as $unionType) {
+                if (!($unionType instanceof ReflectionNamedType)) {
+                    continue;
+                }
+
+                $typeName = $unionType->getName();
+
+                // Prefer Data subclasses
+                if (is_subclass_of($typeName, Data::class)) {
+                    return $typeName;
+                }
+
+                // Prefer array type
+                if ($typeName === 'array') {
+                    $preferredType = 'array';
+                    continue;
+                }
+
+                // Keep first type as fallback
+                if ($preferredType === null) {
+                    $preferredType = $typeName;
+                }
+            }
+
+            return $preferredType;
+        }
+
+        if ($type instanceof ReflectionIntersectionType) {
+            throw new \InvalidArgumentException(
+                sprintf(
+                    'Parameter "%s" uses intersection type which is not supported for automatic resolution',
+                    $parameter->getName(),
+                ),
+            );
+        }
+
+        return null;
     }
 }

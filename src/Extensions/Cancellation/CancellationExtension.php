@@ -16,6 +16,7 @@ use Cline\Forrst\Data\ExtensionData;
 use Cline\Forrst\Data\ResponseData;
 use Cline\Forrst\Enums\ErrorCode;
 use Cline\Forrst\Events\ExecutingFunction;
+use Cline\Forrst\Events\FunctionExecuted;
 use Cline\Forrst\Events\RequestValidated;
 use Cline\Forrst\Extensions\AbstractExtension;
 use Cline\Forrst\Extensions\Cancellation\Functions\CancelFunction;
