@@ -349,16 +349,15 @@ abstract class AbstractFunction implements FunctionInterface
      *
      * Reads from the #[Descriptor] attribute if present, otherwise returns null.
      *
-     * @return null|array<int, array<string, mixed>|SimulationScenarioData> Scenarios or null
+     * @return null|list<SimulationScenarioData> Scenarios or null
      */
     #[Override()]
     public function getSimulations(): ?array
     {
-        if (($descriptor = $this->resolveDescriptor()) instanceof FunctionDescriptor) {
-            return $descriptor->getSimulations();
-        }
-
-        return null;
+        return $this->fromDescriptorOr(
+            fn (FunctionDescriptor $d) => $d->getSimulations(),
+            null,
+        );
     }
 
     /**
