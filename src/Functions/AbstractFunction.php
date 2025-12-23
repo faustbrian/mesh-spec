@@ -432,22 +432,46 @@ abstract class AbstractFunction implements FunctionInterface
             return $this->descriptor;
         }
 
-        $this->descriptorResolved = true;
-
         $reflection = new ReflectionClass($this);
         $attributes = $reflection->getAttributes(Descriptor::class);
 
         if ($attributes === []) {
+            $this->descriptorResolved = true;
+            $this->descriptor = null;
+
             return null;
         }
 
         /** @var Descriptor $attribute */
         $attribute = $attributes[0]->newInstance();
 
-        /** @var class-string<DescriptorInterface> $descriptorClass */
         $descriptorClass = $attribute->class;
 
-        $this->descriptor = $descriptorClass::create();
+        // Validate the descriptor class implements the correct interface
+        if (! is_subclass_of($descriptorClass, DescriptorInterface::class)) {
+            throw new \InvalidArgumentException(
+                sprintf(
+                    'Descriptor class %s must implement %s',
+                    $descriptorClass,
+                    DescriptorInterface::class,
+                ),
+            );
+        }
+
+        // Validate create() method exists
+        if (! method_exists($descriptorClass, 'create')) {
+            throw new \BadMethodCallException(
+                sprintf(
+                    'Descriptor class %s must implement static create() method',
+                    $descriptorClass,
+                ),
+            );
+        }
+
+        /** @var class-string<DescriptorInterface> $descriptorClass */
+        $descriptor = $descriptorClass::create();
+        $this->descriptor = $descriptor;
+        $this->descriptorResolved = true;
 
         return $this->descriptor;
     }

@@ -355,6 +355,16 @@ abstract class AbstractListFunction extends AbstractFunction
      * defines available fields, filterable attributes, loadable relationships, and
      * transformation logic for this list endpoint.
      *
+     * The resource class must implement ResourceInterface and provide:
+     * - getFields(): array - List of available fields for sparse fieldsets
+     * - getFilters(): array - List of filterable attributes (MUST validate input)
+     * - getRelationships(): array - List of loadable relationships (MUST validate input)
+     * - toArray(): array - Transform model to array representation
+     *
+     * SECURITY NOTE: The resource class's getFilters() and getRelationships() methods
+     * MUST validate and whitelist allowed attributes to prevent query injection.
+     * Never pass unvalidated filter parameters directly to database queries.
+     *
      * @return class-string<ResourceInterface> The fully-qualified resource class name
      */
     abstract protected function getResourceClass(): string;
