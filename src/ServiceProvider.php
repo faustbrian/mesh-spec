@@ -96,7 +96,15 @@ final class ServiceProvider extends PackageServiceProvider
                 );
             }
 
-            $protocol = new $protocolClass();
+            try {
+                $protocol = new $protocolClass();
+            } catch (Throwable $e) {
+                throw new InvalidArgumentException(
+                    sprintf('Failed to instantiate protocol class %s: %s', $protocolClass, $e->getMessage()),
+                    0,
+                    $e
+                );
+            }
 
             if (!$protocol instanceof ProtocolInterface) {
                 throw new InvalidArgumentException(
