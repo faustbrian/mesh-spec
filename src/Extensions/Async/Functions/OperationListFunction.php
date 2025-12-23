@@ -14,13 +14,14 @@ use Cline\Forrst\Contracts\OperationRepositoryInterface;
 use Cline\Forrst\Data\OperationData;
 use Cline\Forrst\Extensions\Async\Descriptors\OperationListDescriptor;
 use Cline\Forrst\Functions\AbstractFunction;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 use function array_map;
-use function in_array;
+use function count;
 use function is_int;
 use function is_string;
-use function sprintf;
-use function strlen;
+use function min;
 
 /**
  * Async operation listing function.
@@ -38,9 +39,11 @@ final class OperationListFunction extends AbstractFunction
      * Create a new operation list function instance.
      *
      * @param OperationRepositoryInterface $repository Operation repository
+     * @param LoggerInterface              $logger     Logger for recording operations
      */
     public function __construct(
         private readonly OperationRepositoryInterface $repository,
+        private readonly LoggerInterface $logger = new NullLogger(),
     ) {}
 
     /**
@@ -57,12 +60,38 @@ final class OperationListFunction extends AbstractFunction
         $limit = $this->requestObject->getArgument('limit', 50);
         $cursor = $this->requestObject->getArgument('cursor');
 
-        $this->validateStatus($status);
-        $this->validateFunction($function);
-        $this->validateLimit($limit);
-        $this->validateCursor($cursor);
+        if ($status !== null && !is_string($status)) {
+            throw new \InvalidArgumentException('Status must be a string or null');
+        }
+
+        if ($function !== null && !is_string($function)) {
+            throw new \InvalidArgumentException('Function must be a string or null');
+        }
+
+        if (!is_int($limit)) {
+            throw new \InvalidArgumentException('Limit must be an integer');
+        }
+
+        if ($limit < 1 || $limit > 100) {
+            throw new \InvalidArgumentException('Limit must be between 1 and 100');
+        }
+
+        // Enforce safe maximum
+        $limit = min($limit, 50);
+
+        if ($cursor !== null && !is_string($cursor)) {
+            throw new \InvalidArgumentException('Cursor must be a string or null');
+        }
 
         $result = $this->repository->list($status, $function, $limit, $cursor);
+
+        $this->logger->debug('Operations listed', [
+            'count' => count($result['operations']),
+            'status_filter' => $status,
+            'function_filter' => $function,
+            'limit' => $limit,
+            'has_next_page' => $result['next_cursor'] !== null,
+        ]);
 
         $response = [
             'operations' => array_map(
@@ -71,90 +100,10 @@ final class OperationListFunction extends AbstractFunction
             ),
         ];
 
-        if (isset($result['next_cursor']) && $result['next_cursor'] !== null) {
+        if ($result['next_cursor'] !== null) {
             $response['next_cursor'] = $result['next_cursor'];
         }
 
         return $response;
-    }
-
-    /**
-     * Validate status filter.
-     *
-     * @param mixed $status Status filter value
-     *
-     * @throws \InvalidArgumentException If status is invalid
-     */
-    private function validateStatus(mixed $status): void
-    {
-        if ($status !== null && !is_string($status)) {
-            throw new \InvalidArgumentException('status must be a string or null');
-        }
-
-        if ($status !== null && !in_array($status, ['pending', 'processing', 'completed', 'failed', 'cancelled'], true)) {
-            throw new \InvalidArgumentException(
-                sprintf('Invalid status filter: %s', $status),
-            );
-        }
-    }
-
-    /**
-     * Validate function filter.
-     *
-     * @param mixed $function Function filter value
-     *
-     * @throws \InvalidArgumentException If function is invalid
-     */
-    private function validateFunction(mixed $function): void
-    {
-        if ($function !== null && !is_string($function)) {
-            throw new \InvalidArgumentException('function must be a string or null');
-        }
-    }
-
-    /**
-     * Validate pagination limit.
-     *
-     * @param mixed $limit Limit value
-     *
-     * @throws \InvalidArgumentException If limit is invalid
-     */
-    private function validateLimit(mixed $limit): void
-    {
-        if (!is_int($limit)) {
-            throw new \InvalidArgumentException('limit must be an integer');
-        }
-
-        if ($limit < 1 || $limit > 100) {
-            throw new \InvalidArgumentException('Limit must be between 1 and 100');
-        }
-    }
-
-    /**
-     * Validate pagination cursor.
-     *
-     * @param mixed $cursor Cursor value
-     *
-     * @throws \InvalidArgumentException If cursor is invalid
-     */
-    private function validateCursor(mixed $cursor): void
-    {
-        if ($cursor !== null && !is_string($cursor)) {
-            throw new \InvalidArgumentException('cursor must be a string or null');
-        }
-
-        if ($cursor === null) {
-            return;
-        }
-
-        $decoded = base64_decode($cursor, true);
-
-        if ($decoded === false) {
-            throw new \InvalidArgumentException('Invalid pagination cursor format');
-        }
-
-        if (strlen($decoded) > 256) {
-            throw new \InvalidArgumentException('Pagination cursor is too large');
-        }
     }
 }
