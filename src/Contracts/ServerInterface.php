@@ -100,4 +100,13 @@ interface ServerInterface
      * @return ExtensionRegistry Extension registry instance
      */
     public function getExtensionRegistry(): ExtensionRegistry;
+
+    /**
+     * Validate server configuration.
+     *
+     * Called during server registration to ensure proper setup.
+     *
+     * @throws \InvalidArgumentException If configuration is invalid
+     */
+    public function validate(): void;
 }
