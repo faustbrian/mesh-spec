@@ -110,7 +110,7 @@ final readonly class FunctionController
         // Check if streaming was requested and enabled
         $streamContext = StreamExtension::getContext();
 
-        if ($streamContext !== null && StreamExtension::shouldStream()) {
+        if ($streamContext !== null) {
             return $this->handleStreaming($streamContext);
         }
 
