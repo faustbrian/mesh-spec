@@ -450,6 +450,24 @@ enum ErrorCode: string
     }
 
     /**
+     * Get metric tags for this error code.
+     *
+     * Provides standardized tags for metrics collection and aggregation.
+     * Useful for integration with monitoring systems like Prometheus,
+     * DataDog, or CloudWatch.
+     *
+     * @return array{category: string, retryable: bool, source: string}
+     */
+    public function getMetricTags(): array
+    {
+        return [
+            'category' => $this->getCategory(),
+            'retryable' => $this->isRetryable(),
+            'source' => $this->isClient() ? 'client' : ($this->isServer() ? 'server' : 'other'),
+        ];
+    }
+
+    /**
      * Create a standardized error response array.
      *
      * Generates a consistent error response structure matching the Forrst
