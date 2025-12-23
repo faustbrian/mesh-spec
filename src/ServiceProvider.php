@@ -162,15 +162,33 @@ final class ServiceProvider extends PackageServiceProvider
             }
 
             foreach ($configuration->servers as $server) {
-                $functionsPath = config('rpc.paths.functions', '');
-                $functionsNamespace = config('rpc.namespaces.functions', '');
+                $functionsPath = config('rpc.paths.functions');
+                $functionsNamespace = config('rpc.namespaces.functions');
+
+                if (!is_string($functionsPath)) {
+                    throw new InvalidArgumentException(
+                        sprintf(
+                            'Configuration rpc.paths.functions must be a string, %s given',
+                            gettype($functionsPath)
+                        )
+                    );
+                }
+
+                if (!is_string($functionsNamespace)) {
+                    throw new InvalidArgumentException(
+                        sprintf(
+                            'Configuration rpc.namespaces.functions must be a string, %s given',
+                            gettype($functionsNamespace)
+                        )
+                    );
+                }
 
                 // @phpstan-ignore-next-line
                 Route::rpc(
                     new ConfigurationServer(
                         $server,
-                        is_string($functionsPath) ? $functionsPath : '',
-                        is_string($functionsNamespace) ? $functionsNamespace : '',
+                        $functionsPath,
+                        $functionsNamespace,
                     ),
                 );
             }
