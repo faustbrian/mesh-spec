@@ -86,10 +86,19 @@ abstract class AbstractData extends Data
      * have a null value to indicate that a particular link is unavailable."
      *
      * @param  array<string, mixed> $array Input array potentially containing null values
+     * @param  int                  $depth Current recursion depth
      * @return array<string, mixed> Filtered array with null values removed
+     *
+     * @throws RuntimeException If maximum recursion depth is exceeded
      */
-    private function removeNullValuesRecursively(array $array): array
+    private function removeNullValuesRecursively(array $array, int $depth = 0): array
     {
+        if ($depth > self::MAX_RECURSION_DEPTH) {
+            throw new RuntimeException(
+                sprintf('Maximum recursion depth of %d exceeded during null value removal', self::MAX_RECURSION_DEPTH),
+            );
+        }
+
         foreach ($array as $key => $value) {
             if ($value === null) {
                 unset($array[$key]);
@@ -103,7 +112,7 @@ abstract class AbstractData extends Data
 
             /** @var array<string, mixed> $recursiveValue */
             $recursiveValue = $value;
-            $array[$key] = $this->removeNullValuesRecursively($recursiveValue);
+            $array[$key] = $this->removeNullValuesRecursively($recursiveValue, $depth + 1);
         }
 
         return $array;
