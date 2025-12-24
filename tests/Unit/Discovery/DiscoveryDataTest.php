@@ -25,8 +25,8 @@ describe('DiscoveryData', function (): void {
             );
             $functions = [
                 new FunctionDescriptorData(
-                    name: 'orders.get',
-                    version: '2',
+                    name: 'urn:cline:forrst:fn:orders.get',
+                    version: '2.0.0',
                     arguments: [],
                 ),
             ];
@@ -60,8 +60,8 @@ describe('DiscoveryData', function (): void {
             );
             $functions = [
                 new FunctionDescriptorData(
-                    name: 'orders.get',
-                    version: '2',
+                    name: 'urn:cline:forrst:fn:orders.get',
+                    version: '2.0.0',
                     arguments: [],
                 ),
             ];
@@ -113,9 +113,9 @@ describe('DiscoveryData', function (): void {
             // Arrange
             $info = new InfoData(title: 'API', version: '1.0.0');
             $functions = [
-                new FunctionDescriptorData(name: 'orders.get', version: '2', arguments: []),
-                new FunctionDescriptorData(name: 'orders.list', version: '2', arguments: []),
-                new FunctionDescriptorData(name: 'orders.create', version: '2', arguments: []),
+                new FunctionDescriptorData(name: 'urn:cline:forrst:fn:orders.get', version: '2.0.0', arguments: []),
+                new FunctionDescriptorData(name: 'urn:cline:forrst:fn:orders.list', version: '2.0.0', arguments: []),
+                new FunctionDescriptorData(name: 'urn:cline:forrst:fn:orders.create', version: '2.0.0', arguments: []),
             ];
 
             // Act
@@ -128,9 +128,9 @@ describe('DiscoveryData', function (): void {
 
             // Assert
             expect($discovery->functions)->toHaveCount(3)
-                ->and($discovery->functions[0]->name)->toBe('orders.get')
-                ->and($discovery->functions[1]->name)->toBe('orders.list')
-                ->and($discovery->functions[2]->name)->toBe('orders.create');
+                ->and($discovery->functions[0]->name)->toBe('urn:cline:forrst:fn:orders.get')
+                ->and($discovery->functions[1]->name)->toBe('urn:cline:forrst:fn:orders.list')
+                ->and($discovery->functions[2]->name)->toBe('urn:cline:forrst:fn:orders.create');
         });
 
         test('creates instance with multiple servers', function (): void {
@@ -261,8 +261,8 @@ describe('DiscoveryData', function (): void {
                 ),
                 functions: [
                     new FunctionDescriptorData(
-                        name: 'orders.get',
-                        version: '2',
+                        name: 'urn:cline:forrst:fn:orders.get',
+                        version: '2.0.0',
                         arguments: [],
                     ),
                 ],
@@ -276,7 +276,7 @@ describe('DiscoveryData', function (): void {
                 ->and($array['info']['title'])->toBe('Orders API')
                 ->and($array['functions'])->toBeArray()
                 ->and($array['functions'][0])->toBeArray()
-                ->and($array['functions'][0]['name'])->toBe('orders.get');
+                ->and($array['functions'][0]['name'])->toBe('urn:cline:forrst:fn:orders.get');
         });
     });
 

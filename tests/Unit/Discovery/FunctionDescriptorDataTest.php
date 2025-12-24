@@ -21,8 +21,8 @@ describe('FunctionDescriptorData', function (): void {
     describe('Happy Paths', function (): void {
         test('creates instance with required fields only', function (): void {
             // Arrange
-            $name = 'orders.create';
-            $version = '2';
+            $name = 'urn:cline:forrst:fn:orders.create';
+            $version = '2.0.0';
             $arguments = [
                 new ArgumentData(
                     name: 'customer_id',
@@ -39,8 +39,8 @@ describe('FunctionDescriptorData', function (): void {
             );
 
             // Assert
-            expect($function->name)->toBe('orders.create')
-                ->and($function->version)->toBe('2')
+            expect($function->name)->toBe('urn:cline:forrst:fn:orders.create')
+                ->and($function->version)->toBe('2.0.0')
                 ->and($function->arguments)->toHaveCount(1)
                 ->and($function->arguments[0])->toBeInstanceOf(ArgumentData::class)
                 ->and($function->summary)->toBeNull()
@@ -83,8 +83,8 @@ describe('FunctionDescriptorData', function (): void {
 
             // Act
             $function = new FunctionDescriptorData(
-                name: 'orders.create',
-                version: '2',
+                name: 'urn:cline:forrst:fn:orders.create',
+                version: '2.0.0',
                 arguments: $arguments,
                 summary: 'Create a new order',
                 description: 'Creates an order for a customer',
@@ -100,8 +100,8 @@ describe('FunctionDescriptorData', function (): void {
             );
 
             // Assert
-            expect($function->name)->toBe('orders.create')
-                ->and($function->version)->toBe('2')
+            expect($function->name)->toBe('urn:cline:forrst:fn:orders.create')
+                ->and($function->version)->toBe('2.0.0')
                 ->and($function->arguments)->toHaveCount(1)
                 ->and($function->summary)->toBe('Create a new order')
                 ->and($function->description)->toBe('Creates an order for a customer')
@@ -122,8 +122,8 @@ describe('FunctionDescriptorData', function (): void {
         test('creates instance with multiple side effects', function (): void {
             // Arrange & Act
             $function = new FunctionDescriptorData(
-                name: 'inventory.sync',
-                version: '1',
+                name: 'urn:cline:forrst:fn:inventory.sync',
+                version: '1.0.0',
                 arguments: [],
                 sideEffects: ['create', 'update', 'delete'],
             );
@@ -136,8 +136,8 @@ describe('FunctionDescriptorData', function (): void {
         test('creates instance with empty side effects for read-only function', function (): void {
             // Arrange & Act
             $function = new FunctionDescriptorData(
-                name: 'orders.get',
-                version: '2',
+                name: 'urn:cline:forrst:fn:orders.get',
+                version: '2.0.0',
                 arguments: [],
                 sideEffects: [],
             );
@@ -150,8 +150,8 @@ describe('FunctionDescriptorData', function (): void {
         test('creates instance with discoverable false', function (): void {
             // Arrange & Act
             $function = new FunctionDescriptorData(
-                name: 'debug.internal',
-                version: '1',
+                name: 'urn:cline:forrst:fn:debug.internal',
+                version: '1.0.0',
                 arguments: [],
                 discoverable: false,
             );
@@ -163,8 +163,8 @@ describe('FunctionDescriptorData', function (): void {
         test('toArray outputs sideEffects in camelCase', function (): void {
             // Arrange
             $function = new FunctionDescriptorData(
-                name: 'orders.create',
-                version: '2',
+                name: 'urn:cline:forrst:fn:orders.create',
+                version: '2.0.0',
                 arguments: [],
                 sideEffects: ['create', 'update'],
             );
@@ -181,8 +181,8 @@ describe('FunctionDescriptorData', function (): void {
         test('toArray outputs externalDocs in camelCase', function (): void {
             // Arrange
             $function = new FunctionDescriptorData(
-                name: 'orders.create',
-                version: '2',
+                name: 'urn:cline:forrst:fn:orders.create',
+                version: '2.0.0',
                 arguments: [],
                 externalDocs: new ExternalDocsData(
                     url: 'https://docs.example.com',
@@ -203,7 +203,7 @@ describe('FunctionDescriptorData', function (): void {
         test('toArray includes all required fields', function (): void {
             // Arrange
             $function = new FunctionDescriptorData(
-                name: 'test.function',
+                name: 'urn:cline:forrst:fn:test.function',
                 version: '1.0.0',
                 arguments: [],
             );
@@ -215,7 +215,7 @@ describe('FunctionDescriptorData', function (): void {
             expect($array)->toHaveKey('name')
                 ->and($array)->toHaveKey('version')
                 ->and($array)->toHaveKey('arguments')
-                ->and($array['name'])->toBe('test.function')
+                ->and($array['name'])->toBe('urn:cline:forrst:fn:test.function')
                 ->and($array['version'])->toBe('1.0.0')
                 ->and($array['arguments'])->toBe([]);
         });
@@ -223,8 +223,8 @@ describe('FunctionDescriptorData', function (): void {
         test('toArray handles null optional fields', function (): void {
             // Arrange
             $function = new FunctionDescriptorData(
-                name: 'test.function',
-                version: '1',
+                name: 'urn:cline:forrst:fn:test.function',
+                version: '1.0.0',
                 arguments: [],
             );
 
@@ -248,8 +248,8 @@ describe('FunctionDescriptorData', function (): void {
         test('toArray includes discoverable with default', function (): void {
             // Arrange
             $function = new FunctionDescriptorData(
-                name: 'test.function',
-                version: '1',
+                name: 'urn:cline:forrst:fn:test.function',
+                version: '1.0.0',
                 arguments: [],
             );
 
@@ -266,8 +266,8 @@ describe('FunctionDescriptorData', function (): void {
         test('handles empty arguments array', function (): void {
             // Arrange & Act
             $function = new FunctionDescriptorData(
-                name: 'test.function',
-                version: '1',
+                name: 'urn:cline:forrst:fn:test.function',
+                version: '1.0.0',
                 arguments: [],
             );
 
@@ -286,8 +286,8 @@ describe('FunctionDescriptorData', function (): void {
 
             // Act
             $function = new FunctionDescriptorData(
-                name: 'test.function',
-                version: '1',
+                name: 'urn:cline:forrst:fn:test.function',
+                version: '1.0.0',
                 arguments: $arguments,
             );
 
@@ -307,8 +307,8 @@ describe('FunctionDescriptorData', function (): void {
 
             // Act
             $function = new FunctionDescriptorData(
-                name: 'test.function',
-                version: '1',
+                name: 'urn:cline:forrst:fn:test.function',
+                version: '1.0.0',
                 arguments: [],
                 tags: $tags,
             );
@@ -328,8 +328,8 @@ describe('FunctionDescriptorData', function (): void {
 
             // Act
             $function = new FunctionDescriptorData(
-                name: 'test.function',
-                version: '1',
+                name: 'urn:cline:forrst:fn:test.function',
+                version: '1.0.0',
                 arguments: [],
                 errors: $errors,
             );
@@ -343,8 +343,8 @@ describe('FunctionDescriptorData', function (): void {
         test('handles null side effects', function (): void {
             // Arrange & Act
             $function = new FunctionDescriptorData(
-                name: 'test.function',
-                version: '1',
+                name: 'urn:cline:forrst:fn:test.function',
+                version: '1.0.0',
                 arguments: [],
                 sideEffects: null,
             );
@@ -356,32 +356,32 @@ describe('FunctionDescriptorData', function (): void {
         test('handles function name with dots', function (): void {
             // Arrange & Act
             $function = new FunctionDescriptorData(
-                name: 'api.v2.orders.create',
-                version: '1',
+                name: 'urn:cline:forrst:fn:api.v2.orders.create',
+                version: '1.0.0',
                 arguments: [],
             );
 
             // Assert
-            expect($function->name)->toBe('api.v2.orders.create');
+            expect($function->name)->toBe('urn:cline:forrst:fn:api.v2.orders.create');
         });
 
         test('handles version as string with multiple digits', function (): void {
             // Arrange & Act
             $function = new FunctionDescriptorData(
-                name: 'test.function',
-                version: '12',
+                name: 'urn:cline:forrst:fn:test.function',
+                version: '12.0.0',
                 arguments: [],
             );
 
             // Assert
-            expect($function->version)->toBe('12');
+            expect($function->version)->toBe('12.0.0');
         });
 
         test('toArray with nested Data objects converts correctly', function (): void {
             // Arrange
             $function = new FunctionDescriptorData(
-                name: 'orders.create',
-                version: '2',
+                name: 'urn:cline:forrst:fn:orders.create',
+                version: '2.0.0',
                 arguments: [
                     new ArgumentData(
                         name: 'customer_id',
@@ -411,32 +411,32 @@ describe('FunctionDescriptorData', function (): void {
         test('validates required name field exists', function (): void {
             // Arrange
             $function = new FunctionDescriptorData(
-                name: 'test.function',
-                version: '1',
+                name: 'urn:cline:forrst:fn:test.function',
+                version: '1.0.0',
                 arguments: [],
             );
 
             // Act & Assert
-            expect($function->name)->toBe('test.function');
+            expect($function->name)->toBe('urn:cline:forrst:fn:test.function');
         });
 
         test('validates required version field exists', function (): void {
             // Arrange
             $function = new FunctionDescriptorData(
-                name: 'test.function',
-                version: '1',
+                name: 'urn:cline:forrst:fn:test.function',
+                version: '1.0.0',
                 arguments: [],
             );
 
             // Act & Assert
-            expect($function->version)->toBe('1');
+            expect($function->version)->toBe('1.0.0');
         });
 
         test('validates required arguments field exists', function (): void {
             // Arrange
             $function = new FunctionDescriptorData(
-                name: 'test.function',
-                version: '1',
+                name: 'urn:cline:forrst:fn:test.function',
+                version: '1.0.0',
                 arguments: [],
             );
 
