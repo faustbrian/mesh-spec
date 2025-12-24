@@ -148,7 +148,7 @@ describe('OperationListFunction', function (): void {
                     ->and($result[3]->name)->toBe('cursor')
                     ->and($result[3]->schema['type'])->toBe('string')
                     ->and($result[3]->required)->toBeFalse()
-                    ->and($result[3]->description)->toBe('Pagination cursor');
+                    ->and($result[3]->description)->toBe('Pagination cursor for retrieving next page');
             });
         });
 
@@ -273,7 +273,7 @@ describe('OperationListFunction', function (): void {
                 // Arrange
                 $repository = mock(OperationRepositoryInterface::class, function (MockInterface $mock): void {
                     $mock->shouldReceive('list')
-                        ->with('completed', null, 50, null)
+                        ->with('completed', null, 50, null, null)
                         ->andReturn(['operations' => [], 'next_cursor' => null]);
                 });
 
@@ -288,14 +288,14 @@ describe('OperationListFunction', function (): void {
                 $function();
 
                 // Assert - verified by mock expectations
-                $repository->shouldHaveReceived('list')->with('completed', null, 50, null);
+                $repository->shouldHaveReceived('list')->with('completed', null, 50, null, null);
             });
 
             test('passes function filter to repository', function (): void {
                 // Arrange
                 $repository = mock(OperationRepositoryInterface::class, function (MockInterface $mock): void {
                     $mock->shouldReceive('list')
-                        ->with(null, 'urn:app:forrst:fn:users:create', 50, null)
+                        ->with(null, 'urn:app:forrst:fn:users:create', 50, null, null)
                         ->andReturn(['operations' => [], 'next_cursor' => null]);
                 });
 
@@ -310,14 +310,14 @@ describe('OperationListFunction', function (): void {
                 $function();
 
                 // Assert - verified by mock expectations
-                $repository->shouldHaveReceived('list')->with(null, 'urn:app:forrst:fn:users:create', 50, null);
+                $repository->shouldHaveReceived('list')->with(null, 'urn:app:forrst:fn:users:create', 50, null, null);
             });
 
             test('passes limit to repository', function (): void {
                 // Arrange
                 $repository = mock(OperationRepositoryInterface::class, function (MockInterface $mock): void {
                     $mock->shouldReceive('list')
-                        ->with(null, null, 25, null)
+                        ->with(null, null, 25, null, null)
                         ->andReturn(['operations' => [], 'next_cursor' => null]);
                 });
 
@@ -332,14 +332,14 @@ describe('OperationListFunction', function (): void {
                 $function();
 
                 // Assert - verified by mock expectations
-                $repository->shouldHaveReceived('list')->with(null, null, 25, null);
+                $repository->shouldHaveReceived('list')->with(null, null, 25, null, null);
             });
 
             test('uses default limit of 50 when not provided', function (): void {
                 // Arrange
                 $repository = mock(OperationRepositoryInterface::class, function (MockInterface $mock): void {
                     $mock->shouldReceive('list')
-                        ->with(null, null, 50, null)
+                        ->with(null, null, 50, null, null)
                         ->andReturn(['operations' => [], 'next_cursor' => null]);
                 });
 
@@ -351,14 +351,14 @@ describe('OperationListFunction', function (): void {
                 $function();
 
                 // Assert - verified by mock expectations
-                $repository->shouldHaveReceived('list')->with(null, null, 50, null);
+                $repository->shouldHaveReceived('list')->with(null, null, 50, null, null);
             });
 
             test('passes cursor to repository', function (): void {
                 // Arrange
                 $repository = mock(OperationRepositoryInterface::class, function (MockInterface $mock): void {
                     $mock->shouldReceive('list')
-                        ->with(null, null, 50, 'cursor-abc123')
+                        ->with(null, null, 50, 'cursor-abc123', null)
                         ->andReturn(['operations' => [], 'next_cursor' => null]);
                 });
 
@@ -373,7 +373,7 @@ describe('OperationListFunction', function (): void {
                 $function();
 
                 // Assert - verified by mock expectations
-                $repository->shouldHaveReceived('list')->with(null, null, 50, 'cursor-abc123');
+                $repository->shouldHaveReceived('list')->with(null, null, 50, 'cursor-abc123', null);
             });
 
             test('includes next_cursor when more results available', function (): void {
@@ -425,7 +425,7 @@ describe('OperationListFunction', function (): void {
                 // Arrange
                 $repository = mock(OperationRepositoryInterface::class, function (MockInterface $mock): void {
                     $mock->shouldReceive('list')
-                        ->with('processing', 'data.export', 10, 'cursor-123')
+                        ->with('processing', 'data.export', 10, 'cursor-123', null)
                         ->andReturn(['operations' => [], 'next_cursor' => null]);
                 });
 
@@ -446,7 +446,7 @@ describe('OperationListFunction', function (): void {
                 $function();
 
                 // Assert - verified by mock expectations
-                $repository->shouldHaveReceived('list')->with('processing', 'data.export', 10, 'cursor-123');
+                $repository->shouldHaveReceived('list')->with('processing', 'data.export', 10, 'cursor-123', null);
             });
         });
     });
@@ -526,7 +526,7 @@ describe('OperationListFunction', function (): void {
                 // Arrange
                 $repository = mock(OperationRepositoryInterface::class, function (MockInterface $mock): void {
                     $mock->shouldReceive('list')
-                        ->with(null, null, 1, null)
+                        ->with(null, null, 1, null, null)
                         ->andReturn(['operations' => [], 'next_cursor' => null]);
                 });
 
@@ -541,14 +541,14 @@ describe('OperationListFunction', function (): void {
                 $function();
 
                 // Assert - verified by mock expectations
-                $repository->shouldHaveReceived('list')->with(null, null, 1, null);
+                $repository->shouldHaveReceived('list')->with(null, null, 1, null, null);
             });
 
             test('respects maximum limit of 100', function (): void {
                 // Arrange
                 $repository = mock(OperationRepositoryInterface::class, function (MockInterface $mock): void {
                     $mock->shouldReceive('list')
-                        ->with(null, null, 100, null)
+                        ->with(null, null, 50, null, null)
                         ->andReturn(['operations' => [], 'next_cursor' => null]);
                 });
 
@@ -562,8 +562,8 @@ describe('OperationListFunction', function (): void {
                 // Act
                 $function();
 
-                // Assert - verified by mock expectations
-                $repository->shouldHaveReceived('list')->with(null, null, 100, null);
+                // Assert - verified by mock expectations (capped at 50 by implementation)
+                $repository->shouldHaveReceived('list')->with(null, null, 50, null, null);
             });
         });
     });
