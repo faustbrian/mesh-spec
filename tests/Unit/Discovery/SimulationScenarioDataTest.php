@@ -11,32 +11,17 @@ use Cline\Forrst\Discovery\SimulationScenarioData;
 
 describe('SimulationScenarioData', function (): void {
     describe('Happy Paths', function (): void {
-        test('creates instance with all parameters provided', function (): void {
-            // Arrange
-            $name = 'success_scenario';
-            $input = ['user_id' => 123, 'name' => 'John Doe'];
-            $output = ['id' => 123, 'name' => 'John Doe', 'created' => true];
-            $description = 'Successfully creates a user';
-            $error = ['code' => 0, 'message' => 'No error'];
-            $metadata = ['timing' => 150, 'headers' => ['Content-Type' => 'application/json']];
-
-            // Act
-            $scenario = new SimulationScenarioData(
-                name: $name,
-                input: $input,
-                output: $output,
-                description: $description,
-                error: $error,
-                metadata: $metadata,
+        test('validates output and error are mutually exclusive', function (): void {
+            // Arrange & Act & Assert
+            expect(fn () => new SimulationScenarioData(
+                name: 'test',
+                input: ['user_id' => 123],
+                output: ['id' => 123],
+                error: ['code' => 'ERROR', 'message' => 'Error'],
+            ))->toThrow(
+                InvalidFieldValueException::class,
+                'Cannot specify both "output" and "error"',
             );
-
-            // Assert
-            expect($scenario->name)->toBe($name)
-                ->and($scenario->input)->toBe($input)
-                ->and($scenario->output)->toBe($output)
-                ->and($scenario->description)->toBe($description)
-                ->and($scenario->error)->toBe($error)
-                ->and($scenario->metadata)->toBe($metadata);
         });
 
         test('creates instance with only required parameters', function (): void {
@@ -351,7 +336,7 @@ describe('SimulationScenarioData', function (): void {
             // Arrange
             $name = 'lowercase_error';
             $input = ['action' => 'fail'];
-            $code = 'custom_error';
+            $code = 'CUSTOM_ERROR';
             $message = 'Custom error';
 
             // Act
@@ -363,7 +348,7 @@ describe('SimulationScenarioData', function (): void {
             );
 
             // Assert
-            expect($scenario->error['code'])->toBe('custom_error');
+            expect($scenario->error['code'])->toBe('CUSTOM_ERROR');
         });
 
         test('handles empty string as name', function (): void {

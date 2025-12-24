@@ -174,7 +174,7 @@ describe('AsyncExtension', function (): void {
                 ->and($poll)->toHaveKey('version')
                 ->and($poll)->toHaveKey('arguments')
                 ->and($poll['function'])->toBe('urn:cline:forrst:ext:async:fn:status')
-                ->and($poll['version'])->toBe('1')
+                ->and($poll['version'])->toBe('1.0.0')
                 ->and($poll['arguments'])->toHaveKey('operation_id');
         });
 

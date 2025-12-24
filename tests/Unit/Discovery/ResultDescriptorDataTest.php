@@ -234,28 +234,24 @@ describe('ResultDescriptorData', function (): void {
             expect($result->collection)->toBeTrue();
         });
 
-        test('handles both resource and schema set', function (): void {
-            // Arrange
-            $schema = ['type' => 'object'];
-
-            // Act
-            $result = new ResultDescriptorData(
+        test('validates resource and schema are mutually exclusive', function (): void {
+            // Arrange & Act & Assert
+            expect(fn () => new ResultDescriptorData(
                 resource: 'order',
-                schema: $schema,
+                schema: ['type' => 'object'],
+            ))->toThrow(
+                InvalidFieldValueException::class,
+                'Cannot specify both "resource" and "schema"',
             );
-
-            // Assert
-            expect($result->resource)->toBe('order')
-                ->and($result->schema)->toBe($schema);
         });
 
-        test('handles neither resource nor schema set', function (): void {
-            // Arrange & Act
-            $result = new ResultDescriptorData();
-
-            // Assert
-            expect($result->resource)->toBeNull()
-                ->and($result->schema)->toBeNull();
+        test('validates at least one of resource or schema required', function (): void {
+            // Arrange & Act & Assert
+            expect(fn () => new ResultDescriptorData())
+                ->toThrow(
+                    MissingRequiredFieldException::class,
+                    'resource or schema',
+                );
         });
 
         test('handles empty schema object', function (): void {

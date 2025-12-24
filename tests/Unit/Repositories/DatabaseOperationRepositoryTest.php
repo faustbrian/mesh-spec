@@ -219,7 +219,7 @@ describe('DatabaseOperationRepository', function (): void {
 
             for ($i = 1; $i <= 10; ++$i) {
                 Operation::query()->create([
-                    'id' => 'op-list-'.$i,
+                    'id' => sprintf('op_list_%019d', $i),
                     'function' => 'urn:cline:forrst:fn:test:function',
                     'status' => 'pending',
                 ]);
@@ -287,7 +287,7 @@ describe('DatabaseOperationRepository', function (): void {
 
             for ($i = 1; $i <= 10; ++$i) {
                 Operation::query()->create([
-                    'id' => 'op-limit-'.$i,
+                    'id' => sprintf('op_limit_%018d', $i),
                     'function' => 'urn:cline:forrst:fn:test:function',
                     'status' => 'pending',
                 ]);
@@ -309,7 +309,7 @@ describe('DatabaseOperationRepository', function (): void {
             // The repository uses id for cursor comparison, not created_at
             for ($i = 10; $i >= 1; --$i) {
                 Operation::query()->create([
-                    'id' => sprintf('op-page-%02d', $i),
+                    'id' => sprintf('op_page_%019d', $i),
                     'function' => 'urn:cline:forrst:fn:test:function',
                     'status' => 'pending',
                 ]);
@@ -385,7 +385,7 @@ describe('DatabaseOperationRepository', function (): void {
 
             for ($i = 1; $i <= 10; ++$i) {
                 Operation::query()->create([
-                    'id' => 'op-caller-'.$i,
+                    'id' => sprintf('op_caller_%017d', $i),
                     'function' => 'urn:cline:forrst:fn:test:function',
                     'status' => 'pending',
                     'caller_id' => 'caller-1',
@@ -594,7 +594,7 @@ describe('DatabaseOperationRepository', function (): void {
 
             for ($i = 1; $i <= 5; ++$i) {
                 Operation::query()->create([
-                    'id' => 'op-exact-'.$i,
+                    'id' => sprintf('op_exact_%018d', $i),
                     'function' => 'urn:cline:forrst:fn:test:function',
                     'status' => 'pending',
                 ]);

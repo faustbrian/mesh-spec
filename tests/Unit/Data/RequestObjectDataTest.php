@@ -38,7 +38,7 @@ describe('RequestObjectData', function (): void {
                 ->and($request->protocol->version)->toBe('0.1.0')
                 ->and($request->id)->toBe('test-123')
                 ->and($request->call->function)->toBe('user.create')
-                ->and($request->call->version)->toBe('1')
+                ->and($request->call->version)->toBe('1.0.0')
                 ->and($request->call->arguments)->toBe(['name' => 'John Doe', 'email' => 'john@example.com'])
                 ->and($request->context)->toBe(['tenant' => 'acme']);
         });
@@ -82,7 +82,7 @@ describe('RequestObjectData', function (): void {
             $request = RequestObjectData::asRequest('orders.list', null, '2');
 
             // Assert
-            expect($request->getVersion())->toBe('2');
+            expect($request->getVersion())->toBe('2.0.0');
         });
 
         test('retrieves specific argument using dot notation', function (): void {

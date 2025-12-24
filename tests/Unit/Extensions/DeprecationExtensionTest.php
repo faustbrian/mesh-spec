@@ -240,7 +240,7 @@ describe('DeprecationExtension', function (): void {
             // Assert
             $warning = $result->extensions[0]->data['warnings'][0];
             expect($warning['replacement']['function'])->toBe('new.function')
-                ->and($warning['replacement']['version'])->toBe('2');
+                ->and($warning['replacement']['version'])->toBe('2.0.0');
         });
 
         test('deprecateVersion applies to specific version', function (): void {
