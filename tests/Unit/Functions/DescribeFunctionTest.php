@@ -10,6 +10,7 @@
 use Cline\Forrst\Contracts\FunctionInterface;
 use Cline\Forrst\Contracts\ServerInterface;
 use Cline\Forrst\Discovery\ResultDescriptorData;
+use Cline\Forrst\Exceptions\EmptyArrayException;
 use Cline\Forrst\Extensions\Discovery\Functions\DescribeFunction;
 use Cline\Forrst\Facades\Server as ServerFacade;
 use Cline\Forrst\Repositories\FunctionRepository;
@@ -113,7 +114,7 @@ describe('DescribeFunction', function (): void {
                 // Arrange
                 $mockFunction = mock(FunctionInterface::class, function (MockInterface $mock): void {
                     $mock->shouldReceive('getUrn')->andReturn('urn:cline:forrst:fn:test:function');
-                    $mock->shouldReceive('getVersion')->andReturn('1');
+                    $mock->shouldReceive('getVersion')->andReturn('1.0.0');
                     $mock->shouldReceive('getSummary')->andReturn('Test function summary');
                     $mock->shouldReceive('getArguments')->andReturn([]);
                     $mock->shouldReceive('getResult')->andReturn(null);
@@ -151,7 +152,7 @@ describe('DescribeFunction', function (): void {
                     ->and($result)->toHaveKey('forrst')
                     ->and($result['forrst'])->toBe('0.1.0')
                     ->and($result)->toHaveKey('discovery')
-                    ->and($result['discovery'])->toBe('0.1')
+                    ->and($result['discovery'])->toBe('0.1.0')
                     ->and($result)->toHaveKey('info')
                     ->and($result['info'])->toHaveKey('title')
                     ->and($result['info'])->toHaveKey('version')
@@ -191,7 +192,7 @@ describe('DescribeFunction', function (): void {
                 // Arrange
                 $mockFunction1 = mock(FunctionInterface::class, function (MockInterface $mock): void {
                     $mock->shouldReceive('getUrn')->andReturn('function.one');
-                    $mock->shouldReceive('getVersion')->andReturn('1');
+                    $mock->shouldReceive('getVersion')->andReturn('1.0.0');
                     $mock->shouldReceive('getSummary')->andReturn('Function One');
                     $mock->shouldReceive('getArguments')->andReturn([]);
                     $mock->shouldReceive('getResult')->andReturn(null);
@@ -213,7 +214,7 @@ describe('DescribeFunction', function (): void {
 
                 $mockFunction2 = mock(FunctionInterface::class, function (MockInterface $mock): void {
                     $mock->shouldReceive('getUrn')->andReturn('function.two');
-                    $mock->shouldReceive('getVersion')->andReturn('1');
+                    $mock->shouldReceive('getVersion')->andReturn('1.0.0');
                     $mock->shouldReceive('getSummary')->andReturn('Function Two');
                     $mock->shouldReceive('getArguments')->andReturn([]);
                     $mock->shouldReceive('getResult')->andReturn(null);
@@ -312,7 +313,7 @@ describe('DescribeFunction', function (): void {
                 // Arrange
                 $mockFunction1 = mock(FunctionInterface::class, function (MockInterface $mock): void {
                     $mock->shouldReceive('getUrn')->andReturn('urn:app:forrst:fn:users:list');
-                    $mock->shouldReceive('getVersion')->andReturn('1');
+                    $mock->shouldReceive('getVersion')->andReturn('1.0.0');
                     $mock->shouldReceive('getSummary')->andReturn('List all users');
                     $mock->shouldReceive('getArguments')->andReturn([]);
                     $mock->shouldReceive('getResult')->andReturn(null);
@@ -332,7 +333,7 @@ describe('DescribeFunction', function (): void {
 
                 $mockFunction2 = mock(FunctionInterface::class, function (MockInterface $mock): void {
                     $mock->shouldReceive('getUrn')->andReturn('urn:app:forrst:fn:users:get');
-                    $mock->shouldReceive('getVersion')->andReturn('1');
+                    $mock->shouldReceive('getVersion')->andReturn('1.0.0');
                     $mock->shouldReceive('getSummary')->andReturn('Get a single user');
                     $mock->shouldReceive('getArguments')->andReturn([]);
                     $mock->shouldReceive('getResult')->andReturn(null);
@@ -665,12 +666,9 @@ describe('DescribeFunction', function (): void {
 
                 $function = new DescribeFunction();
 
-                // Act
-                $result = $function->handle();
-
-                // Assert
-                expect($result['functions'])->toBeArray()
-                    ->and($result['functions'])->toHaveCount(0);
+                // Act & Assert
+                expect(fn () => $function->handle())
+                    ->toThrow(EmptyArrayException::class);
             });
         });
     });
@@ -681,7 +679,7 @@ describe('DescribeFunction', function (): void {
                 // Arrange
                 $mockFunction = mock(FunctionInterface::class, function (MockInterface $mock): void {
                     $mock->shouldReceive('getUrn')->andReturn('urn:cline:forrst:fn:test:function');
-                    $mock->shouldReceive('getVersion')->andReturn('1');
+                    $mock->shouldReceive('getVersion')->andReturn('1.0.0');
                     $mock->shouldReceive('getSummary')->andReturn('Test');
                     $mock->shouldReceive('getArguments')->andReturn([]);
                     $mock->shouldReceive('getResult')->andReturn(null);
@@ -723,7 +721,7 @@ describe('DescribeFunction', function (): void {
                 // Arrange
                 $mockFunction = mock(FunctionInterface::class, function (MockInterface $mock): void {
                     $mock->shouldReceive('getUrn')->andReturn('urn:cline:forrst:fn:test:function');
-                    $mock->shouldReceive('getVersion')->andReturn('1');
+                    $mock->shouldReceive('getVersion')->andReturn('1.0.0');
                     $mock->shouldReceive('getSummary')->andReturn('Test');
                     $mock->shouldReceive('getArguments')->andReturn([]);
                     $mock->shouldReceive('getResult')->andReturn(null);
