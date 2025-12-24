@@ -9,9 +9,11 @@
 
 use Carbon\CarbonImmutable;
 use Cline\Forrst\Contracts\HealthCheckerInterface;
+use Cline\Forrst\Data\HealthStatus;
 use Cline\Forrst\Data\RequestObjectData;
 use Cline\Forrst\Discovery\ArgumentData;
 use Cline\Forrst\Discovery\ResultDescriptorData;
+use Cline\Forrst\Exceptions\InvalidFieldValueException;
 use Cline\Forrst\Extensions\Diagnostics\Functions\HealthFunction;
 use Mockery\MockInterface;
 
@@ -157,7 +159,7 @@ describe('HealthFunction', function (): void {
             test('returns healthy status with no checkers', function (): void {
                 // Arrange
                 $function = new HealthFunction([], requireAuthForDetails: false);
-                $request = RequestObjectData::asRequest('urn:cline:forrst:ext:diagnostics:fn:health', []);
+                $request = RequestObjectData::asRequest('urn:cline:forrst:ext:diagnostics:fn:health', [], context: ['user_id' => 'test-user']);
                 $function->setRequest($request);
 
                 // Act
@@ -172,7 +174,7 @@ describe('HealthFunction', function (): void {
             test('returns timestamp in ISO 8601 format', function (): void {
                 // Arrange
                 $function = new HealthFunction([], requireAuthForDetails: false);
-                $request = RequestObjectData::asRequest('urn:cline:forrst:ext:diagnostics:fn:health', []);
+                $request = RequestObjectData::asRequest('urn:cline:forrst:ext:diagnostics:fn:health', [], context: ['user_id' => 'test-user']);
                 $function->setRequest($request);
                 $before = CarbonImmutable::now()->subSecond();
 
@@ -190,22 +192,22 @@ describe('HealthFunction', function (): void {
                 // Arrange
                 $checker1 = mock(HealthCheckerInterface::class, function (MockInterface $mock): void {
                     $mock->shouldReceive('getName')->andReturn('database');
-                    $mock->shouldReceive('check')->andReturn([
-                        'status' => 'healthy',
-                        'message' => 'Database is responsive',
-                    ]);
+                    $mock->shouldReceive('check')->andReturn(new HealthStatus(
+                        status: 'healthy',
+                        message: 'Database is responsive',
+                    ));
                 });
 
                 $checker2 = mock(HealthCheckerInterface::class, function (MockInterface $mock): void {
                     $mock->shouldReceive('getName')->andReturn('cache');
-                    $mock->shouldReceive('check')->andReturn([
-                        'status' => 'healthy',
-                        'message' => 'Cache is operational',
-                    ]);
+                    $mock->shouldReceive('check')->andReturn(new HealthStatus(
+                        status: 'healthy',
+                        message: 'Cache is operational',
+                    ));
                 });
 
                 $function = new HealthFunction([$checker1, $checker2], requireAuthForDetails: false);
-                $request = RequestObjectData::asRequest('urn:cline:forrst:ext:diagnostics:fn:health', []);
+                $request = RequestObjectData::asRequest('urn:cline:forrst:ext:diagnostics:fn:health', [], context: ['user_id' => 'test-user']);
                 $function->setRequest($request);
 
                 // Act
@@ -222,16 +224,16 @@ describe('HealthFunction', function (): void {
                 // Arrange
                 $checker1 = mock(HealthCheckerInterface::class, function (MockInterface $mock): void {
                     $mock->shouldReceive('getName')->andReturn('database');
-                    $mock->shouldReceive('check')->andReturn(['status' => 'healthy']);
+                    $mock->shouldReceive('check')->andReturn(new HealthStatus(status: 'healthy'));
                 });
 
                 $checker2 = mock(HealthCheckerInterface::class, function (MockInterface $mock): void {
                     $mock->shouldReceive('getName')->andReturn('cache');
-                    $mock->shouldReceive('check')->andReturn(['status' => 'degraded']);
+                    $mock->shouldReceive('check')->andReturn(new HealthStatus(status: 'degraded'));
                 });
 
                 $function = new HealthFunction([$checker1, $checker2], requireAuthForDetails: false);
-                $request = RequestObjectData::asRequest('urn:cline:forrst:ext:diagnostics:fn:health', []);
+                $request = RequestObjectData::asRequest('urn:cline:forrst:ext:diagnostics:fn:health', [], context: ['user_id' => 'test-user']);
                 $function->setRequest($request);
 
                 // Act
@@ -245,16 +247,16 @@ describe('HealthFunction', function (): void {
                 // Arrange
                 $checker1 = mock(HealthCheckerInterface::class, function (MockInterface $mock): void {
                     $mock->shouldReceive('getName')->andReturn('database');
-                    $mock->shouldReceive('check')->andReturn(['status' => 'healthy']);
+                    $mock->shouldReceive('check')->andReturn(new HealthStatus(status: 'healthy'));
                 });
 
                 $checker2 = mock(HealthCheckerInterface::class, function (MockInterface $mock): void {
                     $mock->shouldReceive('getName')->andReturn('cache');
-                    $mock->shouldReceive('check')->andReturn(['status' => 'unhealthy']);
+                    $mock->shouldReceive('check')->andReturn(new HealthStatus(status: 'unhealthy'));
                 });
 
                 $function = new HealthFunction([$checker1, $checker2], requireAuthForDetails: false);
-                $request = RequestObjectData::asRequest('urn:cline:forrst:ext:diagnostics:fn:health', []);
+                $request = RequestObjectData::asRequest('urn:cline:forrst:ext:diagnostics:fn:health', [], context: ['user_id' => 'test-user']);
                 $function->setRequest($request);
 
                 // Act
@@ -268,7 +270,7 @@ describe('HealthFunction', function (): void {
                 // Arrange
                 $checker1 = mock(HealthCheckerInterface::class, function (MockInterface $mock): void {
                     $mock->shouldReceive('getName')->andReturn('database');
-                    $mock->shouldReceive('check')->andReturn(['status' => 'healthy']);
+                    $mock->shouldReceive('check')->andReturn(new HealthStatus(status: 'healthy'));
                 });
 
                 $checker2 = mock(HealthCheckerInterface::class, function (MockInterface $mock): void {
@@ -313,17 +315,18 @@ describe('HealthFunction', function (): void {
                 // Arrange
                 $checker = mock(HealthCheckerInterface::class, function (MockInterface $mock): void {
                     $mock->shouldReceive('getName')->andReturn('database');
-                    $mock->shouldReceive('check')->andReturn([
-                        'status' => 'healthy',
-                        'latency' => ['value' => 5, 'unit' => 'ms'],
-                        'message' => 'Database is responsive',
-                    ]);
+                    $mock->shouldReceive('check')->andReturn(new HealthStatus(
+                        status: 'healthy',
+                        latency: ['value' => 5, 'unit' => 'ms'],
+                        message: 'Database is responsive',
+                    ));
                 });
 
                 $function = new HealthFunction([$checker], requireAuthForDetails: false);
                 $request = RequestObjectData::asRequest(
                     'urn:cline:forrst:ext:diagnostics:fn:health',
                     ['include_details' => true],
+                    context: ['user_id' => 'test-user'],
                 );
                 $function->setRequest($request);
 
@@ -340,11 +343,11 @@ describe('HealthFunction', function (): void {
                 // Arrange
                 $checker = mock(HealthCheckerInterface::class, function (MockInterface $mock): void {
                     $mock->shouldReceive('getName')->andReturn('database');
-                    $mock->shouldReceive('check')->andReturn([
-                        'status' => 'healthy',
-                        'latency' => ['value' => 5, 'unit' => 'ms'],
-                        'message' => 'Database is responsive',
-                    ]);
+                    $mock->shouldReceive('check')->andReturn(new HealthStatus(
+                        status: 'healthy',
+                        latency: ['value' => 5, 'unit' => 'ms'],
+                        message: 'Database is responsive',
+                    ));
                 });
 
                 $function = new HealthFunction([$checker], requireAuthForDetails: false);
@@ -371,16 +374,16 @@ describe('HealthFunction', function (): void {
                 // Arrange
                 $checker1 = mock(HealthCheckerInterface::class, function (MockInterface $mock): void {
                     $mock->shouldReceive('getName')->andReturn('component1');
-                    $mock->shouldReceive('check')->andReturn(['status' => 'degraded']);
+                    $mock->shouldReceive('check')->andReturn(new HealthStatus(status: 'degraded'));
                 });
 
                 $checker2 = mock(HealthCheckerInterface::class, function (MockInterface $mock): void {
                     $mock->shouldReceive('getName')->andReturn('component2');
-                    $mock->shouldReceive('check')->andReturn(['status' => 'unhealthy']);
+                    $mock->shouldReceive('check')->andReturn(new HealthStatus(status: 'unhealthy'));
                 });
 
                 $function = new HealthFunction([$checker1, $checker2], requireAuthForDetails: false);
-                $request = RequestObjectData::asRequest('urn:cline:forrst:ext:diagnostics:fn:health', []);
+                $request = RequestObjectData::asRequest('urn:cline:forrst:ext:diagnostics:fn:health', [], context: ['user_id' => 'test-user']);
                 $function->setRequest($request);
 
                 // Act
@@ -394,16 +397,16 @@ describe('HealthFunction', function (): void {
                 // Arrange
                 $checker1 = mock(HealthCheckerInterface::class, function (MockInterface $mock): void {
                     $mock->shouldReceive('getName')->andReturn('component1');
-                    $mock->shouldReceive('check')->andReturn(['status' => 'healthy']);
+                    $mock->shouldReceive('check')->andReturn(new HealthStatus(status: 'healthy'));
                 });
 
                 $checker2 = mock(HealthCheckerInterface::class, function (MockInterface $mock): void {
                     $mock->shouldReceive('getName')->andReturn('component2');
-                    $mock->shouldReceive('check')->andReturn(['status' => 'degraded']);
+                    $mock->shouldReceive('check')->andReturn(new HealthStatus(status: 'degraded'));
                 });
 
                 $function = new HealthFunction([$checker1, $checker2], requireAuthForDetails: false);
-                $request = RequestObjectData::asRequest('urn:cline:forrst:ext:diagnostics:fn:health', []);
+                $request = RequestObjectData::asRequest('urn:cline:forrst:ext:diagnostics:fn:health', [], context: ['user_id' => 'test-user']);
                 $function->setRequest($request);
 
                 // Act
@@ -417,16 +420,16 @@ describe('HealthFunction', function (): void {
                 // Arrange
                 $checker1 = mock(HealthCheckerInterface::class, function (MockInterface $mock): void {
                     $mock->shouldReceive('getName')->andReturn('component1');
-                    $mock->shouldReceive('check')->andReturn(['status' => 'unhealthy']);
+                    $mock->shouldReceive('check')->andReturn(new HealthStatus(status: 'unhealthy'));
                 });
 
                 $checker2 = mock(HealthCheckerInterface::class, function (MockInterface $mock): void {
                     $mock->shouldReceive('getName')->andReturn('component2');
-                    $mock->shouldReceive('check')->andReturn(['status' => 'unhealthy']);
+                    $mock->shouldReceive('check')->andReturn(new HealthStatus(status: 'unhealthy'));
                 });
 
                 $function = new HealthFunction([$checker1, $checker2], requireAuthForDetails: false);
-                $request = RequestObjectData::asRequest('urn:cline:forrst:ext:diagnostics:fn:health', []);
+                $request = RequestObjectData::asRequest('urn:cline:forrst:ext:diagnostics:fn:health', [], context: ['user_id' => 'test-user']);
                 $function->setRequest($request);
 
                 // Act
@@ -438,7 +441,7 @@ describe('HealthFunction', function (): void {
         });
 
         describe('component filtering', function (): void {
-            test('returns healthy with no components when filtering non-existent component', function (): void {
+            test('throws exception when filtering by non-existent component', function (): void {
                 // Arrange
                 $checker = mock(HealthCheckerInterface::class, function (MockInterface $mock): void {
                     $mock->shouldReceive('getName')->andReturn('database');
@@ -451,12 +454,8 @@ describe('HealthFunction', function (): void {
                 );
                 $function->setRequest($request);
 
-                // Act
-                $result = $function();
-
-                // Assert
-                expect($result['status'])->toBe('healthy')
-                    ->and($result)->not()->toHaveKey('components');
+                // Act & Assert
+                expect(fn (): array => $function())->toThrow(InvalidFieldValueException::class);
             });
         });
     });
@@ -472,11 +471,16 @@ describe('HealthFunction', function (): void {
             });
 
             $function = new HealthFunction([$checker], requireAuthForDetails: false);
-            $request = RequestObjectData::asRequest('urn:cline:forrst:ext:diagnostics:fn:health', []);
+            $request = RequestObjectData::asRequest('urn:cline:forrst:ext:diagnostics:fn:health', [], context: ['user_id' => 'test-user']);
             $function->setRequest($request);
 
-            // Act & Assert - should propagate exception
-            expect(fn (): array => $function())->toThrow(RuntimeException::class);
+            // Act
+            $result = $function();
+
+            // Assert - exception should be caught and converted to unhealthy status
+            expect($result['status'])->toBe('unhealthy')
+                ->and($result['components']['database']['status'])->toBe('unhealthy')
+                ->and($result['components']['database'])->toHaveKey('error');
         });
     });
 });

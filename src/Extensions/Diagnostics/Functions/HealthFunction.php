@@ -12,6 +12,7 @@ namespace Cline\Forrst\Extensions\Diagnostics\Functions;
 use Carbon\CarbonImmutable;
 use Cline\Forrst\Attributes\Descriptor;
 use Cline\Forrst\Contracts\HealthCheckerInterface;
+use Cline\Forrst\Data\HealthStatus as HealthStatusData;
 use Cline\Forrst\Enums\HealthStatus;
 use Cline\Forrst\Exceptions\InvalidFieldValueException;
 use Cline\Forrst\Exceptions\TooManyRequestsException;
@@ -168,14 +169,17 @@ final class HealthFunction extends AbstractFunction
             try {
                 $result = $checker->check();
 
+                // Convert HealthStatusData to array for sanitization
+                $resultArray = $result->toArray();
+
                 // Sanitize output based on authentication
                 $components[$checker->getName()] = $this->sanitizeHealthResult(
-                    $result,
+                    $resultArray,
                     $includeDetails,
                     $this->isAuthenticated(),
                 );
 
-                $worstStatus = $this->worstStatus($worstStatus, HealthStatus::from($result['status']));
+                $worstStatus = $this->worstStatus($worstStatus, HealthStatus::from($result->status));
             } catch (Throwable $e) {
                 $this->logger?->error('Health checker failed', [
                     'checker' => $checker->getName(),
