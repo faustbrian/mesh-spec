@@ -10,6 +10,7 @@
 namespace Cline\Forrst\Contracts;
 
 use Cline\Forrst\Data\OperationData;
+use Cline\Forrst\Exceptions\ForbiddenException;
 
 /**
  * Forrst async operation repository contract interface.
@@ -45,13 +46,17 @@ interface OperationRepositoryInterface
      * Save an operation with ownership.
      *
      * Persists an operation to storage. If the operation already exists (based on ID),
-     * it should be updated. If it does not exist, it should be created.
+     * it should be updated. If it does not exist, it should be created. For new operations,
+     * the userId becomes the owner. For existing operations, implementations MUST verify
+     * the userId matches the owner before allowing updates.
      *
      * WARNING: This method does NOT provide concurrency protection. For state transitions
      * that may be subject to race conditions, use {@see saveIfVersionMatches()} instead.
      *
      * @param OperationData $operation The operation to save
-     * @param null|string   $userId    User ID to associate with operation
+     * @param null|string   $userId    User ID to associate with operation (owner for new operations)
+     *
+     * @throws ForbiddenException If userId doesn't match existing operation's owner
      */
     public function save(OperationData $operation, ?string $userId = null): void;
 
@@ -70,6 +75,8 @@ interface OperationRepositoryInterface
      * @param null|string   $userId          User ID for access control
      *
      * @return bool True if save succeeded (version matched), false if version mismatch
+     *
+     * @throws ForbiddenException If userId doesn't match existing operation's owner
      */
     public function saveIfVersionMatches(
         OperationData $operation,
@@ -81,13 +88,14 @@ interface OperationRepositoryInterface
      * Delete an operation with access control.
      *
      * Removes an operation from storage by its ID. Idempotent - silently succeeds
-     * if the operation does not exist. Implementations should verify user ownership
-     * before deletion and throw an exception if unauthorized.
+     * if the operation does not exist. Implementations MUST verify user ownership
+     * before deletion and throw ForbiddenException if the authenticated user does
+     * not own the operation.
      *
      * @param string      $id     Operation ID
      * @param null|string $userId User ID for access control (null = system access)
      *
-     * @throws \DomainException If user doesn't own the operation
+     * @throws ForbiddenException If user doesn't own the operation
      */
     public function delete(string $id, ?string $userId = null): void;
 
