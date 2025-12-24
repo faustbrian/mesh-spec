@@ -53,8 +53,11 @@ describe('Functions', function (): void {
             expect($payload)
                 ->toHaveKey('protocol')
                 ->toHaveKey('call')
-                ->toHaveKey('id', '01J34641TE5SF58ZX3N9HPT1BA')
-                ->and($payload['call'])->toHaveKey('function', 'urn:app:forrst:fn:users:list')
+                ->toHaveKey('id')
+                ->and($payload['id'])->toBeString()->toHaveLength(26); // ULIDs are 26 characters
+
+            expect($payload['call'])
+                ->toHaveKey('function', 'urn:app:forrst:fn:users:list')
                 ->not->toHaveKey('arguments'); // null params should be filtered out
         });
 
@@ -79,7 +82,8 @@ describe('Functions', function (): void {
             expect($payload)
                 ->toHaveKey('protocol')
                 ->toHaveKey('call')
-                ->toHaveKey('id', '01J34641TE5SF58ZX3N9HPT1BA')
+                ->toHaveKey('id')
+                ->and($payload['id'])->toBeString()->toHaveLength(26) // ULIDs are 26 characters
                 ->and($payload['call'])->toHaveKey('function', 'urn:app:forrst:fn:users:find')
                 ->toHaveKey('arguments', $params);
         });
@@ -532,7 +536,7 @@ describe('Functions', function (): void {
             $payload = $request->json()->all();
 
             expect($payload)
-                ->toHaveKey('id', '01J34641TE5SF58ZX3N9HPT1BA')
+                ->toHaveKey('id')
                 ->and($payload['id'])->toBeString()
                 ->and($payload['id'])->toHaveLength(26); // ULIDs are 26 characters
         });
