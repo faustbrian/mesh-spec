@@ -25,7 +25,7 @@ describe('DiscoveryData', function (): void {
             );
             $functions = [
                 new FunctionDescriptorData(
-                    name: 'urn:cline:forrst:fn:orders.get',
+                    name: 'urn:cline:forrst:fn:orders:get',
                     version: '2.0.0',
                     arguments: [],
                 ),
@@ -60,7 +60,7 @@ describe('DiscoveryData', function (): void {
             );
             $functions = [
                 new FunctionDescriptorData(
-                    name: 'urn:cline:forrst:fn:orders.get',
+                    name: 'urn:cline:forrst:fn:orders:get',
                     version: '2.0.0',
                     arguments: [],
                 ),
@@ -113,9 +113,9 @@ describe('DiscoveryData', function (): void {
             // Arrange
             $info = new InfoData(title: 'API', version: '1.0.0');
             $functions = [
-                new FunctionDescriptorData(name: 'urn:cline:forrst:fn:orders.get', version: '2.0.0', arguments: []),
-                new FunctionDescriptorData(name: 'urn:cline:forrst:fn:orders.list', version: '2.0.0', arguments: []),
-                new FunctionDescriptorData(name: 'urn:cline:forrst:fn:orders.create', version: '2.0.0', arguments: []),
+                new FunctionDescriptorData(name: 'urn:cline:forrst:fn:orders:get', version: '2.0.0', arguments: []),
+                new FunctionDescriptorData(name: 'urn:cline:forrst:fn:orders:list', version: '2.0.0', arguments: []),
+                new FunctionDescriptorData(name: 'urn:cline:forrst:fn:orders:create', version: '2.0.0', arguments: []),
             ];
 
             // Act
@@ -128,9 +128,9 @@ describe('DiscoveryData', function (): void {
 
             // Assert
             expect($discovery->functions)->toHaveCount(3)
-                ->and($discovery->functions[0]->name)->toBe('urn:cline:forrst:fn:orders.get')
-                ->and($discovery->functions[1]->name)->toBe('urn:cline:forrst:fn:orders.list')
-                ->and($discovery->functions[2]->name)->toBe('urn:cline:forrst:fn:orders.create');
+                ->and($discovery->functions[0]->name)->toBe('urn:cline:forrst:fn:orders:get')
+                ->and($discovery->functions[1]->name)->toBe('urn:cline:forrst:fn:orders:list')
+                ->and($discovery->functions[2]->name)->toBe('urn:cline:forrst:fn:orders:create');
         });
 
         test('creates instance with multiple servers', function (): void {
@@ -146,7 +146,7 @@ describe('DiscoveryData', function (): void {
                 forrst: '0.1.0',
                 discovery: '0.1.0',
                 info: $info,
-                functions: [],
+                functions: [new FunctionDescriptorData(name: 'urn:cline:forrst:fn:test', version: '1.0.0', arguments: [])],
                 servers: $servers,
             );
 
@@ -169,7 +169,7 @@ describe('DiscoveryData', function (): void {
                 forrst: '0.1.0',
                 discovery: '0.1.0',
                 info: $info,
-                functions: [],
+                functions: [new FunctionDescriptorData(name: 'urn:cline:forrst:fn:test', version: '1.0.0', arguments: [])],
                 resources: $resources,
             );
 
@@ -186,7 +186,7 @@ describe('DiscoveryData', function (): void {
                 forrst: '0.1.0',
                 discovery: '0.1.0',
                 info: new InfoData(title: 'API', version: '1.0.0'),
-                functions: [],
+                functions: [new FunctionDescriptorData(name: 'urn:cline:forrst:fn:test', version: '1.0.0', arguments: [])],
                 externalDocs: new ExternalDocsData(
                     url: 'https://docs.example.com',
                     description: 'Full documentation',
@@ -209,7 +209,7 @@ describe('DiscoveryData', function (): void {
                 forrst: '0.1.0',
                 discovery: '0.1.0',
                 info: new InfoData(title: 'API', version: '1.0.0'),
-                functions: [],
+                functions: [new FunctionDescriptorData(name: 'urn:cline:forrst:fn:test', version: '1.0.0', arguments: [])],
             );
 
             // Act
@@ -223,7 +223,7 @@ describe('DiscoveryData', function (): void {
                 ->and($array['forrst'])->toBe('0.1.0')
                 ->and($array['discovery'])->toBe('0.1.0')
                 ->and($array['info'])->toBeArray()
-                ->and($array['functions'])->toBe([]);
+                ->and($array['functions'])->toHaveCount(1);
         });
 
         test('toArray handles null optional fields', function (): void {
@@ -232,7 +232,7 @@ describe('DiscoveryData', function (): void {
                 forrst: '0.1.0',
                 discovery: '0.1.0',
                 info: new InfoData(title: 'API', version: '1.0.0'),
-                functions: [],
+                functions: [new FunctionDescriptorData(name: 'urn:cline:forrst:fn:test', version: '1.0.0', arguments: [])],
             );
 
             // Act
@@ -261,7 +261,7 @@ describe('DiscoveryData', function (): void {
                 ),
                 functions: [
                     new FunctionDescriptorData(
-                        name: 'urn:cline:forrst:fn:orders.get',
+                        name: 'urn:cline:forrst:fn:orders:get',
                         version: '2.0.0',
                         arguments: [],
                     ),
@@ -276,7 +276,7 @@ describe('DiscoveryData', function (): void {
                 ->and($array['info']['title'])->toBe('Orders API')
                 ->and($array['functions'])->toBeArray()
                 ->and($array['functions'][0])->toBeArray()
-                ->and($array['functions'][0]['name'])->toBe('urn:cline:forrst:fn:orders.get');
+                ->and($array['functions'][0]['name'])->toBe('urn:cline:forrst:fn:orders:get');
         });
     });
 
@@ -287,11 +287,11 @@ describe('DiscoveryData', function (): void {
                 forrst: '0.1.0',
                 discovery: '0.1.0',
                 info: new InfoData(title: 'API', version: '1.0.0'),
-                functions: [],
+                functions: [new FunctionDescriptorData(name: 'urn:cline:forrst:fn:test', version: '1.0.0', arguments: [])],
             );
 
             // Assert
-            expect($discovery->functions)->toBe([])
+            expect($discovery->functions)->toHaveCount(1)
                 ->and($discovery->functions)->toHaveCount(0);
         });
 
@@ -301,7 +301,7 @@ describe('DiscoveryData', function (): void {
                 forrst: '0.1.0',
                 discovery: '0.1.0',
                 info: new InfoData(title: 'API', version: '1.0.0'),
-                functions: [],
+                functions: [new FunctionDescriptorData(name: 'urn:cline:forrst:fn:test', version: '1.0.0', arguments: [])],
             );
 
             // Assert
@@ -314,7 +314,7 @@ describe('DiscoveryData', function (): void {
                 forrst: '0.1.0',
                 discovery: '0.1.0',
                 info: new InfoData(title: 'API', version: '1.0.0'),
-                functions: [],
+                functions: [new FunctionDescriptorData(name: 'urn:cline:forrst:fn:test', version: '1.0.0', arguments: [])],
                 resources: null,
             );
 
@@ -328,7 +328,7 @@ describe('DiscoveryData', function (): void {
                 forrst: '0.1.0',
                 discovery: '0.1.0',
                 info: new InfoData(title: 'API', version: '1.0.0'),
-                functions: [],
+                functions: [new FunctionDescriptorData(name: 'urn:cline:forrst:fn:test', version: '1.0.0', arguments: [])],
                 components: null,
             );
 
@@ -342,7 +342,7 @@ describe('DiscoveryData', function (): void {
                 forrst: '0.1.0',
                 discovery: '0.1.0',
                 info: new InfoData(title: 'API', version: '2.3.0'),
-                functions: [],
+                functions: [new FunctionDescriptorData(name: 'urn:cline:forrst:fn:test', version: '1.0.0', arguments: [])],
             );
 
             // Assert
@@ -362,7 +362,7 @@ describe('DiscoveryData', function (): void {
                 forrst: '0.1.0',
                 discovery: '0.1.0',
                 info: new InfoData(title: 'API', version: '1.0.0'),
-                functions: [],
+                functions: [new FunctionDescriptorData(name: 'urn:cline:forrst:fn:test', version: '1.0.0', arguments: [])],
                 resources: $resources,
             );
 
@@ -380,7 +380,7 @@ describe('DiscoveryData', function (): void {
                 forrst: '0.1.0',
                 discovery: '0.1.0',
                 info: new InfoData(title: 'API', version: '1.0.0'),
-                functions: [],
+                functions: [new FunctionDescriptorData(name: 'urn:cline:forrst:fn:test', version: '1.0.0', arguments: [])],
             );
 
             // Act & Assert
@@ -393,7 +393,7 @@ describe('DiscoveryData', function (): void {
                 forrst: '0.1.0',
                 discovery: '0.1.0',
                 info: new InfoData(title: 'API', version: '1.0.0'),
-                functions: [],
+                functions: [new FunctionDescriptorData(name: 'urn:cline:forrst:fn:test', version: '1.0.0', arguments: [])],
             );
 
             // Act & Assert
@@ -406,7 +406,7 @@ describe('DiscoveryData', function (): void {
                 forrst: '0.1.0',
                 discovery: '0.1.0',
                 info: new InfoData(title: 'API', version: '1.0.0'),
-                functions: [],
+                functions: [new FunctionDescriptorData(name: 'urn:cline:forrst:fn:test', version: '1.0.0', arguments: [])],
             );
 
             // Act & Assert
@@ -419,7 +419,7 @@ describe('DiscoveryData', function (): void {
                 forrst: '0.1.0',
                 discovery: '0.1.0',
                 info: new InfoData(title: 'API', version: '1.0.0'),
-                functions: [],
+                functions: [new FunctionDescriptorData(name: 'urn:cline:forrst:fn:test', version: '1.0.0', arguments: [])],
             );
 
             // Act & Assert
