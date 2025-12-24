@@ -123,7 +123,7 @@ describe('AtomicLockExtension', function (): void {
             // Arrange
             $lock = mock(Lock::class);
             $lock->shouldReceive('get')->andReturn(true);
-            $lock->shouldReceive('release')->once();
+            $lock->shouldReceive('release')->once()->andReturn(true);
 
             Cache::shouldReceive('lock')->andReturn($lock);
             Cache::shouldReceive('put')->times(3);
