@@ -21,6 +21,7 @@ describe('ExtensionRegistry', function (): void {
             // Arrange
             $extension = m::mock(ExtensionInterface::class);
             $extension->shouldReceive('getUrn')->andReturn('urn:test:extension');
+            $extension->shouldReceive('getSubscribedEvents')->andReturn([]);
 
             // Act
             $this->registry->register($extension);
@@ -33,6 +34,7 @@ describe('ExtensionRegistry', function (): void {
             // Arrange
             $extension = m::mock(ExtensionInterface::class);
             $extension->shouldReceive('getUrn')->andReturn('urn:test:extension');
+            $extension->shouldReceive('getSubscribedEvents')->andReturn([]);
             $this->registry->register($extension);
 
             // Act
@@ -46,6 +48,7 @@ describe('ExtensionRegistry', function (): void {
             // Arrange
             $extension = m::mock(ExtensionInterface::class);
             $extension->shouldReceive('getUrn')->andReturn('urn:test:extension');
+            $extension->shouldReceive('getSubscribedEvents')->andReturn([]);
             $this->registry->register($extension);
 
             // Act
@@ -59,8 +62,10 @@ describe('ExtensionRegistry', function (): void {
             // Arrange
             $ext1 = m::mock(ExtensionInterface::class);
             $ext1->shouldReceive('getUrn')->andReturn('urn:test:ext1');
+            $ext1->shouldReceive('getSubscribedEvents')->andReturn([]);
             $ext2 = m::mock(ExtensionInterface::class);
             $ext2->shouldReceive('getUrn')->andReturn('urn:test:ext2');
+            $ext2->shouldReceive('getSubscribedEvents')->andReturn([]);
 
             $this->registry->register($ext1);
             $this->registry->register($ext2);
@@ -80,10 +85,13 @@ describe('ExtensionRegistry', function (): void {
             // Arrange
             $ext1 = m::mock(ExtensionInterface::class);
             $ext1->shouldReceive('getUrn')->andReturn('urn:test:ext1');
+            $ext1->shouldReceive('getSubscribedEvents')->andReturn([]);
             $ext2 = m::mock(ExtensionInterface::class);
             $ext2->shouldReceive('getUrn')->andReturn('urn:test:ext2');
+            $ext2->shouldReceive('getSubscribedEvents')->andReturn([]);
             $ext3 = m::mock(ExtensionInterface::class);
             $ext3->shouldReceive('getUrn')->andReturn('urn:test:ext3');
+            $ext3->shouldReceive('getSubscribedEvents')->andReturn([]);
 
             $this->registry->register($ext1);
             $this->registry->register($ext2);
@@ -103,6 +111,7 @@ describe('ExtensionRegistry', function (): void {
             // Arrange
             $ext1 = m::mock(ExtensionInterface::class);
             $ext1->shouldReceive('getUrn')->andReturn('urn:test:ext1');
+            $ext1->shouldReceive('getSubscribedEvents')->andReturn([]);
             $ext1->shouldReceive('toCapabilities')->andReturn([
                 'urn' => 'urn:test:ext1',
                 'documentation' => 'https://example.com/ext1',
@@ -110,6 +119,7 @@ describe('ExtensionRegistry', function (): void {
 
             $ext2 = m::mock(ExtensionInterface::class);
             $ext2->shouldReceive('getUrn')->andReturn('urn:test:ext2');
+            $ext2->shouldReceive('getSubscribedEvents')->andReturn([]);
             $ext2->shouldReceive('toCapabilities')->andReturn([
                 'urn' => 'urn:test:ext2',
             ]);
@@ -135,6 +145,7 @@ describe('ExtensionRegistry', function (): void {
             // Arrange
             $extension = m::mock(ExtensionInterface::class);
             $extension->shouldReceive('getUrn')->andReturn('urn:test:extension');
+            $extension->shouldReceive('getSubscribedEvents')->andReturn([]);
             $this->registry->register($extension);
 
             // Act
@@ -148,8 +159,10 @@ describe('ExtensionRegistry', function (): void {
             // Arrange
             $ext1 = m::mock(ExtensionInterface::class);
             $ext1->shouldReceive('getUrn')->andReturn('urn:test:extension');
+            $ext1->shouldReceive('getSubscribedEvents')->andReturn([]);
             $ext2 = m::mock(ExtensionInterface::class);
             $ext2->shouldReceive('getUrn')->andReturn('urn:test:extension');
+            $ext2->shouldReceive('getSubscribedEvents')->andReturn([]);
 
             $this->registry->register($ext1);
 
@@ -215,6 +228,7 @@ describe('ExtensionRegistry', function (): void {
             // Arrange
             $extension = m::mock(ExtensionInterface::class);
             $extension->shouldReceive('getUrn')->andReturn('urn:test:extension');
+            $extension->shouldReceive('getSubscribedEvents')->andReturn([]);
             $this->registry->register($extension);
 
             // Act
@@ -229,10 +243,13 @@ describe('ExtensionRegistry', function (): void {
             // Arrange
             $ext1 = m::mock(ExtensionInterface::class);
             $ext1->shouldReceive('getUrn')->andReturn('urn:test:ext1');
+            $ext1->shouldReceive('getSubscribedEvents')->andReturn([]);
             $ext2 = m::mock(ExtensionInterface::class);
             $ext2->shouldReceive('getUrn')->andReturn('urn:test:ext2');
+            $ext2->shouldReceive('getSubscribedEvents')->andReturn([]);
             $ext3 = m::mock(ExtensionInterface::class);
             $ext3->shouldReceive('getUrn')->andReturn('urn:test:ext3');
+            $ext3->shouldReceive('getSubscribedEvents')->andReturn([]);
 
             // Act
             $this->registry->register($ext1);
@@ -251,6 +268,7 @@ describe('ExtensionRegistry', function (): void {
             // Arrange
             $extension = m::mock(ExtensionInterface::class);
             $extension->shouldReceive('getUrn')->andReturn('urn:test:ext:special-chars_123');
+            $extension->shouldReceive('getSubscribedEvents')->andReturn([]);
 
             // Act
             $this->registry->register($extension);
@@ -264,14 +282,17 @@ describe('ExtensionRegistry', function (): void {
             // Arrange
             $ext1 = m::mock(ExtensionInterface::class);
             $ext1->shouldReceive('getUrn')->andReturn('urn:test:ext1');
+            $ext1->shouldReceive('getSubscribedEvents')->andReturn([]);
             $ext1->shouldReceive('toCapabilities')->andReturn(['urn' => 'urn:test:ext1']);
 
             $ext2 = m::mock(ExtensionInterface::class);
             $ext2->shouldReceive('getUrn')->andReturn('urn:test:ext2');
+            $ext2->shouldReceive('getSubscribedEvents')->andReturn([]);
             $ext2->shouldReceive('toCapabilities')->andReturn(['urn' => 'urn:test:ext2']);
 
             $ext3 = m::mock(ExtensionInterface::class);
             $ext3->shouldReceive('getUrn')->andReturn('urn:test:ext3');
+            $ext3->shouldReceive('getSubscribedEvents')->andReturn([]);
             $ext3->shouldReceive('toCapabilities')->andReturn(['urn' => 'urn:test:ext3']);
 
             $this->registry->register($ext1);
@@ -292,6 +313,7 @@ describe('ExtensionRegistry', function (): void {
             // Arrange
             $extension = m::mock(ExtensionInterface::class);
             $extension->shouldReceive('getUrn')->andReturn('');
+            $extension->shouldReceive('getSubscribedEvents')->andReturn([]);
 
             // Act
             $this->registry->register($extension);
@@ -305,10 +327,13 @@ describe('ExtensionRegistry', function (): void {
             // Arrange
             $ext1 = m::mock(ExtensionInterface::class);
             $ext1->shouldReceive('getUrn')->andReturn('urn:test:ext1');
+            $ext1->shouldReceive('getSubscribedEvents')->andReturn([]);
             $ext2 = m::mock(ExtensionInterface::class);
             $ext2->shouldReceive('getUrn')->andReturn('urn:test:ext2');
+            $ext2->shouldReceive('getSubscribedEvents')->andReturn([]);
             $ext2Replacement = m::mock(ExtensionInterface::class);
             $ext2Replacement->shouldReceive('getUrn')->andReturn('urn:test:ext2');
+            $ext2Replacement->shouldReceive('getSubscribedEvents')->andReturn([]);
 
             $this->registry->register($ext1);
             $this->registry->register($ext2);
