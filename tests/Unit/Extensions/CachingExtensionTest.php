@@ -278,7 +278,7 @@ describe('CachingExtension', function (): void {
 
             // Assert
             expect($cacheKey)->toContain('forrst_cache')
-                ->and($cacheKey)->toContain('urn:cline:forrst:fn:test:function')
+                ->and($cacheKey)->toContain('urn_cline_forrst_fn_test_function')
                 ->and($cacheKey)->toContain('1');
         });
 
