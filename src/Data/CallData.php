@@ -21,8 +21,8 @@ use function is_array;
  * and the arguments to pass to the function. This is the core payload structure
  * that identifies what RPC method should be executed and with what parameters.
  *
- * The function name uses dot notation to support namespace-like organization
- * (e.g., "users.create", "orders.list"). Version allows for per-function API
+ * The function name uses URN format (e.g., "urn:vendor:forrst:fn:users:create",
+ * "urn:vendor:forrst:fn:orders:list"). Version allows for per-function API
  * versioning independent of the server version.
  *
  * @author Brian Faust <brian@cline.sh>
@@ -33,10 +33,10 @@ final class CallData extends AbstractData
     /**
      * Create a new call data instance.
      *
-     * @param string                    $function  The function name to invoke using dot notation
-     *                                             for namespace organization (e.g., "orders.create",
-     *                                             "users.update"). Must match a registered function
-     *                                             name in the server's function registry.
+     * @param string                    $function  The function URN to invoke (e.g.,
+     *                                             "urn:vendor:forrst:fn:orders:create",
+     *                                             "urn:vendor:forrst:fn:users:update"). Must match a
+     *                                             registered function URN in the server's function registry.
      * @param null|string               $version   Optional function version for per-function API
      *                                             versioning. Allows different versions of the same
      *                                             function to coexist (e.g., "1.0", "2.0"). If null,

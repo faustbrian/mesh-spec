@@ -50,7 +50,7 @@ final class OperationData extends AbstractData
      *                                                results. Must be globally unique across all
      *                                                operations in the system.
      * @param string                     $function    Function name that was invoked to create this
-     *                                                operation. Uses the same dot notation as the
+     *                                                operation. Uses URN format as the
      *                                                call data (e.g., "orders.process").
      * @param null|string                $version     Optional function version that was called.
      *                                                Records which API version initiated the operation.

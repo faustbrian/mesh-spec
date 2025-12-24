@@ -48,9 +48,10 @@ final class LinkData extends Data
      * @param null|string               $description Detailed explanation of when and how to use this link, including
      *                                               any preconditions or contextual information. Supports Markdown
      *                                               for rich documentation formatting.
-     * @param null|string               $function    Target function name to invoke (e.g., "venues.get",
-     *                                               "attendees.list"). The function must be defined in the
-     *                                               same discovery document. Omit if link is purely informational.
+     * @param null|string               $function    Target function URN to invoke (e.g.,
+     *                                               "urn:vendor:forrst:fn:venues:get"). The function must be
+     *                                               defined in the same discovery document. Omit if link is purely
+     *                                               informational.
      * @param null|array<string, mixed> $params      Parameters to pass to the target function. Values can be runtime
      *                                               expressions referencing the current result (e.g., "$result.venue.id",
      *                                               "$result.id"). Keys are parameter names for the target function.
@@ -82,13 +83,13 @@ final class LinkData extends Data
             $this->validateParams($this->params);
         }
 
-        // Validate function name format if provided (accept both dot notation and URN format)
-        if ($this->function === null || preg_match('/^[a-z][a-z0-9]*(?:\.[a-z][a-z0-9]*)*$/', $this->function) || preg_match('/^urn:[a-z0-9_-]+:forrst:fn:[a-z0-9_:]+$/', $this->function)) {
+        // Validate function name format if provided (URN format only)
+        if ($this->function === null || preg_match('/^urn:[a-z0-9_-]+:forrst:fn:[a-z0-9_:]+$/', $this->function)) {
             return;
         }
 
         trigger_error(
-            sprintf("Warning: Function name '%s' should use dot notation (e.g., 'users.get') or URN format (e.g., 'urn:vendor:forrst:fn:users:get')", $this->function),
+            sprintf("Warning: Function name '%s' must use URN format (e.g., 'urn:vendor:forrst:fn:users:get')", $this->function),
             E_USER_WARNING,
         );
     }
