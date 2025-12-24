@@ -567,8 +567,8 @@ describe('FunctionDescriptor', function (): void {
 
         test('multiple links accumulate', function (): void {
             // Arrange
-            $link1 = LinkData::from(['name' => 'Link 1', 'function' => 'fn1']);
-            $link2 = LinkData::from(['name' => 'Link 2', 'function' => 'fn2']);
+            $link1 = LinkData::from(['name' => 'Link 1', 'function' => 'urn:app:forrst:fn:link1']);
+            $link2 = LinkData::from(['name' => 'Link 2', 'function' => 'urn:app:forrst:fn:link2']);
 
             // Act
             $descriptor = FunctionDescriptor::make()
@@ -584,7 +584,7 @@ describe('FunctionDescriptor', function (): void {
         test('multiple simulations accumulate', function (): void {
             // Arrange
             $sim1 = new SimulationScenarioData(name: 'success', input: ['id' => '1'], output: ['ok' => true]);
-            $sim2 = new SimulationScenarioData(name: 'failure', input: ['id' => '0'], error: ['code' => 'NOT_FOUND']);
+            $sim2 = new SimulationScenarioData(name: 'failure', input: ['id' => '0'], error: ['code' => 'NOT_FOUND', 'message' => 'Resource not found']);
 
             // Act
             $descriptor = FunctionDescriptor::make()
