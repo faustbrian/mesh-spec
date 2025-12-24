@@ -301,7 +301,8 @@ describe('FunctionDescriptor', function (): void {
             $deprecated = $descriptor->getDeprecated();
             expect($deprecated)->toBeInstanceOf(DeprecatedData::class)
                 ->and($deprecated->reason)->toBe('Use v2 instead')
-                ->and($deprecated->sunset)->toBe('2025-12-31');
+                ->and($deprecated->sunset)->toBeInstanceOf(\DateTimeImmutable::class)
+                ->and($deprecated->sunset->format('Y-m-d'))->toBe('2025-12-31');
         });
 
         test('sets side effects', function (): void {
