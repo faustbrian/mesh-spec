@@ -346,23 +346,17 @@ describe('NormalizationResult', function (): void {
             expect($merged)->toHaveCount(100);
         });
 
-        test('handles unicode characters in resource type and id', function (): void {
-            // Arrange
-            $unicodeResource = new ResourceObjectData(
-                type: 'статьи', // Russian for "articles"
-                id: '日本語', // Japanese characters
+        test('rejects unicode characters in resource type per JSON:API spec', function (): void {
+            // Arrange & Act & Assert
+            // JSON:API spec recommends lowercase ASCII type names only
+            expect(fn () => new ResourceObjectData(
+                type: 'статьи', // Russian for "articles" - not allowed
+                id: '日本語', // Japanese characters - allowed in ID
                 attributes: ['title' => 'Unicode Test'],
+            ))->toThrow(
+                InvalidFieldValueException::class,
+                'must be lowercase and contain only letters, numbers, hyphens, or underscores',
             );
-
-            $included = ['статьи:日本語' => $unicodeResource];
-            $result = new NormalizationResult($this->primaryResource, $included);
-
-            // Act
-            $array = $result->getIncludedArray();
-
-            // Assert
-            expect($array)->toHaveCount(1)
-                ->and($array[0])->toBe($unicodeResource);
         });
     });
 
