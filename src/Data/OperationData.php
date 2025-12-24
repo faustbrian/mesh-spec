@@ -112,7 +112,7 @@ final class OperationData extends AbstractData
         // Validate ID format: UUID, ULID, or prefixed format (op_/op- prefix)
         $isUuid = (bool) preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $id);
         $isUlid = (bool) preg_match('/^[0-9A-HJKMNP-TV-Z]{26}$/i', $id);
-        $isPrefixed = (bool) preg_match('/^op[_-][0-9a-z]+$/i', $id);
+        $isPrefixed = (bool) preg_match('/^op[_-][0-9a-z_-]+$/i', $id);
 
         if (!$isUuid && !$isUlid && !$isPrefixed) {
             throw InvalidFieldValueException::forField(
