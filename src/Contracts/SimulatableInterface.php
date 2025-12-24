@@ -9,6 +9,7 @@
 
 namespace Cline\Forrst\Contracts;
 
+use Cline\Forrst\Exceptions\InvalidConfigurationException;
 use Cline\Forrst\Discovery\SimulationScenarioData;
 
 /**
@@ -82,7 +83,7 @@ interface SimulatableInterface extends FunctionInterface
      *
      * @return string Default scenario name (e.g., "default", "success")
      *
-     * @throws \Cline\Forrst\Exceptions\InvalidConfigurationException If default scenario doesn't exist
+     * @throws InvalidConfigurationException If default scenario doesn't exist
      */
     public function getDefaultScenario(): string;
 
@@ -115,7 +116,7 @@ interface SimulatableInterface extends FunctionInterface
      * }
      * ```
      *
-     * @throws \Cline\Forrst\Exceptions\InvalidConfigurationException If default scenario doesn't exist in available scenarios
+     * @throws InvalidConfigurationException If default scenario doesn't exist in available scenarios
      */
     public function validateSimulation(): void;
 }

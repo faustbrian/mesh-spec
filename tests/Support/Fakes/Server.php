@@ -66,4 +66,10 @@ final class Server extends AbstractServer
             new StreamExtension(),
         ];
     }
+
+    #[Override()]
+    public function validate(): void
+    {
+        // No validation needed for test fake
+    }
 }

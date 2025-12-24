@@ -71,11 +71,11 @@ final class FunctionExtensionsData extends Data
         }
 
         // Validate arrays are not empty when specified
-        if ($this->supported !== null && empty($this->supported)) {
+        if ($this->supported !== null && $this->supported === []) {
             throw EmptyFieldException::forField('supported');
         }
 
-        if ($this->excluded !== null && empty($this->excluded)) {
+        if ($this->excluded !== null && $this->excluded === []) {
             throw EmptyFieldException::forField('excluded');
         }
     }
@@ -92,7 +92,7 @@ final class FunctionExtensionsData extends Data
         foreach ($extensions as $index => $name) {
             if (!\is_string($name)) {
                 throw InvalidFieldTypeException::forField(
-                    "extension[{$index}]",
+                    sprintf('extension[%d]', $index),
                     'string',
                     $name
                 );
@@ -101,15 +101,15 @@ final class FunctionExtensionsData extends Data
             // Extension names should follow kebab-case or URN format
             if (!\preg_match('/^[a-z][a-z0-9-]*$/', $name) && !\str_starts_with($name, 'urn:')) {
                 throw InvalidFieldValueException::forField(
-                    "extension[{$index}]",
-                    "Invalid extension name '{$name}'. Must be kebab-case (e.g., 'query', 'atomic-lock') or URN format (e.g., 'urn:forrst:ext:query')"
+                    sprintf('extension[%d]', $index),
+                    sprintf("Invalid extension name '%s'. Must be kebab-case (e.g., 'query', 'atomic-lock') or URN format (e.g., 'urn:forrst:ext:query')", $name)
                 );
             }
 
             // Warn about uppercase (common mistake)
             if ($name !== \strtolower($name) && !\str_starts_with($name, 'urn:')) {
                 \trigger_error(
-                    "Warning: Extension name '{$name}' contains uppercase characters. "
+                    sprintf("Warning: Extension name '%s' contains uppercase characters. ", $name)
                     ."Extension names are case-sensitive and typically lowercase.",
                     \E_USER_WARNING
                 );
@@ -145,11 +145,11 @@ final class FunctionExtensionsData extends Data
      */
     public static function allow(array $extensions): self
     {
-        if (empty($extensions)) {
+        if ($extensions === []) {
             throw EmptyFieldException::forField('extensions');
         }
 
-        return new self(supported: $extensions, excluded: null);
+        return new self(supported: $extensions);
     }
 
     /**
@@ -161,7 +161,7 @@ final class FunctionExtensionsData extends Data
      */
     public static function deny(array $extensions): self
     {
-        if (empty($extensions)) {
+        if ($extensions === []) {
             throw EmptyFieldException::forField('extensions');
         }
 
@@ -173,6 +173,6 @@ final class FunctionExtensionsData extends Data
      */
     public static function inherit(): self
     {
-        return new self(supported: null, excluded: null);
+        return new self();
     }
 }

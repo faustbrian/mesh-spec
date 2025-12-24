@@ -80,7 +80,7 @@ final class ServiceProvider extends PackageServiceProvider
     public function packageRegistered(): void
     {
         // ProtocolInterface requires runtime config resolution - cannot use attributes
-        $this->app->singleton(ProtocolInterface::class, function (): ProtocolInterface {
+        $this->app->singleton(function (): ProtocolInterface {
             $protocolClass = config('rpc.protocol');
 
             if (!is_string($protocolClass)) {
@@ -99,10 +99,10 @@ final class ServiceProvider extends PackageServiceProvider
 
             try {
                 $protocol = new $protocolClass();
-            } catch (Throwable $e) {
+            } catch (Throwable $throwable) {
                 throw InvalidConfigurationException::forKey(
                     'rpc.protocol',
-                    sprintf('failed to instantiate class %s: %s', $protocolClass, $e->getMessage())
+                    sprintf('failed to instantiate class %s: %s', $protocolClass, $throwable->getMessage())
                 );
             }
 

@@ -26,4 +26,10 @@ final class AuthorizationExceptionServer extends AbstractServer
     {
         throw new AuthorizationException('Forbidden');
     }
+
+    #[Override()]
+    public function validate(): void
+    {
+        // No validation needed for test fake
+    }
 }

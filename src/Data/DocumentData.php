@@ -140,7 +140,7 @@ final class DocumentData extends AbstractData
      */
     public function hasErrors(): bool
     {
-        return $this->errors !== null && \count($this->errors) > 0;
+        return $this->errors !== null && $this->errors !== [];
     }
 
     /**
@@ -150,7 +150,7 @@ final class DocumentData extends AbstractData
      */
     public function hasIncluded(): bool
     {
-        return $this->included !== null && \count($this->included) > 0;
+        return $this->included !== null && $this->included !== [];
     }
 
     /**
@@ -160,7 +160,7 @@ final class DocumentData extends AbstractData
      */
     public function hasMeta(): bool
     {
-        return $this->meta !== null && \count($this->meta) > 0;
+        return $this->meta !== null && $this->meta !== [];
     }
 
     /**

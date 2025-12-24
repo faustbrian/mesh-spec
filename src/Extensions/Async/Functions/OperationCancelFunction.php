@@ -23,8 +23,6 @@ use Cline\Forrst\Extensions\Async\Descriptors\OperationCancelDescriptor;
 use Cline\Forrst\Functions\AbstractFunction;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
-
-use function assert;
 use function is_string;
 
 /**
@@ -53,7 +51,7 @@ final class OperationCancelFunction extends AbstractFunction
     /**
      * Maximum retry attempts for optimistic locking conflicts.
      */
-    private const MAX_RETRIES = 3;
+    private const int MAX_RETRIES = 3;
 
     /**
      * Execute the operation cancel function.
@@ -148,7 +146,7 @@ final class OperationCancelFunction extends AbstractFunction
                 ];
             }
 
-            $retries++;
+            ++$retries;
             $this->logger->debug('Optimistic lock conflict, retrying', [
                 'operation_id' => $operationId,
                 'attempt' => $retries,

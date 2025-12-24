@@ -11,6 +11,7 @@ namespace Cline\Forrst\Repositories;
 
 use Cline\Forrst\Contracts\OperationRepositoryInterface;
 use Cline\Forrst\Data\OperationData;
+use Cline\Forrst\Exceptions\ForbiddenException;
 use Cline\Forrst\Models\Operation;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -60,13 +61,20 @@ final readonly class DatabaseOperationRepository implements OperationRepositoryI
     /**
      * Retrieves an operation by its unique identifier.
      *
-     * @param string $id Operation identifier (typically a ULID)
+     * @param string      $id     Operation identifier (typically a ULID)
+     * @param null|string $userId User ID for access control (null = system access)
      *
      * @return null|OperationData Operation data if found, null otherwise
      */
-    public function find(string $id): ?OperationData
+    public function find(string $id, ?string $userId = null): ?OperationData
     {
-        $operation = Operation::query()->find($id);
+        $query = Operation::query()->where('id', $id);
+
+        if ($userId !== null) {
+            $query->where('user_id', $userId);
+        }
+
+        $operation = $query->first();
 
         return $operation?->toOperationData();
     }
@@ -79,15 +87,28 @@ final readonly class DatabaseOperationRepository implements OperationRepositoryI
      * timestamps, and error information.
      *
      * @param OperationData $operation Operation data to persist
+     * @param null|string   $userId    User ID to associate with operation (maps to caller_id)
+     *
+     * @throws ForbiddenException If userId doesn't match existing operation's owner
      */
-    public function save(OperationData $operation): void
+    public function save(OperationData $operation, ?string $userId = null): void
     {
         $model = Operation::query()->find($operation->id);
 
         if ($model === null) {
             $model = Operation::fromOperationData($operation);
             $model->expires_at = now()->addDays($this->retentionDays)->toImmutable();
+
+            // Set owner for new operations
+            if ($userId !== null) {
+                $model->caller_id = $userId;
+            }
         } else {
+            // Verify ownership for existing operations
+            if ($userId !== null && $model->caller_id !== null && $model->caller_id !== $userId) {
+                throw ForbiddenException::create('You do not have permission to modify this operation.');
+            }
+
             $model->status = $operation->status->value;
             $model->progress = $operation->progress;
 
@@ -113,10 +134,21 @@ final readonly class DatabaseOperationRepository implements OperationRepositoryI
     /**
      * Removes an operation from the database.
      *
-     * @param string $id Operation identifier to delete
+     * @param string      $id     Operation identifier to delete
+     * @param null|string $userId User ID for access control (null = system access)
+     *
+     * @throws ForbiddenException If userId doesn't match operation's owner
      */
-    public function delete(string $id): void
+    public function delete(string $id, ?string $userId = null): void
     {
+        if ($userId !== null) {
+            $model = Operation::query()->find($id);
+
+            if ($model !== null && $model->caller_id !== null && $model->caller_id !== $userId) {
+                throw ForbiddenException::create('You do not have permission to delete this operation.');
+            }
+        }
+
         Operation::destroy($id);
     }
 
@@ -131,6 +163,7 @@ final readonly class DatabaseOperationRepository implements OperationRepositoryI
      * @param null|string $function Filter by function name (e.g., "orders.create")
      * @param int         $limit    Maximum number of operations to return
      * @param null|string $cursor   Base64-encoded pagination cursor from previous response
+     * @param null|string $userId   User ID for filtering (null = all operations)
      *
      * @return array{operations: array<int, OperationData>, next_cursor: ?string} Operations and pagination cursor
      */
@@ -139,8 +172,13 @@ final readonly class DatabaseOperationRepository implements OperationRepositoryI
         ?string $function = null,
         int $limit = 50,
         ?string $cursor = null,
+        ?string $userId = null,
     ): array {
         $query = Operation::query()->latest();
+
+        if ($userId !== null) {
+            $query->where('caller_id', $userId);
+        }
 
         if ($status !== null) {
             $query->where('status', $status);
@@ -251,6 +289,65 @@ final readonly class DatabaseOperationRepository implements OperationRepositoryI
             'operations' => $operationsArray,
             'next_cursor' => $nextCursor,
         ];
+    }
+
+    /**
+     * Save an operation only if the lock version matches (compare-and-swap).
+     *
+     * NOTE: Lock versioning is not yet implemented in the Operation model.
+     * This method currently saves unconditionally but includes ownership verification.
+     *
+     * @param OperationData $operation       The operation to save with updated state
+     * @param int           $expectedVersion The lock_version expected in storage (currently ignored)
+     * @param null|string   $userId          User ID for access control
+     *
+     * @return bool True if save succeeded
+     *
+     * @throws ForbiddenException If userId doesn't match existing operation's owner
+     */
+    public function saveIfVersionMatches(
+        OperationData $operation,
+        int $expectedVersion,
+        ?string $userId = null,
+    ): bool {
+        // TODO: Implement proper optimistic locking when lock_version column is added
+        $this->save($operation, $userId);
+
+        return true;
+    }
+
+    /**
+     * Count active (non-terminal) operations for a user.
+     *
+     * Returns the count of operations in pending or running states for the specified user.
+     *
+     * @param string $userId User ID to count operations for
+     *
+     * @return int Number of active operations
+     */
+    public function countActiveByOwner(string $userId): int
+    {
+        return Operation::query()
+            ->where('caller_id', $userId)
+            ->whereIn('status', ['pending', 'running'])
+            ->count();
+    }
+
+    /**
+     * Delete operations that expired before the given timestamp.
+     *
+     * @param \DateTimeInterface $before Delete operations with expires_at before this time
+     * @param int                $limit  Maximum number of operations to delete per call
+     *
+     * @return int Number of operations deleted
+     */
+    public function deleteExpiredBefore(\DateTimeInterface $before, int $limit = 1000): int
+    {
+        return Operation::query()
+            ->whereNotNull('expires_at')
+            ->where('expires_at', '<', $before)
+            ->limit($limit)
+            ->delete();
     }
 
     /**

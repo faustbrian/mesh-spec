@@ -199,7 +199,7 @@ final class ResourceObjectData extends AbstractData
      * @param string $key The meta key
      * @return bool True if the meta field exists
      */
-    public function hasMeta(string $key): bool
+    public function hasMetaKey(string $key): bool
     {
         return isset($this->meta[$key]);
     }

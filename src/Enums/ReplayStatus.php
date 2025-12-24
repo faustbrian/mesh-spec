@@ -9,6 +9,8 @@
 
 namespace Cline\Forrst\Enums;
 
+use Cline\Forrst\Exceptions\InvalidStatusTransitionException;
+
 /**
  * Lifecycle status values for replay operations in the Forrst replay extension.
  *
@@ -187,14 +189,14 @@ enum ReplayStatus: string
      *
      * @param self $newStatus The desired new status
      *
-     * @throws \Cline\Forrst\Exceptions\InvalidStatusTransitionException
+     * @throws InvalidStatusTransitionException
      *
      * @return self The new status if transition is valid
      */
     public function transitionTo(self $newStatus): self
     {
         if (!$this->canTransitionTo($newStatus)) {
-            throw \Cline\Forrst\Exceptions\InvalidStatusTransitionException::fromTo(
+            throw InvalidStatusTransitionException::fromTo(
                 $this->value,
                 $newStatus->value,
                 $this->isTerminal()

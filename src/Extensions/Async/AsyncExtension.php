@@ -34,7 +34,6 @@ use Cline\Forrst\Functions\FunctionUrn;
 use Override;
 
 use function array_merge;
-use function assert;
 use function bin2hex;
 use function ctype_xdigit;
 use function filter_var;
@@ -65,12 +64,12 @@ use const FILTER_VALIDATE_IP;
  * result delivery. Functions return immediately with an operation ID that clients
  * poll for completion, preventing timeout issues for expensive operations.
  *
- * Supports optional webhook callbacks to notify clients when operations complete,
- * reducing polling overhead for very long operations.
+ * For webhook notifications when operations complete, use the WebhookExtension
+ * alongside this extension. The webhook extension handles registration and dispatch
+ * of Standard Webhooks-compliant callbacks.
  *
  * Request options:
  * - preferred: boolean - client prefers async execution if supported
- * - callback_url: string - optional URL for POST notification on completion
  *
  * Response data:
  * - operation_id: unique identifier for tracking operation status
@@ -81,6 +80,7 @@ use const FILTER_VALIDATE_IP;
  * @author Brian Faust <brian@cline.sh>
  *
  * @see https://docs.cline.sh/forrst/extensions/async
+ * @see https://docs.cline.sh/forrst/extensions/webhook
  */
 final class AsyncExtension extends AbstractExtension implements ProvidesFunctionsInterface
 {
@@ -281,13 +281,11 @@ final class AsyncExtension extends AbstractExtension implements ProvidesFunction
         }
 
         // Block private IP ranges
-        if (filter_var($host, FILTER_VALIDATE_IP)) {
-            if (!filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
-                throw InvalidFieldValueException::forField(
-                    'callback_url',
-                    sprintf('Cannot use private/reserved IP addresses: %s', $host),
-                );
-            }
+        if (filter_var($host, FILTER_VALIDATE_IP) && !filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+            throw InvalidFieldValueException::forField(
+                'callback_url',
+                sprintf('Cannot use private/reserved IP addresses: %s', $host),
+            );
         }
 
         return $callbackUrl;
@@ -675,6 +673,7 @@ final class AsyncExtension extends AbstractExtension implements ProvidesFunction
             if (strlen($message) > 1000) {
                 throw FieldExceedsMaxLengthException::forField('message', 1000);
             }
+
             $metadata['progress_message'] = $message;
             $metadata['progress_updated_at'] = now()->toIso8601String();
         }
@@ -711,13 +710,13 @@ final class AsyncExtension extends AbstractExtension implements ProvidesFunction
     {
         $maxAttempts = 10;
 
-        for ($attempt = 0; $attempt < $maxAttempts; $attempt++) {
+        for ($attempt = 0; $attempt < $maxAttempts; ++$attempt) {
             $operationId = 'op_'.bin2hex(random_bytes(self::OPERATION_ID_BYTES));
 
             // Check if ID already exists
             $existing = $this->operations->find($operationId);
 
-            if ($existing === null) {
+            if (!$existing instanceof OperationData) {
                 return $operationId;
             }
 

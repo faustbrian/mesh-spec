@@ -16,7 +16,7 @@ final class LockTtlExceedsMaximumException extends RuntimeException implements F
     public static function create(int $requested, int $maximum): self
     {
         return new self(
-            "Lock TTL of {$requested} seconds exceeds maximum allowed {$maximum} seconds",
+            sprintf('Lock TTL of %d seconds exceeds maximum allowed %d seconds', $requested, $maximum),
         );
     }
 }

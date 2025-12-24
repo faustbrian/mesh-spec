@@ -85,10 +85,10 @@ final class DiscoveryServerData extends Data
         preg_match_all('/\{([^}]+)\}/', $url, $matches);
         foreach ($matches[1] as $varName) {
             // RFC 6570: variable names must be [A-Za-z0-9_]+ (no hyphens, dots, etc.)
-            if (!preg_match('/^[A-Za-z0-9_]+$/', $varName)) {
+            if (!preg_match('/^\w+$/', $varName)) {
                 throw InvalidFieldValueException::forField(
-                    "url.variable.{$varName}",
-                    "Invalid variable name '{$varName}' in URI template. " .
+                    'url.variable.' . $varName,
+                    sprintf("Invalid variable name '%s' in URI template. ", $varName) .
                     'Variable names must contain only letters, numbers, and underscores.'
                 );
             }
@@ -114,7 +114,7 @@ final class DiscoveryServerData extends Data
         preg_match_all('/\{([^}]+)\}/', $url, $matches);
         $urlVars = $matches[1];
 
-        if (empty($urlVars)) {
+        if ($urlVars === []) {
             return; // No variables in template
         }
 
@@ -125,7 +125,7 @@ final class DiscoveryServerData extends Data
         $definedVars = array_keys($variables);
         $undefinedVars = array_diff($urlVars, $definedVars);
 
-        if (!empty($undefinedVars)) {
+        if ($undefinedVars !== []) {
             throw InvalidFieldValueException::forField(
                 'variables',
                 'URL template references undefined variables: ' . json_encode($undefinedVars)
@@ -156,7 +156,7 @@ final class DiscoveryServerData extends Data
 
                 if (!$value instanceof ServerVariableData) {
                     throw InvalidFieldTypeException::forField(
-                        "variables.{$key}",
+                        'variables.' . $key,
                         'ServerVariableData',
                         $value
                     );
@@ -176,7 +176,7 @@ final class DiscoveryServerData extends Data
 
                 if (!$value instanceof ServerExtensionDeclarationData) {
                     throw InvalidFieldTypeException::forField(
-                        "extensions[{$index}]",
+                        sprintf('extensions[%d]', $index),
                         'ServerExtensionDeclarationData',
                         $value
                     );

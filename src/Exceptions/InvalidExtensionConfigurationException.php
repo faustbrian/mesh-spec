@@ -27,8 +27,6 @@ final class InvalidExtensionConfigurationException extends RuntimeException
      * @param string $extensionUrn Extension identifier
      * @param string $eventClass   Event class name
      * @param mixed  $priority     The invalid priority value
-     *
-     * @return self
      */
     public static function invalidPriority(string $extensionUrn, string $eventClass, mixed $priority): self
     {
@@ -46,8 +44,6 @@ final class InvalidExtensionConfigurationException extends RuntimeException
      * @param string $extensionUrn Extension identifier
      * @param string $eventClass   Event class name
      * @param mixed  $method       The invalid method value
-     *
-     * @return self
      */
     public static function invalidMethod(string $extensionUrn, string $eventClass, mixed $method): self
     {
@@ -66,8 +62,6 @@ final class InvalidExtensionConfigurationException extends RuntimeException
      * @param string $eventClass     Event class name
      * @param string $method         Method name that doesn't exist
      * @param string $extensionClass Extension class name
-     *
-     * @return self
      */
     public static function methodNotFound(
         string $extensionUrn,
@@ -85,14 +79,12 @@ final class InvalidExtensionConfigurationException extends RuntimeException
     }
 
     /**
-     * Create exception for a method that is not callable (e.g., private).
+     * Create exception for a method that is not callable(e.g., private).
      *
      * @param string $extensionUrn   Extension identifier
      * @param string $eventClass     Event class name
      * @param string $method         Method name that is not callable
      * @param string $extensionClass Extension class name
-     *
-     * @return self
      */
     public static function methodNotCallable(
         string $extensionUrn,

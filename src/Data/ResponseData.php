@@ -43,17 +43,17 @@ final class ResponseData extends AbstractData
     /**
      * Maximum allowed size for errors array to prevent memory exhaustion.
      */
-    private const MAX_ERRORS_COUNT = 100;
+    private const int MAX_ERRORS_COUNT = 100;
 
     /**
      * Maximum allowed size for extensions array to prevent memory exhaustion.
      */
-    private const MAX_EXTENSIONS_COUNT = 50;
+    private const int MAX_EXTENSIONS_COUNT = 50;
 
     /**
      * Maximum allowed depth for nested meta data to prevent stack overflow.
      */
-    private const MAX_META_DEPTH = 10;
+    private const int MAX_META_DEPTH = 10;
 
     /**
      * Create a new response data instance.
@@ -103,14 +103,8 @@ final class ResponseData extends AbstractData
                 );
             }
 
-            if ($errors !== [] && count($errors) === 0) {
+            if ($errors !== [] && $errors === []) {
                 throw EmptyArrayException::forField('errors');
-            }
-
-            foreach ($errors as $error) {
-                if (!$error instanceof ErrorData) {
-                    throw InvalidArrayElementException::forField('errors', 'ErrorData');
-                }
             }
         }
 

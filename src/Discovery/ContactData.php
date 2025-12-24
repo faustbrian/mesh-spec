@@ -41,8 +41,6 @@ final class ContactData extends Data
      * @param null|string $name  Contact name
      * @param null|string $url   Contact URL
      * @param null|string $email Contact email
-     *
-     * @return self
      */
     public static function create(
         ?string $name = null,
@@ -60,8 +58,6 @@ final class ContactData extends Data
      * Create contact with email only.
      *
      * @param string $email Contact email address
-     *
-     * @return self
      */
     public static function email(string $email): self
     {
@@ -73,8 +69,6 @@ final class ContactData extends Data
      *
      * @param string $name  Contact name
      * @param string $email Contact email address
-     *
-     * @return self
      */
     public static function person(string $name, string $email): self
     {
@@ -87,8 +81,6 @@ final class ContactData extends Data
      * @param string $name  Contact name
      * @param string $url   Contact URL
      * @param string $email Contact email address
-     *
-     * @return self
      */
     public static function full(string $name, string $url, string $email): self
     {
@@ -101,8 +93,6 @@ final class ContactData extends Data
      * @param string $teamName Team name
      * @param string $url      Team documentation or support URL
      * @param string $email    Team email address
-     *
-     * @return self
      */
     public static function team(string $teamName, string $url, string $email): self
     {
@@ -135,7 +125,7 @@ final class ContactData extends Data
         public readonly ?string $url = null,
         public readonly ?string $email = null,
     ) {
-        $this->validate();
+        $this->validateContact();
     }
 
     /**
@@ -149,7 +139,7 @@ final class ContactData extends Data
      * @throws InvalidEmailException
      * @throws MissingRequiredFieldException
      */
-    private function validate(): void
+    private function validateContact(): void
     {
         if ($this->name !== null) {
             $this->validateName();
@@ -175,7 +165,7 @@ final class ContactData extends Data
      */
     private function validateName(): void
     {
-        $trimmedName = trim($this->name);
+        $trimmedName = trim((string) $this->name);
 
         if ($trimmedName === '') {
             throw WhitespaceOnlyException::forField('name');
@@ -203,7 +193,7 @@ final class ContactData extends Data
             throw InvalidUrlException::invalidFormat('url');
         }
 
-        $parsedUrl = parse_url($this->url);
+        $parsedUrl = parse_url((string) $this->url);
 
         if (!isset($parsedUrl['scheme']) || !\in_array($parsedUrl['scheme'], ['http', 'https'], true)) {
             throw InvalidProtocolException::forUrl('url');
@@ -230,7 +220,7 @@ final class ContactData extends Data
         }
 
         // Additional RFC 5322 validation
-        if (mb_strlen($this->email) > 254) {
+        if (mb_strlen((string) $this->email) > 254) {
             throw FieldExceedsMaxLengthException::forField('email', 254);
         }
     }

@@ -117,4 +117,17 @@ final readonly class ForrstProtocol implements ProtocolInterface
     {
         return 'application/json';
     }
+
+    /**
+     * Validate that data structure conforms to protocol requirements.
+     *
+     * @param array<string, mixed> $data Data to validate
+     *
+     * @throws \InvalidArgumentException If data is invalid
+     */
+    public function validate(array $data): void
+    {
+        // Protocol validation is handled elsewhere in the request pipeline
+        // This method exists for interface compliance
+    }
 }

@@ -10,7 +10,6 @@
 namespace Cline\Forrst\Extensions;
 
 use Cline\Forrst\Contracts\ExtensionInterface;
-use Cline\Forrst\Exceptions\InvalidConfigurationException;
 use Cline\Forrst\Exceptions\InvalidFieldTypeException;
 use Cline\Forrst\Exceptions\InvalidFieldValueException;
 use Cline\Forrst\Exceptions\MissingRequiredFieldException;
@@ -70,14 +69,14 @@ final class ExtensionRegistry
             if (!method_exists($extension, $method)) {
                 throw InvalidFieldValueException::forField(
                     'method',
-                    sprintf('Extension %s references non-existent method %s for event %s', get_class($extension), $method, $eventClass),
+                    sprintf('Extension %s references non-existent method %s for event %s', $extension::class, $method, $eventClass),
                 );
             }
 
             if (!is_callable([$extension, $method])) {
                 throw InvalidFieldValueException::forField(
                     'method',
-                    sprintf('Method %s::%s is not callable (check visibility)', get_class($extension), $method),
+                    sprintf('Method %s::%s is not callable (check visibility)', $extension::class, $method),
                 );
             }
 

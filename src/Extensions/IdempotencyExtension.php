@@ -208,10 +208,10 @@ final class IdempotencyExtension extends AbstractExtension
                 'cache_key' => $cacheKey,
                 'lock' => $lock, // Store lock to release later
             ];
-        } catch (\Throwable $e) {
+        } catch (\Throwable $throwable) {
             $lock->release();
 
-            throw $e;
+            throw $throwable;
         }
     }
 
@@ -534,8 +534,8 @@ final class IdempotencyExtension extends AbstractExtension
     {
         try {
             $encoded = json_encode($arguments ?? [], JSON_THROW_ON_ERROR);
-        } catch (\JsonException $e) {
-            throw DataTransformationException::cannotTransform('arguments', 'hash', 'arguments are not JSON-serializable', $e);
+        } catch (\JsonException $jsonException) {
+            throw DataTransformationException::cannotTransform('arguments', 'hash', 'arguments are not JSON-serializable', $jsonException);
         }
 
         return 'sha256:'.hash('sha256', $encoded);

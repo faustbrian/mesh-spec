@@ -189,7 +189,6 @@ abstract class AbstractRequestException extends Exception implements RpcExceptio
             );
         }
 
-        /** @var array<string, mixed> */
         return $message;
     }
 

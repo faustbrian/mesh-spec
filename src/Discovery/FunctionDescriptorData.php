@@ -146,7 +146,7 @@ final class FunctionDescriptorData extends Data
         if (!preg_match($semverPattern, $version)) {
             throw InvalidFieldValueException::forField(
                 'version',
-                "Invalid semantic version: '{$version}'. Must follow semver format (e.g., '1.0.0')"
+                sprintf("Invalid semantic version: '%s'. Must follow semver format (e.g., '1.0.0')", $version)
             );
         }
 
@@ -154,7 +154,7 @@ final class FunctionDescriptorData extends Data
         foreach ($arguments as $index => $argument) {
             if (!$argument instanceof ArgumentData) {
                 throw InvalidFieldTypeException::forField(
-                    "arguments[{$index}]",
+                    sprintf('arguments[%d]', $index),
                     ArgumentData::class,
                     $argument
                 );
@@ -175,7 +175,7 @@ final class FunctionDescriptorData extends Data
             foreach ($this->tags as $index => $tag) {
                 if (!\is_array($tag) && !$tag instanceof TagData) {
                     throw InvalidFieldTypeException::forField(
-                        "tags[{$index}]",
+                        sprintf('tags[%d]', $index),
                         'array or ' . TagData::class,
                         $tag
                     );
@@ -188,7 +188,7 @@ final class FunctionDescriptorData extends Data
             foreach ($this->errors as $index => $error) {
                 if (!\is_array($error) && !$error instanceof ErrorDefinitionData) {
                     throw InvalidFieldTypeException::forField(
-                        "errors[{$index}]",
+                        sprintf('errors[%d]', $index),
                         'array or ' . ErrorDefinitionData::class,
                         $error
                     );
@@ -201,7 +201,7 @@ final class FunctionDescriptorData extends Data
             foreach ($this->links as $index => $link) {
                 if (!\is_array($link) && !$link instanceof LinkData) {
                     throw InvalidFieldTypeException::forField(
-                        "links[{$index}]",
+                        sprintf('links[%d]', $index),
                         'array or ' . LinkData::class,
                         $link
                     );
@@ -216,7 +216,7 @@ final class FunctionDescriptorData extends Data
                 if (!\in_array($effect, $validEffects, true)) {
                     throw InvalidFieldValueException::forField(
                         'sideEffects',
-                        "Invalid value: '{$effect}'. Must be one of: " . implode(', ', $validEffects)
+                        sprintf("Invalid value: '%s'. Must be one of: ", $effect) . implode(', ', $validEffects)
                     );
                 }
             }

@@ -135,6 +135,6 @@ final class RequestValidated extends ExtensionEvent
 
         $response = $this->getResponse();
 
-        return $response !== null && $response->isFailed();
+        return $response instanceof ResponseData && $response->isFailed();
     }
 }

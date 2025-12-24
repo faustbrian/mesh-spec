@@ -254,7 +254,7 @@ final class FunctionRepository
         foreach ($function->getArguments() as $index => $argument) {
             if (!$argument instanceof ArgumentData && !is_array($argument)) {
                 throw InvalidFieldValueException::forField(
-                    "argument at index {$index}",
+                    'argument at index ' . $index,
                     sprintf('must be ArgumentData or array, %s given', get_debug_type($argument))
                 );
             }
@@ -264,7 +264,7 @@ final class FunctionRepository
         foreach ($function->getErrors() as $index => $error) {
             if (!$error instanceof ErrorDefinitionData && !is_array($error)) {
                 throw InvalidFieldValueException::forField(
-                    "error at index {$index}",
+                    'error at index ' . $index,
                     sprintf('must be ErrorDefinitionData or array, %s given', get_debug_type($error))
                 );
             }

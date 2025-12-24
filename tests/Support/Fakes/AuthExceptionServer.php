@@ -26,4 +26,10 @@ final class AuthExceptionServer extends AbstractServer
     {
         throw new AuthenticationException('Authentication required');
     }
+
+    #[Override()]
+    public function validate(): void
+    {
+        // No validation needed for test fake
+    }
 }

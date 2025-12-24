@@ -127,7 +127,7 @@ final readonly class FunctionController
         // Unexpected type - log and return error
         Log::error('Invalid result data type', [
             'type' => get_debug_type($result->data),
-            'class' => is_object($result->data) ? get_class($result->data) : null,
+            'class' => is_object($result->data) ? $result->data::class : null,
         ]);
 
         return Response::json([
@@ -204,7 +204,7 @@ final readonly class FunctionController
                     // Log error before sending to client
                     Log::error('Streaming error', [
                         'exception' => $throwable,
-                        'function' => get_class($function),
+                        'function' => $function::class,
                     ]);
 
                     // Send error chunk
@@ -215,9 +215,7 @@ final readonly class FunctionController
                     $this->flush();
                 } finally {
                     // Always send final response if not already sent
-                    if (!$finalResponseSent) {
-                        $this->sendFinalResponse($requestData);
-                    }
+                    $this->sendFinalResponse($requestData);
                 }
             },
             \Symfony\Component\HttpFoundation\Response::HTTP_OK,

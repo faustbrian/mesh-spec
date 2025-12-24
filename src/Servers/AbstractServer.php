@@ -210,4 +210,18 @@ abstract class AbstractServer implements ServerInterface
      * @return array<int, class-string<FunctionInterface>> Array of function class names
      */
     abstract public function functions(): array;
+
+    /**
+     * Validate server configuration.
+     *
+     * Override this method to add custom validation logic for your server.
+     * Called during server initialization to ensure the server is properly
+     * configured before accepting requests.
+     *
+     * @throws \InvalidArgumentException If configuration is invalid
+     */
+    public function validate(): void
+    {
+        // Default implementation - no validation required
+    }
 }

@@ -13,7 +13,6 @@ use Cline\Forrst\Data\AbstractData;
 use Cline\Forrst\Exceptions\EmptyArrayException;
 use Cline\Forrst\Exceptions\InvalidConfigurationException;
 use Cline\Forrst\Exceptions\InvalidFieldTypeException;
-use Cline\Forrst\Exceptions\InvalidFieldValueException;
 use Spatie\LaravelData\Attributes\DataCollectionOf;
 use Spatie\LaravelData\Attributes\Validation\Present;
 use Spatie\LaravelData\DataCollection;

@@ -9,6 +9,7 @@
 
 namespace Cline\Forrst\Discovery;
 
+use Carbon\CarbonImmutable;
 use Cline\Forrst\Exceptions\HtmlNotAllowedException;
 use Cline\Forrst\Exceptions\InvalidFieldValueException;
 use Cline\Forrst\Exceptions\MissingRequiredFieldException;
@@ -45,7 +46,7 @@ final class DeprecatedData extends Data
         public readonly ?string $reason = null,
         public readonly ?\DateTimeImmutable $sunset = null,
     ) {
-        $this->validate();
+        $this->validateDeprecation();
     }
 
     /**
@@ -53,7 +54,6 @@ final class DeprecatedData extends Data
      *
      * @param null|string $reason Deprecation reason
      * @param null|string $sunsetDate ISO 8601 date string (e.g., "2025-12-31")
-     * @return self
      * @throws \InvalidArgumentException if date format is invalid
      */
     public static function create(?string $reason = null, ?string $sunsetDate = null): self
@@ -63,7 +63,7 @@ final class DeprecatedData extends Data
         if ($sunsetDate !== null) {
             try {
                 $sunset = new \DateTimeImmutable($sunsetDate);
-            } catch (\Exception $e) {
+            } catch (\Exception) {
                 throw InvalidFieldValueException::forField(
                     'sunset',
                     sprintf('Invalid date format "%s". Expected ISO 8601 format (e.g., "2025-12-31")', $sunsetDate)
@@ -79,13 +79,13 @@ final class DeprecatedData extends Data
      *
      * @throws \InvalidArgumentException
      */
-    private function validate(): void
+    private function validateDeprecation(): void
     {
         if ($this->reason !== null) {
             $this->validateReason();
         }
 
-        if ($this->sunset !== null) {
+        if ($this->sunset instanceof \DateTimeImmutable) {
             $this->validateSunset();
         }
 
@@ -99,7 +99,7 @@ final class DeprecatedData extends Data
      */
     private function validateReason(): void
     {
-        $trimmedReason = trim($this->reason);
+        $trimmedReason = trim((string) $this->reason);
 
         if ($trimmedReason === '') {
             throw WhitespaceOnlyException::forField('reason');
@@ -146,7 +146,7 @@ final class DeprecatedData extends Data
      */
     private function validateSunset(): void
     {
-        $now = new \DateTimeImmutable();
+        $now = CarbonImmutable::now();
 
         if ($this->sunset < $now) {
             throw InvalidFieldValueException::forField(
@@ -166,15 +166,13 @@ final class DeprecatedData extends Data
      */
     private function validateAtLeastOneFieldPresent(): void
     {
-        if ($this->reason === null && $this->sunset === null) {
+        if ($this->reason === null && !$this->sunset instanceof \DateTimeImmutable) {
             throw MissingRequiredFieldException::forField('reason or sunset');
         }
     }
 
     /**
      * Get sunset date as ISO 8601 string.
-     *
-     * @return null|string
      */
     public function getSunsetString(): ?string
     {
@@ -183,16 +181,14 @@ final class DeprecatedData extends Data
 
     /**
      * Check if the sunset date has passed.
-     *
-     * @return bool
      */
     public function hasSunsetPassed(): bool
     {
-        if ($this->sunset === null) {
+        if (!$this->sunset instanceof \DateTimeImmutable) {
             return false;
         }
 
-        return $this->sunset < new \DateTimeImmutable();
+        return $this->sunset < CarbonImmutable::now();
     }
 
     /**
@@ -202,11 +198,11 @@ final class DeprecatedData extends Data
      */
     public function getDaysUntilSunset(): ?int
     {
-        if ($this->sunset === null) {
+        if (!$this->sunset instanceof \DateTimeImmutable) {
             return null;
         }
 
-        $now = new \DateTimeImmutable();
+        $now = CarbonImmutable::now();
         $interval = $now->diff($this->sunset);
 
         return (int) $interval->format('%r%a'); // Positive for future, negative for past
@@ -216,7 +212,6 @@ final class DeprecatedData extends Data
      * Check if sunset is approaching (within 90 days).
      *
      * @param int $days Number of days to consider as "approaching" (default 90)
-     * @return bool
      */
     public function isSunsetApproaching(int $days = 90): bool
     {
@@ -231,8 +226,6 @@ final class DeprecatedData extends Data
 
     /**
      * Check if the reason includes alternative suggestions.
-     *
-     * @return bool
      */
     public function hasAlternativeSuggestion(): bool
     {
@@ -247,31 +240,23 @@ final class DeprecatedData extends Data
             '/see\s+\w+/i',
             '/instead\s+of/i',
         ];
-
-        foreach ($patterns as $pattern) {
-            if (preg_match($pattern, $this->reason)) {
-                return true;
-            }
-        }
-
-        return false;
+        return array_any($patterns, fn($pattern): int|false => preg_match($pattern, $this->reason));
     }
 
     /**
      * Get a deprecation warning message.
      *
      * @param string $elementName Name of the deprecated element
-     * @return string
      */
     public function getWarningMessage(string $elementName): string
     {
-        $message = "DEPRECATED: {$elementName} is deprecated";
+        $message = sprintf('DEPRECATED: %s is deprecated', $elementName);
 
         if ($this->reason !== null) {
-            $message .= ". {$this->reason}";
+            $message .= '. ' . $this->reason;
         }
 
-        if ($this->sunset !== null) {
+        if ($this->sunset instanceof \DateTimeImmutable) {
             $message .= sprintf(
                 ' and will be removed on %s (%d days remaining)',
                 $this->getSunsetString(),

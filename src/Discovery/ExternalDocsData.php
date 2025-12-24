@@ -68,7 +68,7 @@ final class ExternalDocsData extends Data
         // Strongly recommend HTTPS for security
         if ($scheme !== 'https') {
             trigger_error(
-                "Warning: External documentation URL should use HTTPS for security: '{$url}'",
+                sprintf("Warning: External documentation URL should use HTTPS for security: '%s'", $url),
                 E_USER_WARNING
             );
         }

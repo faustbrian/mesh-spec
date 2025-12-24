@@ -29,13 +29,8 @@ use ReflectionNamedType;
 use ReflectionUnionType;
 use Spatie\LaravelData\Data;
 use Throwable;
-
-use function array_filter;
-use function array_keys;
-use function assert;
 use function call_user_func;
 use function count;
-use function get_debug_type;
 use function implode;
 use function is_array;
 use function is_subclass_of;
@@ -172,7 +167,7 @@ final readonly class CallFunction
             }
         }
 
-        if (count($resolutionErrors) > 0) {
+        if ($resolutionErrors !== []) {
             throw InvalidFieldValueException::forField(
                 'parameters',
                 'Parameter resolution failed: '.implode('; ', $resolutionErrors),

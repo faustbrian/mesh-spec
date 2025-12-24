@@ -113,7 +113,7 @@ abstract class AbstractFunction implements FunctionInterface
     public function getUrn(): string
     {
         return $this->fromDescriptorOr(
-            fn (FunctionDescriptor $d) => $d->getUrn(),
+            fn (FunctionDescriptor $d): string => $d->getUrn(),
             function (): string {
                 $vendor = config('rpc.vendor', 'app');
 
@@ -135,7 +135,7 @@ abstract class AbstractFunction implements FunctionInterface
                     );
                 }
 
-                return "urn:{$vendor}:forrst:fn:{$name}";
+                return sprintf('urn:%s:forrst:fn:%s', $vendor, $name);
             },
         );
     }
@@ -151,7 +151,7 @@ abstract class AbstractFunction implements FunctionInterface
     public function getVersion(): string
     {
         return $this->fromDescriptorOr(
-            fn (FunctionDescriptor $d) => $d->getVersion(),
+            fn (FunctionDescriptor $d): string => $d->getVersion(),
             '1.0.0',
         );
     }
@@ -167,7 +167,7 @@ abstract class AbstractFunction implements FunctionInterface
     public function getSummary(): string
     {
         return $this->fromDescriptorOr(
-            fn (FunctionDescriptor $d) => $d->getSummary(),
+            fn (FunctionDescriptor $d): string => $d->getSummary(),
             fn (): string => $this->getUrn(),
         );
     }
@@ -183,7 +183,7 @@ abstract class AbstractFunction implements FunctionInterface
     public function getArguments(): array
     {
         return $this->fromDescriptorOr(
-            fn (FunctionDescriptor $d) => $d->getArguments(),
+            fn (FunctionDescriptor $d): array => $d->getArguments(),
             [],
         );
     }
@@ -199,7 +199,7 @@ abstract class AbstractFunction implements FunctionInterface
     public function getResult(): ?ResultDescriptorData
     {
         return $this->fromDescriptorOr(
-            fn (FunctionDescriptor $d) => $d->getResult(),
+            fn (FunctionDescriptor $d): ?ResultDescriptorData => $d->getResult(),
             null,
         );
     }
@@ -215,7 +215,7 @@ abstract class AbstractFunction implements FunctionInterface
     public function getErrors(): array
     {
         return $this->fromDescriptorOr(
-            fn (FunctionDescriptor $d) => $d->getErrors(),
+            fn (FunctionDescriptor $d): array => $d->getErrors(),
             [],
         );
     }
@@ -231,7 +231,7 @@ abstract class AbstractFunction implements FunctionInterface
     public function getDescription(): ?string
     {
         return $this->fromDescriptorOr(
-            fn (FunctionDescriptor $d) => $d->getDescription(),
+            fn (FunctionDescriptor $d): ?string => $d->getDescription(),
             null,
         );
     }
@@ -247,7 +247,7 @@ abstract class AbstractFunction implements FunctionInterface
     public function getTags(): ?array
     {
         return $this->fromDescriptorOr(
-            fn (FunctionDescriptor $d) => $d->getTags(),
+            fn (FunctionDescriptor $d): ?array => $d->getTags(),
             null,
         );
     }
@@ -263,7 +263,7 @@ abstract class AbstractFunction implements FunctionInterface
     public function getQuery(): ?QueryCapabilitiesData
     {
         return $this->fromDescriptorOr(
-            fn (FunctionDescriptor $d) => $d->getQuery(),
+            fn (FunctionDescriptor $d): ?QueryCapabilitiesData => $d->getQuery(),
             null,
         );
     }
@@ -279,7 +279,7 @@ abstract class AbstractFunction implements FunctionInterface
     public function getDeprecated(): ?DeprecatedData
     {
         return $this->fromDescriptorOr(
-            fn (FunctionDescriptor $d) => $d->getDeprecated(),
+            fn (FunctionDescriptor $d): ?DeprecatedData => $d->getDeprecated(),
             null,
         );
     }
@@ -295,7 +295,7 @@ abstract class AbstractFunction implements FunctionInterface
     public function getSideEffects(): ?array
     {
         return $this->fromDescriptorOr(
-            fn (FunctionDescriptor $d) => $d->getSideEffects(),
+            fn (FunctionDescriptor $d): ?array => $d->getSideEffects(),
             null,
         );
     }
@@ -311,7 +311,7 @@ abstract class AbstractFunction implements FunctionInterface
     public function isDiscoverable(): bool
     {
         return $this->fromDescriptorOr(
-            fn (FunctionDescriptor $d) => $d->isDiscoverable(),
+            fn (FunctionDescriptor $d): bool => $d->isDiscoverable(),
             true,
         );
     }
@@ -327,7 +327,7 @@ abstract class AbstractFunction implements FunctionInterface
     public function getExamples(): ?array
     {
         return $this->fromDescriptorOr(
-            fn (FunctionDescriptor $d) => $d->getExamples(),
+            fn (FunctionDescriptor $d): ?array => $d->getExamples(),
             null,
         );
     }
@@ -343,7 +343,7 @@ abstract class AbstractFunction implements FunctionInterface
     public function getLinks(): ?array
     {
         return $this->fromDescriptorOr(
-            fn (FunctionDescriptor $d) => $d->getLinks(),
+            fn (FunctionDescriptor $d): ?array => $d->getLinks(),
             null,
         );
     }
@@ -359,7 +359,7 @@ abstract class AbstractFunction implements FunctionInterface
     public function getExternalDocs(): ?ExternalDocsData
     {
         return $this->fromDescriptorOr(
-            fn (FunctionDescriptor $d) => $d->getExternalDocs(),
+            fn (FunctionDescriptor $d): ?ExternalDocsData => $d->getExternalDocs(),
             null,
         );
     }
@@ -375,7 +375,7 @@ abstract class AbstractFunction implements FunctionInterface
     public function getSimulations(): ?array
     {
         return $this->fromDescriptorOr(
-            fn (FunctionDescriptor $d) => $d->getSimulations(),
+            fn (FunctionDescriptor $d): ?array => $d->getSimulations(),
             null,
         );
     }
@@ -391,7 +391,7 @@ abstract class AbstractFunction implements FunctionInterface
     public function getExtensions(): ?FunctionExtensionsData
     {
         return $this->fromDescriptorOr(
-            fn (FunctionDescriptor $d) => $d->getExtensions(),
+            fn (FunctionDescriptor $d): ?FunctionExtensionsData => $d->getExtensions(),
             null,
         );
     }
@@ -417,7 +417,7 @@ abstract class AbstractFunction implements FunctionInterface
      */
     protected function getRequestObject(): RequestObjectData
     {
-        if ($this->requestObject === null) {
+        if (!$this->requestObject instanceof RequestObjectData) {
             throw InvalidMethodCallException::cannotCall(
                 'getRequestObject',
                 'Request object not available. Ensure setRequest() is called before accessing request data.',
@@ -475,6 +475,7 @@ abstract class AbstractFunction implements FunctionInterface
         /** @var class-string<DescriptorInterface> $descriptorClass */
         $descriptor = $descriptorClass::create();
         $this->descriptor = $descriptor;
+
         $this->descriptorResolved = true;
 
         return $this->descriptor;

@@ -70,7 +70,7 @@ final class TagData extends Data
         // Recommend kebab-case or snake_case for consistency
         if (!preg_match('/^[a-z][a-z0-9_-]*$/', $trimmedName)) {
             trigger_error(
-                "Warning: Tag name '{$trimmedName}' should use lowercase kebab-case or snake_case " .
+                sprintf("Warning: Tag name '%s' should use lowercase kebab-case or snake_case ", $trimmedName) .
                 "(e.g., 'user-management', 'billing', 'analytics')",
                 E_USER_WARNING
             );

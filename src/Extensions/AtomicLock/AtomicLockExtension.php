@@ -114,7 +114,7 @@ final class AtomicLockExtension extends AbstractExtension implements ProvidesFun
      *
      * @var null|callable(string): bool
      */
-    private $authorizationCallback = null;
+    private $authorizationCallback;
 
     /**
      * Get the functions provided by this extension.
@@ -264,7 +264,7 @@ final class AtomicLockExtension extends AbstractExtension implements ProvidesFun
                 'acquired_at' => $acquiredAt,
                 'expires_at' => $expiresAt,
             ];
-        } catch (\Throwable $e) {
+        } catch (\Throwable $throwable) {
             // Ensure context is null on any failure
             $this->context = null;
 
@@ -278,7 +278,7 @@ final class AtomicLockExtension extends AbstractExtension implements ProvidesFun
                 }
             }
 
-            throw $e;
+            throw $throwable;
         }
     }
 

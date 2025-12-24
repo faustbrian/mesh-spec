@@ -137,7 +137,7 @@ final class ErrorDefinitionData extends Data
         if (!preg_match('/^[A-Z][A-Z0-9_]*$/', $code)) {
             throw InvalidFieldValueException::forField(
                 'code',
-                "Error code must follow SCREAMING_SNAKE_CASE convention. Got: '{$code}'"
+                sprintf("Error code must follow SCREAMING_SNAKE_CASE convention. Got: '%s'", $code)
             );
         }
 
@@ -152,7 +152,7 @@ final class ErrorDefinitionData extends Data
     private function validateMessagePlaceholders(string $message): void
     {
         // Check for potentially unsafe named placeholders
-        if (preg_match('/\{[A-Za-z_][A-Za-z0-9_]*\}/', $message)) {
+        if (preg_match('/\{[A-Za-z_]\w*\}/', $message)) {
             trigger_error(
                 'Warning: Error message uses named placeholders like {fieldName}. '
                 .'Consider using numbered placeholders {0}, {1} to prevent injection.',
@@ -162,8 +162,8 @@ final class ErrorDefinitionData extends Data
 
         // Validate numbered placeholders are sequential
         preg_match_all('/\{(\d+)\}/', $message, $matches);
-        if (!empty($matches[1])) {
-            $indices = array_map('intval', $matches[1]);
+        if (isset($matches[1]) && $matches[1] !== []) {
+            $indices = array_map(intval(...), $matches[1]);
             sort($indices);
             $expected = range(0, \count($indices) - 1);
 
@@ -171,7 +171,7 @@ final class ErrorDefinitionData extends Data
                 throw InvalidFieldValueException::forField(
                     'message',
                     'Message placeholders must be sequential starting from {0}. '
-                    .'Found: '.implode(', ', array_map(fn ($i) => "{{$i}}", $indices))
+                    .'Found: '.implode(', ', array_map(fn (string $i): string => sprintf('{%s}', $i), $indices))
                 );
             }
         }
@@ -204,7 +204,7 @@ final class ErrorDefinitionData extends Data
         if (!\in_array($details['type'], $validTypes, true)) {
             throw InvalidFieldValueException::forField(
                 'details.type',
-                "Invalid JSON Schema type '{$details['type']}'. "
+                sprintf("Invalid JSON Schema type '%s'. ", $details['type'])
                 .'Must be one of: '.implode(', ', $validTypes)
             );
         }
@@ -223,10 +223,11 @@ final class ErrorDefinitionData extends Data
             foreach ($details['properties'] as $propName => $propSchema) {
                 if (!\is_array($propSchema) || !isset($propSchema['type'])) {
                     throw InvalidFieldValueException::forField(
-                        "details.properties.{$propName}",
+                        'details.properties.' . $propName,
                         "Property must have a valid JSON Schema with 'type'"
                     );
                 }
+
                 $this->validateJsonSchema($propSchema, $depth + 1);
             }
         }
@@ -239,6 +240,7 @@ final class ErrorDefinitionData extends Data
                     'JSON Schema "items" must be a valid schema with "type"'
                 );
             }
+
             $this->validateJsonSchema($details['items'], $depth + 1);
         }
     }
@@ -253,7 +255,7 @@ final class ErrorDefinitionData extends Data
     public function formatMessage(array $values): string
     {
         $escaped = array_map(
-            fn ($val) => htmlspecialchars((string) $val, ENT_QUOTES, 'UTF-8'),
+            fn (bool|float|int|string $val): string => htmlspecialchars((string) $val, ENT_QUOTES, 'UTF-8'),
             $values
         );
 

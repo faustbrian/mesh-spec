@@ -38,20 +38,20 @@ final class UrnValidator
     public static function validateExtensionUrn(string $urn, string $fieldName = 'urn'): void
     {
         if ($urn === '') {
-            throw EmptyFieldException::forField("Extension {$fieldName}");
+            throw EmptyFieldException::forField('Extension ' . $fieldName);
         }
 
         // Forrst extension URNs must follow: urn:forrst:ext:name
         if (!preg_match('/^urn:forrst:ext:[a-z0-9][a-z0-9_-]*$/i', $urn)) {
             throw InvalidFieldValueException::forField(
-                "Extension {$fieldName}",
-                "must follow format 'urn:forrst:ext:name', got: {$urn}"
+                'Extension ' . $fieldName,
+                'must follow format \'urn:forrst:ext:name\', got: ' . $urn
             );
         }
 
         // Validate URN length (reasonable limit)
         if (strlen($urn) > 255) {
-            throw FieldExceedsMaxLengthException::forField("Extension {$fieldName}", 255);
+            throw FieldExceedsMaxLengthException::forField('Extension ' . $fieldName, 255);
         }
     }
 
@@ -74,7 +74,7 @@ final class UrnValidator
         // Validate array is not empty when provided
         if ($array === []) {
             throw InvalidFieldValueException::forField(
-                "Extension {$fieldName}",
+                'Extension ' . $fieldName,
                 'cannot be an empty array. Use null instead.'
             );
         }
@@ -83,8 +83,8 @@ final class UrnValidator
         $checkDepth = function (array $arr, int $currentDepth) use (&$checkDepth, $maxDepth, $fieldName): void {
             if ($currentDepth > $maxDepth) {
                 throw InvalidFieldValueException::forField(
-                    "Extension {$fieldName}",
-                    "exceeds maximum nesting depth of {$maxDepth}"
+                    'Extension ' . $fieldName,
+                    'exceeds maximum nesting depth of ' . $maxDepth
                 );
             }
 
@@ -100,15 +100,15 @@ final class UrnValidator
         // Validate total size
         try {
             $serialized = json_encode($array, JSON_THROW_ON_ERROR);
-        } catch (JsonException $e) {
+        } catch (JsonException $jsonException) {
             throw InvalidFieldValueException::forField(
-                "Extension {$fieldName}",
-                "contains invalid data that cannot be JSON serialized: {$e->getMessage()}"
+                'Extension ' . $fieldName,
+                'contains invalid data that cannot be JSON serialized: ' . $jsonException->getMessage()
             );
         }
 
         if (strlen($serialized) > 65536) { // 64KB limit
-            throw FieldExceedsMaxLengthException::forField("Extension {$fieldName}", 65536);
+            throw FieldExceedsMaxLengthException::forField('Extension ' . $fieldName, 65536);
         }
     }
 }

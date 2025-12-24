@@ -160,11 +160,11 @@ final class CancellationExtension extends AbstractExtension implements ProvidesF
 
         try {
             $validToken = $this->validateToken($token);
-        } catch (\InvalidArgumentException $e) {
+        } catch (\InvalidArgumentException $invalidArgumentException) {
             $event->setResponse(ResponseData::error(
                 new ErrorData(
                     code: ErrorCode::InvalidArguments,
-                    message: $e->getMessage(),
+                    message: $invalidArgumentException->getMessage(),
                 ),
                 $event->request->id,
             ));
@@ -176,9 +176,9 @@ final class CancellationExtension extends AbstractExtension implements ProvidesF
         // Register the token as active (not cancelled)
         try {
             Cache::put(self::CACHE_PREFIX.$validToken, 'active', $this->tokenTtl);
-        } catch (\Throwable $e) {
+        } catch (\Throwable $throwable) {
             // Log the error
-            error_log('Failed to register cancellation token: '.$e->getMessage());
+            error_log('Failed to register cancellation token: '.$throwable->getMessage());
 
             $event->setResponse(ResponseData::error(
                 new ErrorData(
@@ -289,9 +289,9 @@ final class CancellationExtension extends AbstractExtension implements ProvidesF
             Cache::put($key, 'cancelled', $this->tokenTtl);
 
             return true;
-        } catch (\Throwable $e) {
+        } catch (\Throwable $throwable) {
             // Log the error
-            error_log('Failed to cancel request token: '.$e->getMessage());
+            error_log('Failed to cancel request token: '.$throwable->getMessage());
 
             return false;
         }
@@ -338,8 +338,8 @@ final class CancellationExtension extends AbstractExtension implements ProvidesF
     {
         try {
             return Cache::get(self::CACHE_PREFIX.$token) === 'cancelled';
-        } catch (\Throwable $e) {
-            error_log('Failed to check cancellation status: '.$e->getMessage());
+        } catch (\Throwable $throwable) {
+            error_log('Failed to check cancellation status: '.$throwable->getMessage());
 
             return false;
         }
@@ -358,8 +358,8 @@ final class CancellationExtension extends AbstractExtension implements ProvidesF
     {
         try {
             return Cache::get(self::CACHE_PREFIX.$token) === 'active';
-        } catch (\Throwable $e) {
-            error_log('Failed to check token active status: '.$e->getMessage());
+        } catch (\Throwable $throwable) {
+            error_log('Failed to check token active status: '.$throwable->getMessage());
 
             return false;
         }
@@ -377,9 +377,9 @@ final class CancellationExtension extends AbstractExtension implements ProvidesF
     {
         try {
             Cache::forget(self::CACHE_PREFIX.$token);
-        } catch (\Throwable $e) {
+        } catch (\Throwable $throwable) {
             // Log but don't throw - cleanup is best effort
-            error_log('Failed to cleanup cancellation token: '.$e->getMessage());
+            error_log('Failed to cleanup cancellation token: '.$throwable->getMessage());
         }
     }
 }

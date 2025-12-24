@@ -180,6 +180,13 @@ enum ExtensionUrn: string
     case Diagnostics = 'urn:cline:forrst:ext:diagnostics';
 
     /**
+     * Webhook extension for Standard Webhooks-compliant event notifications.
+     *
+     * @see https://docs.cline.sh/specs/forrst/extensions/webhook
+     */
+    case Webhook = 'urn:cline:forrst:ext:webhook';
+
+    /**
      * Get all standard extension URNs as strings.
      *
      * Returns an array of all standard extension URN values. Useful for

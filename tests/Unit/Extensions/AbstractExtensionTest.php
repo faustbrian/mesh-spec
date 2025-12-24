@@ -228,7 +228,7 @@ describe('AbstractExtension', function (): void {
                 ->and($events[RequestValidated::class]['method'])->toBe('onRequestValidated');
         });
 
-        test('concrete extension can override toCapabilities to include documentation URL', function (): void {
+        test('concrete extension can override getCapabilityMetadata to include documentation URL', function (): void {
             // Arrange
             $extension = new class() extends AbstractExtension
             {
@@ -237,10 +237,9 @@ describe('AbstractExtension', function (): void {
                     return 'urn:test:docs';
                 }
 
-                public function toCapabilities(): array
+                protected function getCapabilityMetadata(): array
                 {
                     return [
-                        'urn' => $this->getUrn(),
                         'documentation' => 'https://docs.example.com/extensions/test',
                     ];
                 }

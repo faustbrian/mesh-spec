@@ -72,7 +72,7 @@ final class SimulationScenarioData extends Data
         }
 
         // Validate input array is non-empty
-        if (empty($input)) {
+        if ($input === []) {
             throw EmptyArrayException::forField('input');
         }
 
@@ -164,7 +164,7 @@ final class SimulationScenarioData extends Data
         $requiredFields = ['code', 'message'];
         $missingFields = array_diff($requiredFields, array_keys($error));
 
-        if (!empty($missingFields)) {
+        if ($missingFields !== []) {
             throw MissingRequiredFieldException::forField(implode(', ', $missingFields));
         }
 

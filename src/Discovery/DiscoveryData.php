@@ -89,14 +89,14 @@ final class DiscoveryData extends Data
      */
     private function validateFunctions(): void
     {
-        if (empty($this->functions)) {
+        if ($this->functions === []) {
             throw EmptyArrayException::forField('functions');
         }
 
         foreach ($this->functions as $index => $function) {
             if (!$function instanceof FunctionDescriptorData) {
                 throw InvalidFieldTypeException::forField(
-                    "functions[{$index}]",
+                    sprintf('functions[%d]', $index),
                     'FunctionDescriptorData',
                     $function
                 );
@@ -104,10 +104,10 @@ final class DiscoveryData extends Data
         }
 
         // Validate function name uniqueness
-        $names = array_map(fn ($f) => $f->name, $this->functions);
-        $duplicates = array_filter(array_count_values($names), fn ($count) => $count > 1);
+        $names = array_map(fn ($f): string => $f->name, $this->functions);
+        $duplicates = array_filter(array_count_values($names), fn (int $count): bool => $count > 1);
 
-        if (!empty($duplicates)) {
+        if ($duplicates !== []) {
             throw InvalidFieldValueException::forField(
                 'functions',
                 'Duplicate function names found: ' . implode(', ', array_keys($duplicates))
@@ -129,7 +129,7 @@ final class DiscoveryData extends Data
         foreach ($this->servers as $index => $server) {
             if (!$server instanceof DiscoveryServerData) {
                 throw InvalidFieldTypeException::forField(
-                    "servers[{$index}]",
+                    sprintf('servers[%d]', $index),
                     'DiscoveryServerData',
                     $server
                 );
@@ -164,7 +164,7 @@ final class DiscoveryData extends Data
         if (!preg_match($pattern, $version)) {
             throw InvalidFieldValueException::forField(
                 $fieldName,
-                "Version \"{$version}\" must follow semantic versioning (e.g., \"1.0.0\", \"2.1.0-beta.1\")"
+                sprintf('Version "%s" must follow semantic versioning (e.g., "1.0.0", "2.1.0-beta.1")', $version)
             );
         }
     }

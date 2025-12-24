@@ -17,7 +17,6 @@ use Symfony\Component\Intl\Timezones;
 
 use function array_map;
 use function explode;
-use function get_class;
 use function implode;
 use function is_string;
 use function mb_substr;
@@ -86,7 +85,7 @@ final class RuleTransformer
             if (!is_string($rule)) {
                 if (!method_exists($rule, '__toString')) {
                     Log::warning('Skipping rule without __toString method', [
-                        'rule_class' => get_class($rule),
+                        'rule_class' => $rule::class,
                         'field' => $field,
                     ]);
 

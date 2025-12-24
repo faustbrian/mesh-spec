@@ -113,7 +113,7 @@ describe('ExamplePairingData', function (): void {
     describe('Sad Paths - Validation Errors', function (): void {
         test('rejects empty params array', function (): void {
             // Arrange & Act & Assert
-            expect(fn () => new ExamplePairingData(
+            expect(fn (): ExamplePairingData => new ExamplePairingData(
                 name: 'NoParams',
                 params: [],
             ))->toThrow(InvalidArgumentException::class, 'at least one parameter');
@@ -121,7 +121,7 @@ describe('ExamplePairingData', function (): void {
 
         test('rejects param missing name key', function (): void {
             // Arrange & Act & Assert
-            expect(fn () => new ExamplePairingData(
+            expect(fn (): ExamplePairingData => new ExamplePairingData(
                 name: 'MissingName',
                 params: [
                     ['value' => 123], // Missing 'name'
@@ -131,7 +131,7 @@ describe('ExamplePairingData', function (): void {
 
         test('rejects param missing value key', function (): void {
             // Arrange & Act & Assert
-            expect(fn () => new ExamplePairingData(
+            expect(fn (): ExamplePairingData => new ExamplePairingData(
                 name: 'MissingValue',
                 params: [
                     ['name' => 'userId'], // Missing 'value'
@@ -141,7 +141,7 @@ describe('ExamplePairingData', function (): void {
 
         test('rejects invalid parameter name format with hyphens', function (): void {
             // Arrange & Act & Assert
-            expect(fn () => new ExamplePairingData(
+            expect(fn (): ExamplePairingData => new ExamplePairingData(
                 name: 'InvalidParamName',
                 params: [
                     ['name' => 'Invalid-Name', 'value' => 123], // Hyphens not allowed
@@ -151,7 +151,7 @@ describe('ExamplePairingData', function (): void {
 
         test('rejects invalid parameter name starting with uppercase', function (): void {
             // Arrange & Act & Assert
-            expect(fn () => new ExamplePairingData(
+            expect(fn (): ExamplePairingData => new ExamplePairingData(
                 name: 'InvalidParamName',
                 params: [
                     ['name' => 'UpperCase', 'value' => 123], // Must start with lowercase
@@ -161,7 +161,7 @@ describe('ExamplePairingData', function (): void {
 
         test('rejects invalid parameter name starting with number', function (): void {
             // Arrange & Act & Assert
-            expect(fn () => new ExamplePairingData(
+            expect(fn (): ExamplePairingData => new ExamplePairingData(
                 name: 'InvalidParamName',
                 params: [
                     ['name' => '1invalid', 'value' => 123], // Must start with lowercase letter
@@ -171,7 +171,7 @@ describe('ExamplePairingData', function (): void {
 
         test('rejects non-array parameter', function (): void {
             // Arrange & Act & Assert
-            expect(fn () => new ExamplePairingData(
+            expect(fn (): ExamplePairingData => new ExamplePairingData(
                 name: 'NonArrayParam',
                 params: [
                     'not-an-array',
@@ -181,7 +181,7 @@ describe('ExamplePairingData', function (): void {
 
         test('rejects param with non-string name', function (): void {
             // Arrange & Act & Assert
-            expect(fn () => new ExamplePairingData(
+            expect(fn (): ExamplePairingData => new ExamplePairingData(
                 name: 'NonStringName',
                 params: [
                     ['name' => 123, 'value' => 'test'], // Name must be string
@@ -191,7 +191,7 @@ describe('ExamplePairingData', function (): void {
 
         test('rejects result missing name key', function (): void {
             // Arrange & Act & Assert
-            expect(fn () => new ExamplePairingData(
+            expect(fn (): ExamplePairingData => new ExamplePairingData(
                 name: 'MissingResultName',
                 params: [['name' => 'param', 'value' => 1]],
                 result: ['value' => 'data'], // Missing 'name'
@@ -200,7 +200,7 @@ describe('ExamplePairingData', function (): void {
 
         test('rejects result missing value key', function (): void {
             // Arrange & Act & Assert
-            expect(fn () => new ExamplePairingData(
+            expect(fn (): ExamplePairingData => new ExamplePairingData(
                 name: 'MissingResultValue',
                 params: [['name' => 'param', 'value' => 1]],
                 result: ['name' => 'result'], // Missing 'value'
@@ -209,7 +209,7 @@ describe('ExamplePairingData', function (): void {
 
         test('rejects result with non-string name', function (): void {
             // Arrange & Act & Assert
-            expect(fn () => new ExamplePairingData(
+            expect(fn (): ExamplePairingData => new ExamplePairingData(
                 name: 'NonStringResultName',
                 params: [['name' => 'param', 'value' => 1]],
                 result: ['name' => 123, 'value' => 'data'], // Name must be string

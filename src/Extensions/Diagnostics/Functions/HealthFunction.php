@@ -69,7 +69,7 @@ final class HealthFunction extends AbstractFunction
     {
         // Rate limit health checks
         $clientIp = $this->requestObject->getContext('client_ip', 'unknown');
-        $rateLimitKey = "health_check:{$clientIp}";
+        $rateLimitKey = 'health_check:' . $clientIp;
 
         if (!RateLimiter::attempt($rateLimitKey, self::RATE_LIMIT_PER_MINUTE, fn (): bool => true, 60)) {
             $this->logger?->warning('Health check rate limit exceeded', [
@@ -118,9 +118,7 @@ final class HealthFunction extends AbstractFunction
         if (!$this->isAuthenticated() && $component === null) {
             $cacheKey = 'health_check:public';
 
-            return Cache::remember($cacheKey, self::HEALTH_CACHE_TTL, function () use ($includeDetails): array {
-                return $this->performHealthChecks($includeDetails, null);
-            });
+            return Cache::remember($cacheKey, self::HEALTH_CACHE_TTL, fn(): array => $this->performHealthChecks($includeDetails, null));
         }
 
         // Always execute fresh checks for authenticated users or specific components

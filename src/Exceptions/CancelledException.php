@@ -35,7 +35,7 @@ final class CancelledException extends AbstractRequestException
     /**
      * Default cancellation reason message.
      */
-    private const DEFAULT_REASON = 'Request was cancelled by client';
+    private const string DEFAULT_REASON = 'Request was cancelled by client';
 
     /**
      * Create a cancelled exception.

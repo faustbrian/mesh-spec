@@ -72,13 +72,11 @@ final class LinkData extends Data
         }
 
         // Validate function name format if provided
-        if ($this->function !== null) {
-            if (!preg_match('/^[a-z][a-z0-9]*(?:\.[a-z][a-z0-9]*)*$/', $this->function)) {
-                trigger_error(
-                    "Warning: Function name '{$this->function}' should use dot notation (e.g., 'users.get', 'orders.create')",
-                    E_USER_WARNING
-                );
-            }
+        if ($this->function !== null && !preg_match('/^[a-z][a-z0-9]*(?:\.[a-z][a-z0-9]*)*$/', $this->function)) {
+            trigger_error(
+                sprintf("Warning: Function name '%s' should use dot notation (e.g., 'users.get', 'orders.create')", $this->function),
+                E_USER_WARNING
+            );
         }
     }
 
@@ -96,13 +94,11 @@ final class LinkData extends Data
             }
 
             // Check for runtime expression syntax: $result.field
-            if (is_string($paramValue) && str_starts_with($paramValue, '$')) {
-                if (!preg_match('/^\$result\.[a-zA-Z_][a-zA-Z0-9_.]*$/', $paramValue)) {
-                    trigger_error(
-                        "Warning: Parameter '{$paramName}' uses runtime expression but may have invalid syntax: '{$paramValue}'",
-                        E_USER_WARNING
-                    );
-                }
+            if (is_string($paramValue) && str_starts_with($paramValue, '$') && !preg_match('/^\$result\.[a-zA-Z_][a-zA-Z0-9_.]*$/', $paramValue)) {
+                trigger_error(
+                    sprintf("Warning: Parameter '%s' uses runtime expression but may have invalid syntax: '%s'", $paramName, $paramValue),
+                    E_USER_WARNING
+                );
             }
         }
     }

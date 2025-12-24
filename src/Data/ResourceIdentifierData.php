@@ -30,12 +30,12 @@ final class ResourceIdentifierData extends AbstractData
     /**
      * Maximum length for type field to prevent memory exhaustion.
      */
-    private const MAX_TYPE_LENGTH = 255;
+    private const int MAX_TYPE_LENGTH = 255;
 
     /**
      * Maximum length for id field to prevent memory exhaustion.
      */
-    private const MAX_ID_LENGTH = 255;
+    private const int MAX_ID_LENGTH = 255;
 
     /**
      * Create a new resource identifier data instance.

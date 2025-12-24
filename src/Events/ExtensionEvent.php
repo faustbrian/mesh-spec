@@ -137,7 +137,7 @@ abstract class ExtensionEvent
      */
     public function hasResponse(): bool
     {
-        return $this->shortCircuitResponse !== null;
+        return $this->shortCircuitResponse instanceof ResponseData;
     }
 
     /**
@@ -150,7 +150,7 @@ abstract class ExtensionEvent
      */
     public function isShortCircuited(): bool
     {
-        return $this->propagationStopped && $this->shortCircuitResponse !== null;
+        return $this->propagationStopped && $this->shortCircuitResponse instanceof ResponseData;
     }
 
     /**

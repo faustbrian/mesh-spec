@@ -127,6 +127,7 @@ final class DryRunExtension extends AbstractExtension
                 throw MissingRequiredFieldException::forField('would_affect[].type and action');
             }
         }
+
         $data = [
             'valid' => true,
             'would_affect' => $wouldAffect,

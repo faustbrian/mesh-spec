@@ -9,6 +9,7 @@
 
 namespace Cline\Forrst;
 
+use Illuminate\Support\Str;
 use Cline\Forrst\Data\ProtocolData;
 use Illuminate\Http\Response;
 use Illuminate\Testing\TestResponse;
@@ -66,7 +67,7 @@ if (!function_exists('post_forrst') && function_exists('Pest\Laravel\postJson'))
         string $routeName = 'rpc',
     ): TestResponse {
         if ($id === null) {
-            $id = (string) \Illuminate\Support\Str::ulid();
+            $id = (string) Str::ulid();
         }
 
         return postJson(

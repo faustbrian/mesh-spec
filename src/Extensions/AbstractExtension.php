@@ -112,12 +112,12 @@ abstract class AbstractExtension implements ExtensionInterface
     {
         $urn = $this->getUrn();
 
-        if (empty($urn)) {
+        if ($urn === '' || $urn === '0') {
             throw EmptyFieldException::forField('urn');
         }
 
-        if (!str_starts_with($urn, 'forrst.ext.')) {
-            throw InvalidFieldValueException::forField('urn', 'must start with "forrst.ext."');
+        if (!str_starts_with($urn, 'urn:')) {
+            throw InvalidFieldValueException::forField('urn', 'must be a valid URN starting with "urn:"');
         }
 
         return array_merge(

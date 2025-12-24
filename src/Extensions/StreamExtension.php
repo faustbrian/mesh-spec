@@ -147,10 +147,9 @@ final class StreamExtension extends AbstractExtension
      * @return array<string, mixed> Streaming capabilities metadata
      */
     #[Override()]
-    public function toCapabilities(): array
+    protected function getCapabilityMetadata(): array
     {
         return [
-            'urn' => ExtensionUrn::Stream->value,
             'content_type' => 'text/event-stream',
             'events' => ['data', 'progress', 'error', 'done'],
         ];

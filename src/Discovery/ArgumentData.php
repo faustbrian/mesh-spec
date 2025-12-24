@@ -72,8 +72,6 @@ final class ArgumentData extends Data
      * @param string      $name        Argument name
      * @param null|string $summary     Brief description
      * @param null|string $description Detailed description
-     *
-     * @return self
      */
     public static function requiredString(
         string $name,
@@ -96,8 +94,6 @@ final class ArgumentData extends Data
      * @param string      $default     Default value
      * @param null|string $summary     Brief description
      * @param null|string $description Detailed description
-     *
-     * @return self
      */
     public static function optionalString(
         string $name,
@@ -123,8 +119,6 @@ final class ArgumentData extends Data
      * @param null|int    $maximum     Maximum value
      * @param null|string $summary     Brief description
      * @param null|string $description Detailed description
-     *
-     * @return self
      */
     public static function requiredInteger(
         string $name,
@@ -158,8 +152,6 @@ final class ArgumentData extends Data
      * @param string      $name        Argument name
      * @param null|string $summary     Brief description
      * @param null|string $description Detailed description
-     *
-     * @return self
      */
     public static function requiredBoolean(
         string $name,
@@ -210,7 +202,7 @@ final class ArgumentData extends Data
 
         if (!\in_array($actualType, $typeMap[$schemaType], true)) {
             throw InvalidFieldTypeException::forField(
-                "default (for argument '{$this->name}')",
+                sprintf("default (for argument '%s')", $this->name),
                 $schemaType,
                 $this->default
             );

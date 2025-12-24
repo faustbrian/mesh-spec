@@ -25,7 +25,8 @@
     "illuminate/validation": "^12.28",
     "saloonphp/saloon": "^3.14.2",
     "spatie/laravel-data": "^4.18.0",
-    "symfony/intl": "^7.4.0"
+    "symfony/intl": "^7.4.0",
+    "cline/webhook": "^1.0"
   },
   "require-dev": {
     "cline/coding-standard": "^1.5.8",

@@ -60,4 +60,10 @@ final class FullServer extends AbstractServer
             new DiagnosticsExtension(),
         ];
     }
+
+    #[Override()]
+    public function validate(): void
+    {
+        // No validation needed for test fake
+    }
 }

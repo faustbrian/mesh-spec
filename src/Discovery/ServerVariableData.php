@@ -57,7 +57,7 @@ final class ServerVariableData extends Data
 
         // Validate enum list if provided
         if ($this->enum !== null) {
-            if (empty($this->enum)) {
+            if ($this->enum === []) {
                 throw EmptyArrayException::forField('enum');
             }
 
@@ -65,7 +65,7 @@ final class ServerVariableData extends Data
             foreach ($this->enum as $index => $value) {
                 if (!is_string($value)) {
                     throw InvalidFieldTypeException::forField(
-                        "enum[{$index}]",
+                        sprintf('enum[%d]', $index),
                         'string',
                         $value
                     );
@@ -76,7 +76,7 @@ final class ServerVariableData extends Data
             if (!in_array($this->default, $this->enum, true)) {
                 throw InvalidFieldValueException::forField(
                     'default',
-                    "Default value '{$this->default}' must be one of the enum values: " .
+                    sprintf("Default value '%s' must be one of the enum values: ", $this->default) .
                     implode(', ', $this->enum)
                 );
             }

@@ -81,7 +81,7 @@ trait InteractsWithTransformer
      */
     protected function item(ResourceInterface|Model $item): DocumentData
     {
-        return Transformer::create($this->requestObject, $this->getTransformerOptions())->item($item);
+        return Transformer::create($this->requestObject)->item($item);
     }
 
     /**
@@ -96,7 +96,7 @@ trait InteractsWithTransformer
      */
     protected function collection(Collection $collection): DocumentData
     {
-        return Transformer::create($this->requestObject, $this->getTransformerOptions())->collection($collection);
+        return Transformer::create($this->requestObject)->collection($collection);
     }
 
     /**
@@ -112,7 +112,7 @@ trait InteractsWithTransformer
      */
     protected function cursorPaginate(QueryBuilder|Builder $query): DocumentData
     {
-        return Transformer::create($this->requestObject, $this->getTransformerOptions())->cursorPaginate($query);
+        return Transformer::create($this->requestObject)->cursorPaginate($query);
     }
 
     /**
@@ -127,7 +127,7 @@ trait InteractsWithTransformer
      */
     protected function paginate(QueryBuilder|Builder $query): DocumentData
     {
-        return Transformer::create($this->requestObject, $this->getTransformerOptions())->paginate($query);
+        return Transformer::create($this->requestObject)->paginate($query);
     }
 
     /**
@@ -142,6 +142,6 @@ trait InteractsWithTransformer
      */
     protected function simplePaginate(QueryBuilder|Builder $query): DocumentData
     {
-        return Transformer::create($this->requestObject, $this->getTransformerOptions())->simplePaginate($query);
+        return Transformer::create($this->requestObject)->simplePaginate($query);
     }
 }

@@ -74,14 +74,10 @@ final class SendingResponse extends ExtensionEvent
      *
      * @return bool True if response is valid for serialization
      */
-    protected function validateFinalResponse(ResponseData $response): bool
+    private function validateFinalResponse(ResponseData $response): bool
     {
         // Validate required fields exist
-        if (!isset($response->result) && !isset($response->error)) {
-            return false;
-        }
-
-        return true;
+        return !($response->result === null && (!property_exists($response, 'error') || $response->error === null));
     }
 
     /**

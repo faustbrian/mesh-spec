@@ -53,12 +53,15 @@ final readonly class HealthStatus
             if (!isset($latency['value'], $latency['unit'])) {
                 throw MissingRequiredFieldException::forField('latency.value and latency.unit');
             }
+
             if (!is_int($latency['value'])) {
                 throw InvalidFieldTypeException::forField('latency.value', 'integer', $latency['value']);
             }
+
             if ($latency['value'] < 0) {
                 throw InvalidFieldValueException::forField('latency.value', 'must be non-negative');
             }
+
             if (!in_array($latency['unit'], ['ms', 'us', 's'], true)) {
                 throw InvalidEnumValueException::forField('latency.unit', ['ms', 'us', 's']);
             }
@@ -77,7 +80,7 @@ final readonly class HealthStatus
             'latency' => $this->latency,
             'message' => $this->message,
             'last_check' => $this->lastCheck,
-        ], fn($value) => $value !== null);
+        ], fn(string|array|null $value): bool => $value !== null);
     }
 
     /**

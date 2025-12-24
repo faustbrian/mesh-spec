@@ -108,7 +108,7 @@ final class ExampleData extends Data
             // Warn if not using HTTPS for security
             if (str_starts_with($this->externalValue, 'http://')) {
                 trigger_error(
-                    "Warning: externalValue should use HTTPS for security: '{$this->externalValue}'",
+                    sprintf("Warning: externalValue should use HTTPS for security: '%s'", $this->externalValue),
                     \E_USER_WARNING
                 );
             }

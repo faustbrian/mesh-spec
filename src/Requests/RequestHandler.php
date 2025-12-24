@@ -45,7 +45,6 @@ use function is_array;
 use function is_string;
 use function round;
 use function throw_if;
-use function throw_unless;
 
 /**
  * Central request processor for the Forrst RPC protocol.

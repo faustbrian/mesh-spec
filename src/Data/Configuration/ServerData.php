@@ -11,7 +11,6 @@ namespace Cline\Forrst\Data\Configuration;
 
 use Cline\Forrst\Contracts\FunctionInterface;
 use Cline\Forrst\Data\AbstractData;
-use Cline\Forrst\Exceptions\InvalidConfigurationException;
 use Cline\Forrst\Exceptions\InvalidFieldTypeException;
 use Cline\Forrst\Exceptions\InvalidFieldValueException;
 use Cline\Forrst\Exceptions\MissingRequiredFieldException;
@@ -86,9 +85,9 @@ final class ServerData extends AbstractData
         public readonly array $middleware,
         public readonly ?array $functions,
     ) {
-        self::validatePath($this->path);
-        self::validateRoute($this->route);
-        self::validateMiddleware($this->middleware);
+        $this->validatePath($this->path);
+        $this->validateRoute($this->route);
+        $this->validateMiddleware($this->middleware);
     }
 
     /**
@@ -101,7 +100,7 @@ final class ServerData extends AbstractData
      *
      * @throws \InvalidArgumentException If path contains traversal sequences or invalid format
      */
-    private static function validatePath(string $path): void
+    private function validatePath(string $path): void
     {
         // Prevent directory traversal
         if (str_contains($path, '..')) {
@@ -149,7 +148,7 @@ final class ServerData extends AbstractData
      *
      * @throws \InvalidArgumentException If route format is invalid
      */
-    private static function validateRoute(string $route): void
+    private function validateRoute(string $route): void
     {
         if (!str_starts_with($route, '/')) {
             throw InvalidFieldValueException::forField(
@@ -176,7 +175,7 @@ final class ServerData extends AbstractData
      *
      * @throws \InvalidArgumentException If middleware contains invalid entries or non-existent classes
      */
-    private static function validateMiddleware(array $middleware): void
+    private function validateMiddleware(array $middleware): void
     {
         foreach ($middleware as $index => $middlewareClass) {
             if (!is_string($middlewareClass)) {
@@ -188,13 +187,11 @@ final class ServerData extends AbstractData
             }
 
             // Validate class exists (in local/testing environments)
-            if (app()->environment(['local', 'testing'])) {
-                if (!class_exists($middlewareClass)) {
-                    throw InvalidFieldValueException::forField(
-                        'middleware',
-                        sprintf('Middleware class "%s" does not exist', $middlewareClass),
-                    );
-                }
+            if (app()->environment(['local', 'testing']) && !class_exists($middlewareClass)) {
+                throw InvalidFieldValueException::forField(
+                    'middleware',
+                    sprintf('Middleware class "%s" does not exist', $middlewareClass),
+                );
             }
         }
     }

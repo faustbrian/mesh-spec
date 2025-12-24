@@ -195,10 +195,10 @@ final class LocaleExtension extends AbstractExtension
      * DEPRECATED: This method is not thread-safe. Access locale data from
      * request metadata instead: $request->meta['locale_resolved']['language']
      *
-     * @deprecated Use request metadata directly for thread-safe access
      *
      * @return string RFC 5646 language tag (e.g., 'en', 'en-US')
      */
+    #[\Deprecated(message: 'Use request metadata directly for thread-safe access')]
     public function getLanguage(): string
     {
         trigger_error(
@@ -215,10 +215,10 @@ final class LocaleExtension extends AbstractExtension
      * DEPRECATED: This method is not thread-safe. Access locale data from
      * request metadata instead: $request->meta['locale_resolved']['timezone']
      *
-     * @deprecated Use request metadata directly for thread-safe access
      *
      * @return null|string IANA timezone identifier or null
      */
+    #[\Deprecated(message: 'Use request metadata directly for thread-safe access')]
     public function getTimezone(): ?string
     {
         trigger_error(
@@ -235,10 +235,10 @@ final class LocaleExtension extends AbstractExtension
      * DEPRECATED: This method is not thread-safe. Access locale data from
      * request metadata instead: $request->meta['locale_resolved']['currency']
      *
-     * @deprecated Use request metadata directly for thread-safe access
      *
      * @return null|string ISO 4217 currency code or null
      */
+    #[\Deprecated(message: 'Use request metadata directly for thread-safe access')]
     public function getCurrency(): ?string
     {
         trigger_error(
@@ -255,10 +255,10 @@ final class LocaleExtension extends AbstractExtension
      * DEPRECATED: This method is not thread-safe. Access locale data from
      * request metadata instead: $request->meta['locale_resolved']['fallback_used']
      *
-     * @deprecated Use request metadata directly for thread-safe access
      *
      * @return bool True if fallback was used, false if exact match
      */
+    #[\Deprecated(message: 'Use request metadata directly for thread-safe access')]
     public function wasFallbackUsed(): bool
     {
         trigger_error(
@@ -304,10 +304,9 @@ final class LocaleExtension extends AbstractExtension
      * {@inheritDoc}
      */
     #[Override()]
-    public function toCapabilities(): array
+    protected function getCapabilityMetadata(): array
     {
         return [
-            'urn' => ExtensionUrn::Locale->value,
             'supported_languages' => $this->supportedLanguages,
             'default_language' => self::DEFAULT_LANGUAGE,
         ];

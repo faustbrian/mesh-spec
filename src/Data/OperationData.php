@@ -42,6 +42,34 @@ use function trim;
 final class OperationData extends AbstractData
 {
     /**
+     * @var string
+     */
+    public $id;
+    /**
+     * @var string
+     */
+    public $function;
+    /**
+     * @var OperationStatus
+     */
+    public $status;
+    /**
+     * @var float|null
+     */
+    public $progress;
+    /**
+     * @var null|CarbonImmutable
+     */
+    public $startedAt;
+    /**
+     * @var null|CarbonImmutable
+     */
+    public $completedAt;
+    /**
+     * @var null|CarbonImmutable
+     */
+    public $cancelledAt;
+    /**
      * Create a new operation data instance.
      *
      * @param string                     $id               Unique operation identifier (UUID or similar).
@@ -102,14 +130,12 @@ final class OperationData extends AbstractData
         }
 
         // Validate ID format (UUID/ULID pattern)
-        if (!preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $id)) {
-            // Try ULID format as well
-            if (!preg_match('/^[0-9A-HJKMNP-TV-Z]{26}$/i', $id)) {
-                throw InvalidFieldValueException::forField(
-                    'id',
-                    sprintf('Operation ID must be a valid UUID or ULID, got: %s', $id),
-                );
-            }
+        // Try ULID format as well
+        if (!preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $id) && !preg_match('/^[0-9A-HJKMNP-TV-Z]{26}$/i', $id)) {
+            throw InvalidFieldValueException::forField(
+                'id',
+                sprintf('Operation ID must be a valid UUID or ULID, got: %s', $id),
+            );
         }
 
         $this->id = $id;
@@ -124,7 +150,7 @@ final class OperationData extends AbstractData
         }
 
         // Validate state-timestamp consistency
-        if ($status === OperationStatus::Completed && $completedAt === null) {
+        if ($status === OperationStatus::Completed && !$completedAt instanceof CarbonImmutable) {
             throw MissingRequiredFieldException::forField('completedAt');
         }
 
@@ -132,23 +158,23 @@ final class OperationData extends AbstractData
             throw MissingRequiredFieldException::forField('errors');
         }
 
-        if ($status === OperationStatus::Cancelled && $cancelledAt === null) {
+        if ($status === OperationStatus::Cancelled && !$cancelledAt instanceof CarbonImmutable) {
             throw MissingRequiredFieldException::forField('cancelledAt');
         }
 
-        if ($status === OperationStatus::Processing && $startedAt === null) {
+        if ($status === OperationStatus::Processing && !$startedAt instanceof CarbonImmutable) {
             throw MissingRequiredFieldException::forField('startedAt');
         }
 
         // Validate timestamp logical ordering
-        if ($startedAt && $completedAt && $completedAt->lt($startedAt)) {
+        if ($startedAt instanceof CarbonImmutable && $completedAt instanceof CarbonImmutable && $completedAt->lt($startedAt)) {
             throw InvalidFieldValueException::forField(
                 'completedAt',
                 'Operation completedAt cannot be before startedAt',
             );
         }
 
-        if ($startedAt && $cancelledAt && $cancelledAt->lt($startedAt)) {
+        if ($startedAt instanceof CarbonImmutable && $cancelledAt instanceof CarbonImmutable && $cancelledAt->lt($startedAt)) {
             throw InvalidFieldValueException::forField(
                 'cancelledAt',
                 'Operation cancelledAt cannot be before startedAt',

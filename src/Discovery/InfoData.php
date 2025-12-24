@@ -86,7 +86,7 @@ final class InfoData extends Data
 
         // Validate termsOfService URL if provided
         if ($termsOfService !== null) {
-            $this->validateUrl($termsOfService, 'Terms of Service');
+            $this->validateUrl($termsOfService);
         }
 
         // Validate description length if provided
@@ -104,7 +104,7 @@ final class InfoData extends Data
      * @throws InvalidUrlException
      * @throws InvalidProtocolException
      */
-    private function validateUrl(string $url, string $fieldName): void
+    private function validateUrl(string $url): void
     {
         if (!filter_var($url, FILTER_VALIDATE_URL)) {
             throw InvalidUrlException::invalidFormat('termsOfService');

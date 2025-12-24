@@ -26,4 +26,10 @@ final class UnexpectedExceptionServer extends AbstractServer
     {
         throw SimulatedRuntimeException::unexpected();
     }
+
+    #[Override()]
+    public function validate(): void
+    {
+        // No validation needed for test fake
+    }
 }

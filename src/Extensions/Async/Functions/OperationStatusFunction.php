@@ -19,8 +19,6 @@ use Cline\Forrst\Extensions\Async\Descriptors\OperationStatusDescriptor;
 use Cline\Forrst\Functions\AbstractFunction;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
-
-use function assert;
 use function is_string;
 
 /**

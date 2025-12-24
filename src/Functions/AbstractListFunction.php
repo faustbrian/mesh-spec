@@ -9,6 +9,7 @@
 
 namespace Cline\Forrst\Functions;
 
+use Illuminate\Database\Eloquent\Builder;
 use Cline\Forrst\Contracts\ResourceInterface;
 use Cline\Forrst\Data\DocumentData;
 use Cline\Forrst\Discovery\ArgumentData;
@@ -99,11 +100,11 @@ abstract class AbstractListFunction extends AbstractFunction
      * - Add time-based filters (e.g., published_at <= now())
      * - Optimize with additional eager loading
      *
-     * @param \Illuminate\Database\Eloquent\Builder $query The query builder to modify
+     * @param Builder $query The query builder to modify
      *
-     * @return \Illuminate\Database\Eloquent\Builder The modified query builder
+     * @return Builder The modified query builder
      */
-    protected function beforePagination(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
+    protected function beforePagination(Builder $query): Builder
     {
         return $query;
     }

@@ -74,7 +74,7 @@ enum TimeUnit: string
     {
         // Validate non-negative constraint
         if ($value < 0) {
-            throw NegativeValueException::forField("Duration value ({$value} {$this->value})");
+            throw NegativeValueException::forField(sprintf('Duration value (%d %s)', $value, $this->value));
         }
 
         // Check for potential overflow before multiplication
@@ -89,7 +89,7 @@ enum TimeUnit: string
         $maxSafeValue = (int) floor(PHP_INT_MAX / $multiplier);
 
         if ($value > $maxSafeValue) {
-            throw OverflowException::forOperation("toSeconds conversion ({$value} {$this->value})");
+            throw OverflowException::forOperation(sprintf('toSeconds conversion (%d %s)', $value, $this->value));
         }
 
         return $value * $multiplier;
@@ -111,7 +111,7 @@ enum TimeUnit: string
     public function fromSeconds(int $seconds): float
     {
         if ($seconds < 0) {
-            throw NegativeValueException::forField("Seconds ({$seconds})");
+            throw NegativeValueException::forField(sprintf('Seconds (%d)', $seconds));
         }
 
         return match ($this) {
@@ -137,7 +137,7 @@ enum TimeUnit: string
     public static function bestFit(int $seconds): self
     {
         if ($seconds < 0) {
-            throw NegativeValueException::forField("Seconds ({$seconds})");
+            throw NegativeValueException::forField(sprintf('Seconds (%d)', $seconds));
         }
 
         return match (true) {

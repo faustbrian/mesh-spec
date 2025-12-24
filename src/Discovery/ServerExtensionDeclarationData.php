@@ -44,7 +44,7 @@ final class ServerExtensionDeclarationData extends Data
         if (!preg_match('/^urn:forrst:ext:[a-z][a-z0-9-]*$/', $this->urn)) {
             throw InvalidFieldValueException::forField(
                 'urn',
-                "Invalid extension URN: '{$this->urn}'. " .
+                sprintf("Invalid extension URN: '%s'. ", $this->urn) .
                 "Expected format: 'urn:forrst:ext:extensionname' (e.g., 'urn:forrst:ext:async')"
             );
         }
@@ -58,7 +58,7 @@ final class ServerExtensionDeclarationData extends Data
         if (!preg_match($semverPattern, $this->version)) {
             throw InvalidFieldValueException::forField(
                 'version',
-                "Invalid semantic version: '{$this->version}'. Must follow semver format"
+                sprintf("Invalid semantic version: '%s'. Must follow semver format", $this->version)
             );
         }
     }

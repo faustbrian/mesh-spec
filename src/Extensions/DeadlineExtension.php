@@ -262,7 +262,7 @@ final class DeadlineExtension extends AbstractExtension
         }
 
         // Relative timeout
-        if ($deadline === null && isset($options['timeout']) && is_array($options['timeout'])) {
+        if (!$deadline instanceof CarbonImmutable && isset($options['timeout']) && is_array($options['timeout'])) {
             /** @var int $value */
             $value = $options['timeout']['value'] ?? 0;
 
@@ -273,7 +273,7 @@ final class DeadlineExtension extends AbstractExtension
         }
 
         // Enforce maximum deadline (1 hour from now)
-        if ($deadline !== null) {
+        if ($deadline instanceof CarbonImmutable) {
             $maxDeadline = CarbonImmutable::now()->addHour();
 
             if ($deadline->isAfter($maxDeadline)) {

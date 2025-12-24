@@ -210,7 +210,7 @@ final class Urn
      */
     private static function validateName(string $name, string $type): void
     {
-        if (empty($name)) {
+        if ($name === '' || $name === '0') {
             throw EmptyFieldException::forField(sprintf('%s name', ucfirst($type)));
         }
 
@@ -241,7 +241,7 @@ final class Urn
      */
     private static function validateVendor(string $vendor): void
     {
-        if (empty($vendor)) {
+        if ($vendor === '' || $vendor === '0') {
             throw EmptyFieldException::forField('Vendor');
         }
 

@@ -14,9 +14,11 @@ use Cline\Forrst\Functions\Concerns\InteractsWithCancellation;
 
 /**
  * Test class using the InteractsWithCancellation trait.
- * @psalm-immutable
+ *
+ * Note: Cannot be readonly since InteractsWithCancellation trait
+ * has a mutable $cachedCancellationToken property.
  */
-final readonly class TestClassWithCancellation
+final class TestClassWithCancellation
 {
     use InteractsWithCancellation;
 

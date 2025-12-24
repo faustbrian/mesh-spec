@@ -277,7 +277,7 @@ final class DeprecationExtension extends AbstractExtension
         }
 
         // Filter to only strings
-        return array_filter($acknowledge, 'is_string');
+        return array_filter($acknowledge, is_string(...));
     }
 
     /**
@@ -315,7 +315,7 @@ final class DeprecationExtension extends AbstractExtension
             }
 
             $applicable[] = $warning;
-            $count++;
+            ++$count;
         }
 
         return $applicable;
@@ -355,7 +355,7 @@ final class DeprecationExtension extends AbstractExtension
      */
     private function pruneExpiredWarnings(): void
     {
-        $now = CarbonImmutable::now();
+        CarbonImmutable::now();
 
         foreach ($this->warnings as $urn => $warning) {
             if (isset($warning['sunset_date'])) {

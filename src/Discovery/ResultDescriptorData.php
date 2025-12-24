@@ -65,13 +65,11 @@ final class ResultDescriptorData extends Data
         }
 
         // Validate resource name format if provided
-        if ($this->resource !== null) {
-            if (!preg_match('/^[a-z][a-z0-9_]*$/', $this->resource)) {
-                throw InvalidFieldValueException::forField(
-                    'resource',
-                    "Invalid resource name: '{$this->resource}'. Must be snake_case lowercase (e.g., 'user', 'order_item')"
-                );
-            }
+        if ($this->resource !== null && !preg_match('/^[a-z][a-z0-9_]*$/', $this->resource)) {
+            throw InvalidFieldValueException::forField(
+                'resource',
+                sprintf("Invalid resource name: '%s'. Must be snake_case lowercase (e.g., 'user', 'order_item')", $this->resource)
+            );
         }
 
         // Validate JSON Schema structure if provided
@@ -98,7 +96,7 @@ final class ResultDescriptorData extends Data
             $validTypes = ['null', 'boolean', 'object', 'array', 'number', 'string', 'integer'];
             if (!in_array($schema['type'], $validTypes, true)) {
                 throw InvalidResultSchemaException::forSchema(
-                    "Invalid JSON Schema type: '{$schema['type']}'"
+                    sprintf("Invalid JSON Schema type: '%s'", $schema['type'])
                 );
             }
         }

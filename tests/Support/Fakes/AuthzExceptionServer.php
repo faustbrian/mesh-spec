@@ -33,4 +33,10 @@ final class AuthzExceptionServer extends AbstractServer
     {
         throw new AuthorizationException('Server requires authorization');
     }
+
+    #[Override()]
+    public function validate(): void
+    {
+        // No validation needed for test fake
+    }
 }

@@ -74,40 +74,40 @@ final class ExamplePairingData extends Data
      */
     private function validateParams(array $params): void
     {
-        if (empty($params)) {
+        if ($params === []) {
             throw EmptyFieldException::forField('params');
         }
 
         foreach ($params as $index => $param) {
             if (!\is_array($param)) {
                 throw InvalidFieldTypeException::forField(
-                    "params[{$index}]",
+                    sprintf('params[%d]', $index),
                     'array',
                     $param
                 );
             }
 
             if (!isset($param['name'])) {
-                throw MissingRequiredFieldException::forField("params[{$index}].name");
+                throw MissingRequiredFieldException::forField(sprintf('params[%d].name', $index));
             }
 
             if (!\array_key_exists('value', $param)) {
-                throw MissingRequiredFieldException::forField("params[{$index}].value");
+                throw MissingRequiredFieldException::forField(sprintf('params[%d].value', $index));
             }
 
             if (!\is_string($param['name'])) {
                 throw InvalidFieldTypeException::forField(
-                    "params[{$index}].name",
+                    sprintf('params[%d].name', $index),
                     'string',
                     $param['name']
                 );
             }
 
             // Validate parameter name follows conventions
-            if (!\preg_match('/^[a-z][a-zA-Z0-9_]*$/', $param['name'])) {
+            if (!\preg_match('/^[a-z]\w*$/', $param['name'])) {
                 throw InvalidFieldValueException::forField(
-                    "params[{$index}].name",
-                    "Parameter name '{$param['name']}' must follow camelCase/snake_case convention"
+                    sprintf('params[%d].name', $index),
+                    sprintf("Parameter name '%s' must follow camelCase/snake_case convention", $param['name'])
                 );
             }
         }

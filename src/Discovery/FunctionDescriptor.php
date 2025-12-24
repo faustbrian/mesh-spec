@@ -98,7 +98,7 @@ final class FunctionDescriptor
         if (!preg_match('/^urn:[a-z][a-z0-9-]*:forrst:fn:[a-z][a-z0-9:.]*$/i', $urnString)) {
             throw InvalidFieldValueException::forField(
                 'urn',
-                "Invalid format: '{$urnString}'. Expected format: 'urn:namespace:forrst:fn:function:name' (e.g., 'urn:acme:forrst:fn:users:get')"
+                sprintf("Invalid format: '%s'. Expected format: 'urn:namespace:forrst:fn:function:name' (e.g., 'urn:acme:forrst:fn:users:get')", $urnString)
             );
         }
 
@@ -125,7 +125,7 @@ final class FunctionDescriptor
         if (!preg_match($semverPattern, $version)) {
             throw InvalidFieldValueException::forField(
                 'version',
-                "Invalid semantic version: '{$version}'. Must follow semver format (e.g., '1.0.0', '2.1.0-beta.1', '3.0.0+build.123'). See: https://semver.org/"
+                sprintf("Invalid semantic version: '%s'. Must follow semver format (e.g., '1.0.0', '2.1.0-beta.1', '3.0.0+build.123'). See: https://semver.org/", $version)
             );
         }
 

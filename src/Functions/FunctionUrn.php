@@ -122,11 +122,7 @@ enum FunctionUrn: string
     public static function isSystem(string $urn): bool
     {
         // First check it's a valid system URN
-        if (self::tryFrom($urn) !== null) {
-            return true;
-        }
-
-        return false;
+        return self::tryFrom($urn) !== null;
     }
 
     /**
