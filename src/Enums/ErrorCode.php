@@ -159,6 +159,11 @@ enum ErrorCode: string
     case AsyncVersionConflict = 'ASYNC_VERSION_CONFLICT';
 
     /**
+     * Maximum number of concurrent async operations exceeded.
+     */
+    case AsyncQuotaExceeded = 'ASYNC_QUOTA_EXCEEDED';
+
+    /**
      * Server is undergoing scheduled maintenance and is temporarily unavailable.
      */
     case ServerMaintenance = 'SERVER_MAINTENANCE';
@@ -432,7 +437,9 @@ enum ErrorCode: string
 
             self::AsyncOperationNotFound,
             self::AsyncOperationFailed,
-            self::AsyncCannotCancel => 'async',
+            self::AsyncCannotCancel,
+            self::AsyncVersionConflict,
+            self::AsyncQuotaExceeded => 'async',
 
             self::ReplayNotFound,
             self::ReplayExpired,
@@ -530,6 +537,8 @@ enum ErrorCode: string
             self::AsyncOperationNotFound => 404,
             self::AsyncOperationFailed => 500,
             self::AsyncCannotCancel => 400,
+            self::AsyncVersionConflict => 409,
+            self::AsyncQuotaExceeded => 429,
             self::ServerMaintenance => 503,
             self::FunctionMaintenance => 503,
             self::ReplayNotFound => 404,

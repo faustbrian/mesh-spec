@@ -22,6 +22,7 @@ use Cline\Forrst\Exceptions\DataTransformationException;
 use Cline\Forrst\Exceptions\FieldExceedsMaxLengthException;
 use Cline\Forrst\Exceptions\InvalidFieldTypeException;
 use Cline\Forrst\Exceptions\InvalidFieldValueException;
+use Cline\Forrst\Exceptions\OperationQuotaExceededException;
 use Cline\Forrst\Extensions\AbstractExtension;
 use Cline\Forrst\Extensions\Async\Exceptions\InvalidOperationStateException;
 use Cline\Forrst\Extensions\Async\Exceptions\OperationNotFoundException;
@@ -155,6 +156,14 @@ final class AsyncExtension extends AbstractExtension implements ProvidesFunction
      * Ensures operations remain available long enough for clients to poll results.
      */
     private const int MIN_OPERATION_TTL_SECONDS = 60;
+
+    /**
+     * Maximum concurrent active operations per user.
+     *
+     * Prevents resource exhaustion by limiting how many pending/processing
+     * operations a single user can have at once.
+     */
+    private const int MAX_CONCURRENT_OPERATIONS = 10;
 
     /**
      * Create a new async extension instance.
@@ -304,7 +313,8 @@ final class AsyncExtension extends AbstractExtension implements ProvidesFunction
      *
      * @return array{response: ResponseData, operation: OperationData} Tuple of response and operation
      *
-     * @throws \InvalidArgumentException If metadata size exceeds maximum allowed (64KB)
+     * @throws OperationQuotaExceededException If user has too many active operations
+     * @throws \InvalidArgumentException       If metadata size exceeds maximum allowed (64KB)
      */
     public function createAsyncOperation(
         RequestObjectData $request,
@@ -314,6 +324,15 @@ final class AsyncExtension extends AbstractExtension implements ProvidesFunction
         ?int $ttlSeconds = null,
         ?string $ownerId = null,
     ): array {
+        // Check concurrent operation limit for authenticated users
+        if ($ownerId !== null) {
+            $activeCount = $this->operations->countActiveByOwner($ownerId);
+
+            if ($activeCount >= self::MAX_CONCURRENT_OPERATIONS) {
+                throw OperationQuotaExceededException::create($activeCount, self::MAX_CONCURRENT_OPERATIONS);
+            }
+        }
+
         // Validate and clamp TTL to allowed bounds
         $ttl = $ttlSeconds ?? self::DEFAULT_OPERATION_TTL_SECONDS;
         $ttl = max(self::MIN_OPERATION_TTL_SECONDS, min($ttl, self::MAX_OPERATION_TTL_SECONDS));

@@ -100,6 +100,18 @@ interface OperationRepositoryInterface
     public function delete(string $id, ?string $userId = null): void;
 
     /**
+     * Count active (non-terminal) operations for a user.
+     *
+     * Returns the count of operations in pending or running states for the specified user.
+     * Used for enforcing concurrent operation limits per user to prevent resource exhaustion.
+     *
+     * @param string $userId User ID to count operations for
+     *
+     * @return int Number of active operations
+     */
+    public function countActiveByOwner(string $userId): int;
+
+    /**
      * Delete operations that expired before the given timestamp.
      *
      * Used for periodic cleanup of expired operations to prevent unbounded storage
