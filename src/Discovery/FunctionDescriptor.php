@@ -99,11 +99,11 @@ final class FunctionDescriptor
     {
         $urnString = $urn instanceof BackedEnum ? (string) $urn->value : $urn;
 
-        // Validate URN format: urn:namespace:forrst:fn:function:name
-        if (!preg_match('/^urn:[a-z][a-z0-9-]*:forrst:fn:[a-z][a-z0-9:.]*$/i', $urnString)) {
+        // Validate URN format: urn:namespace:forrst:ext:extension:fn:name or urn:namespace:forrst:fn:name
+        if (!preg_match('/^urn:[a-z][a-z0-9-]*:forrst:(?:ext:[a-z][a-z0-9-]*:)?fn:[a-z][a-z0-9:.]*$/i', $urnString)) {
             throw InvalidFieldValueException::forField(
                 'urn',
-                sprintf("Invalid format: '%s'. Expected format: 'urn:namespace:forrst:fn:function:name' (e.g., 'urn:acme:forrst:fn:users:get')", $urnString),
+                sprintf("Invalid format: '%s'. Expected format: 'urn:namespace:forrst:ext:extension:fn:name' or 'urn:namespace:forrst:fn:name'", $urnString),
             );
         }
 
