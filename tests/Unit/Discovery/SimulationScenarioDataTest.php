@@ -8,6 +8,9 @@
  */
 
 use Cline\Forrst\Discovery\SimulationScenarioData;
+use Cline\Forrst\Exceptions\EmptyArrayException;
+use Cline\Forrst\Exceptions\EmptyFieldException;
+use Cline\Forrst\Exceptions\InvalidFieldValueException;
 
 describe('SimulationScenarioData', function (): void {
     describe('Happy Paths', function (): void {
@@ -256,22 +259,13 @@ describe('SimulationScenarioData', function (): void {
             }
         });
 
-        test('rejects empty name field', function (): void {
-            // Arrange
-            $name = 'empty_arrays';
-            $input = [];
-            $output = [];
-
-            // Act
-            $scenario = SimulationScenarioData::success(
-                name: $name,
-                input: $input,
-                output: $output,
-            );
-
-            // Assert
-            expect($scenario->input)->toBe([])
-                ->and($scenario->output)->toBe([]);
+        test('rejects empty input array', function (): void {
+            // Arrange & Act & Assert
+            expect(fn () => SimulationScenarioData::success(
+                name: 'test',
+                input: [],
+                output: ['result' => 'ok'],
+            ))->toThrow(EmptyArrayException::class, 'input cannot be empty');
         });
     });
 
@@ -314,22 +308,13 @@ describe('SimulationScenarioData', function (): void {
         });
 
         test('rejects empty string as error code', function (): void {
-            // Arrange
-            $name = 'empty_error_code';
-            $input = ['test' => true];
-            $code = '';
-            $message = 'No error';
-
-            // Act
-            $scenario = SimulationScenarioData::error(
-                name: $name,
-                input: $input,
-                code: $code,
-                message: $message,
-            );
-
-            // Assert
-            expect($scenario->error['code'])->toBe('');
+            // Arrange & Act & Assert
+            expect(fn () => SimulationScenarioData::error(
+                name: 'test',
+                input: ['test' => true],
+                code: '',
+                message: 'No error',
+            ))->toThrow(InvalidFieldValueException::class, 'error.code is invalid');
         });
 
         test('handles lowercase error codes', function (): void {
@@ -352,18 +337,11 @@ describe('SimulationScenarioData', function (): void {
         });
 
         test('rejects empty string as name', function (): void {
-            // Arrange
-            $name = '';
-            $input = ['test' => true];
-
-            // Act
-            $scenario = new SimulationScenarioData(
-                name: $name,
-                input: $input,
-            );
-
-            // Assert
-            expect($scenario->name)->toBe('');
+            // Arrange & Act & Assert
+            expect(fn () => new SimulationScenarioData(
+                name: '',
+                input: ['test' => true],
+            ))->toThrow(EmptyFieldException::class, 'name cannot be empty');
         });
 
         test('handles very long scenario name', function (): void {
