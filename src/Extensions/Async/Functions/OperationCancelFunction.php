@@ -18,6 +18,7 @@ use Cline\Forrst\Exceptions\InvalidFieldTypeException;
 use Cline\Forrst\Exceptions\InvalidFieldValueException;
 use Cline\Forrst\Exceptions\OperationCannotCancelException;
 use Cline\Forrst\Exceptions\OperationNotFoundException;
+use Cline\Forrst\Exceptions\OperationVersionConflictException;
 use Cline\Forrst\Extensions\Async\Descriptors\OperationCancelDescriptor;
 use Cline\Forrst\Functions\AbstractFunction;
 use Psr\Log\LoggerInterface;
@@ -50,14 +51,23 @@ final class OperationCancelFunction extends AbstractFunction
     ) {}
 
     /**
+     * Maximum retry attempts for optimistic locking conflicts.
+     */
+    private const MAX_RETRIES = 3;
+
+    /**
      * Execute the operation cancel function.
      *
      * Operations are scoped to the authenticated user. Users can only cancel
      * operations they own. Returns "not found" for both missing and unauthorized
      * operations to prevent enumeration attacks.
      *
-     * @throws OperationCannotCancelException If the operation is in a terminal state
-     * @throws OperationNotFoundException     If the operation does not exist or user is unauthorized
+     * Uses optimistic locking to prevent race conditions when multiple processes
+     * attempt to cancel the same operation simultaneously.
+     *
+     * @throws OperationCannotCancelException    If the operation is in a terminal state
+     * @throws OperationNotFoundException        If the operation does not exist or user is unauthorized
+     * @throws OperationVersionConflictException If max retries exceeded due to concurrent modifications
      *
      * @return array{operation_id: string, status: string, cancelled_at: string} Cancellation result
      */
@@ -74,57 +84,85 @@ final class OperationCancelFunction extends AbstractFunction
         // Get authenticated user for access control
         $userId = $this->getAuthenticatedUserId();
 
-        // Find operation with access control - returns null if not found OR unauthorized
-        $operation = $this->repository->find($operationId, $userId);
+        $retries = 0;
 
-        if (!$operation instanceof OperationData) {
-            $this->logger->warning('Operation not found or unauthorized for cancellation', [
+        while ($retries < self::MAX_RETRIES) {
+            // Find operation with access control - returns null if not found OR unauthorized
+            $operation = $this->repository->find($operationId, $userId);
+
+            if (!$operation instanceof OperationData) {
+                $this->logger->warning('Operation not found or unauthorized for cancellation', [
+                    'operation_id' => $operationId,
+                    'user_id' => $userId,
+                ]);
+
+                // Generic error to prevent enumeration attacks
+                throw OperationNotFoundException::create($operationId);
+            }
+
+            if ($operation->isTerminal()) {
+                $this->logger->info('Cannot cancel terminal operation', [
+                    'operation_id' => $operationId,
+                    'status' => $operation->status->value,
+                ]);
+
+                throw OperationCannotCancelException::create($operationId, $operation->status);
+            }
+
+            $now = CarbonImmutable::now();
+            $expectedVersion = $operation->lockVersion;
+
+            $cancelledOperation = new OperationData(
+                id: $operation->id,
+                function: $operation->function,
+                version: $operation->version,
+                status: OperationStatus::Cancelled,
+                progress: $operation->progress,
+                result: $operation->result,
+                errors: $operation->errors,
+                startedAt: $operation->startedAt,
+                completedAt: $operation->completedAt,
+                cancelledAt: $now,
+                metadata: $operation->metadata,
+                lockVersion: $expectedVersion + 1,
+            );
+
+            // Save with optimistic locking - returns false if version mismatch
+            $saved = $this->repository->saveIfVersionMatches(
+                $cancelledOperation,
+                $expectedVersion,
+                $userId,
+            );
+
+            if ($saved) {
+                $this->logger->info('Operation cancelled successfully', [
+                    'operation_id' => $operationId,
+                    'function' => $operation->function,
+                    'user_id' => $userId,
+                ]);
+
+                return [
+                    'operation_id' => $operationId,
+                    'status' => 'cancelled',
+                    'cancelled_at' => $now->toIso8601String(),
+                ];
+            }
+
+            $retries++;
+            $this->logger->debug('Optimistic lock conflict, retrying', [
                 'operation_id' => $operationId,
-                'user_id' => $userId,
+                'attempt' => $retries,
+                'max_retries' => self::MAX_RETRIES,
             ]);
-
-            // Generic error to prevent enumeration attacks
-            throw OperationNotFoundException::create($operationId);
         }
 
-        if ($operation->isTerminal()) {
-            $this->logger->info('Cannot cancel terminal operation', [
-                'operation_id' => $operationId,
-                'status' => $operation->status->value,
-            ]);
-
-            throw OperationCannotCancelException::create($operationId, $operation->status);
-        }
-
-        $now = CarbonImmutable::now();
-        $cancelledOperation = new OperationData(
-            id: $operation->id,
-            function: $operation->function,
-            version: $operation->version,
-            status: OperationStatus::Cancelled,
-            progress: $operation->progress,
-            result: $operation->result,
-            errors: $operation->errors,
-            startedAt: $operation->startedAt,
-            completedAt: $operation->completedAt,
-            cancelledAt: $now,
-            metadata: $operation->metadata,
-        );
-
-        // Save with user context for access control
-        $this->repository->save($cancelledOperation, $userId);
-
-        $this->logger->info('Operation cancelled successfully', [
+        // Max retries exceeded
+        $this->logger->warning('Operation cancellation failed after max retries', [
             'operation_id' => $operationId,
-            'function' => $operation->function,
-            'user_id' => $userId,
+            'retries' => self::MAX_RETRIES,
         ]);
 
-        return [
-            'operation_id' => $operationId,
-            'status' => 'cancelled',
-            'cancelled_at' => $now->toIso8601String(),
-        ];
+        throw OperationVersionConflictException::create($operationId, $operation->lockVersion);
     }
 
     /**

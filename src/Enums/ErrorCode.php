@@ -154,6 +154,11 @@ enum ErrorCode: string
     case AsyncCannotCancel = 'ASYNC_CANNOT_CANCEL';
 
     /**
+     * Async operation was modified concurrently (optimistic lock failure).
+     */
+    case AsyncVersionConflict = 'ASYNC_VERSION_CONFLICT';
+
+    /**
      * Server is undergoing scheduled maintenance and is temporarily unavailable.
      */
     case ServerMaintenance = 'SERVER_MAINTENANCE';

@@ -45,17 +45,37 @@ interface OperationRepositoryInterface
      * Save an operation with ownership.
      *
      * Persists an operation to storage. If the operation already exists (based on ID),
-     * it should be updated. If it does not exist, it should be created. Implementations
-     * must handle concurrent updates safely.
+     * it should be updated. If it does not exist, it should be created.
      *
-     * CONCURRENCY: Implementations MUST handle concurrent updates safely. Use optimistic
-     * locking, row-level locks, or atomic operations to prevent race conditions when
-     * multiple processes update the same operation simultaneously.
+     * WARNING: This method does NOT provide concurrency protection. For state transitions
+     * that may be subject to race conditions, use {@see saveIfVersionMatches()} instead.
      *
      * @param OperationData $operation The operation to save
      * @param null|string   $userId    User ID to associate with operation
      */
     public function save(OperationData $operation, ?string $userId = null): void;
+
+    /**
+     * Save an operation only if the lock version matches (compare-and-swap).
+     *
+     * Provides optimistic locking for safe concurrent updates. The operation is only
+     * saved if the current lock_version in storage matches the provided expectedVersion.
+     * On success, the lock_version is incremented automatically.
+     *
+     * Use this method for all state transitions to prevent race conditions where multiple
+     * processes attempt to update the same operation simultaneously.
+     *
+     * @param OperationData $operation       The operation to save with updated state
+     * @param int           $expectedVersion The lock_version expected in storage
+     * @param null|string   $userId          User ID for access control
+     *
+     * @return bool True if save succeeded (version matched), false if version mismatch
+     */
+    public function saveIfVersionMatches(
+        OperationData $operation,
+        int $expectedVersion,
+        ?string $userId = null,
+    ): bool;
 
     /**
      * Delete an operation with access control.
