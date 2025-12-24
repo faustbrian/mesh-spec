@@ -242,10 +242,10 @@ final class ExtensionEventSubscriber
      * - Method exists on the extension class
      * - Method is publicly callable
      *
-     * @throws InvalidEventHandlerPriorityException If priority is not an integer
-     * @throws InvalidEventHandlerMethodException If method name is not a string
-     * @throws EventHandlerMethodNotFoundException If method does not exist
      * @throws EventHandlerMethodNotCallableException If method is not public
+     * @throws EventHandlerMethodNotFoundException    If method does not exist
+     * @throws InvalidEventHandlerMethodException     If method name is not a string
+     * @throws InvalidEventHandlerPriorityException   If priority is not an integer
      */
     private function buildListenerMap(): void
     {
@@ -290,10 +290,10 @@ final class ExtensionEventSubscriber
      * @param mixed              $priority       Priority value (must be int)
      * @param mixed              $method         Method name (must be string and callable)
      *
-     * @throws InvalidEventHandlerPriorityException If priority is not an integer
-     * @throws InvalidEventHandlerMethodException If method name is not a string
-     * @throws EventHandlerMethodNotFoundException If method does not exist
      * @throws EventHandlerMethodNotCallableException If method is not public
+     * @throws EventHandlerMethodNotFoundException    If method does not exist
+     * @throws InvalidEventHandlerMethodException     If method name is not a string
+     * @throws InvalidEventHandlerPriorityException   If priority is not an integer
      */
     private function validateSubscription(
         ExtensionInterface $extension,

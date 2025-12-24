@@ -27,14 +27,14 @@ use Override;
  * clean static access without manual container resolution. Commonly used to retrieve
  * function definitions, extension configurations, and server metadata.
  *
- * @method static ExtensionRegistry getExtensionRegistry()
+ * @method static ExtensionRegistry  getExtensionRegistry()
  * @method static FunctionRepository getFunctionRepository()
  * @method static array<int, string> getMiddleware()
- * @method static string getName()
- * @method static string getRouteName()
- * @method static string getRoutePath()
- * @method static string getVersion()
- * @method static void validate()
+ * @method static string             getName()
+ * @method static string             getRouteName()
+ * @method static string             getRoutePath()
+ * @method static string             getVersion()
+ * @method static void               validate()
  *
  * @author Brian Faust <brian@cline.sh>
  *

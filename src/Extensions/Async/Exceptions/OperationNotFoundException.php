@@ -9,6 +9,7 @@
 
 namespace Cline\Forrst\Extensions\Async\Exceptions;
 
+use Cline\Forrst\Exceptions\ForrstException;
 use RuntimeException;
 
 use function sprintf;
@@ -24,7 +25,7 @@ use function sprintf;
  *
  * @author Brian Faust <brian@cline.sh>
  */
-final class OperationNotFoundException extends RuntimeException
+final class OperationNotFoundException extends RuntimeException implements ForrstException
 {
     /**
      * Create exception for operation that cannot be found.

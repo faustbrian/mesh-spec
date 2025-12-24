@@ -10,6 +10,7 @@
 namespace Cline\Forrst\Extensions\Async\Exceptions;
 
 use Cline\Forrst\Data\OperationStatus;
+use Cline\Forrst\Exceptions\ForrstException;
 use RuntimeException;
 
 use function sprintf;
@@ -26,7 +27,7 @@ use function sprintf;
  *
  * @author Brian Faust <brian@cline.sh>
  */
-final class InvalidOperationStateException extends RuntimeException
+final class InvalidOperationStateException extends RuntimeException implements ForrstException
 {
     /**
      * Create exception for invalid state transition.
