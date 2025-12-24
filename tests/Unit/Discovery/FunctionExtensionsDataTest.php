@@ -96,25 +96,17 @@ describe('FunctionExtensionsData', function (): void {
 
     describe('Edge Cases', function (): void {
         test('rejects empty supported array', function (): void {
-            // Arrange & Act
-            $extensions = new FunctionExtensionsData(
+            // Arrange & Act & Assert
+            expect(fn () => new FunctionExtensionsData(
                 supported: [],
-            );
-
-            // Assert
-            expect($extensions->supported)->toBe([])
-                ->and($extensions->supported)->toHaveCount(0);
+            ))->toThrow(EmptyFieldException::class, 'supported');
         });
 
         test('rejects empty excluded array', function (): void {
-            // Arrange & Act
-            $extensions = new FunctionExtensionsData(
+            // Arrange & Act & Assert
+            expect(fn () => new FunctionExtensionsData(
                 excluded: [],
-            );
-
-            // Assert
-            expect($extensions->excluded)->toBe([])
-                ->and($extensions->excluded)->toHaveCount(0);
+            ))->toThrow(EmptyFieldException::class, 'excluded');
         });
 
         test('handles multiple supported extensions', function (): void {
