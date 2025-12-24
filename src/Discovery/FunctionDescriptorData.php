@@ -137,14 +137,11 @@ final class FunctionDescriptorData extends Data
             throw EmptyFieldException::forField('name');
         }
 
-        // Accept either URN format or simple dot-notation (e.g., "orders.get" for backward compatibility)
-        $isUrn = (bool) preg_match('/^urn:[a-z][a-z0-9-]*:forrst:(?:ext:[a-z][a-z0-9-]*:)?fn:[a-z][a-z0-9:.-]*$/i', $name);
-        $isSimpleName = (bool) preg_match('/^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)*$/i', $name);
-
-        if (!$isUrn && !$isSimpleName) {
+        // Only accept URN format - no backward compatibility with simple names
+        if (!preg_match('/^urn:[a-z][a-z0-9-]*:forrst:(?:ext:[a-z][a-z0-9-]*:)?fn:[a-z][a-z0-9:.-]*$/i', $name)) {
             throw InvalidFunctionNameException::forName(
                 $name,
-                "Expected URN format ('urn:namespace:forrst:fn:name') or simple dot-notation ('orders.get')",
+                "Expected format: 'urn:namespace:forrst:ext:extension:fn:name' or 'urn:namespace:forrst:fn:name'",
             );
         }
 
