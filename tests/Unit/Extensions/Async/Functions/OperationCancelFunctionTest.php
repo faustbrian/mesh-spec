@@ -92,7 +92,7 @@ describe('OperationCancelFunction', function (): void {
                     ->and($result[0]->name)->toBe('operation_id')
                     ->and($result[0]->schema['type'])->toBe('string')
                     ->and($result[0]->required)->toBeTrue()
-                    ->and($result[0]->description)->toBe('Operation ID to cancel');
+                    ->and($result[0]->description)->toBe('Unique operation identifier');
             });
         });
 
@@ -194,21 +194,21 @@ describe('OperationCancelFunction', function (): void {
             test('cancels pending operation', function (): void {
                 // Arrange
                 $operation = new OperationData(
-                    'op-123',
+                    'op_000000000000000000000123',
                     'long.running.task',
                     status: OperationStatus::Pending,
                     startedAt: CarbonImmutable::now(),
                 );
 
                 $repository = mock(OperationRepositoryInterface::class, function (MockInterface $mock) use ($operation): void {
-                    $mock->shouldReceive('find')->with('op-123')->andReturn($operation);
-                    $mock->shouldReceive('save')->once()->with(Mockery::on(fn ($data): bool => $data instanceof OperationData && $data->status === OperationStatus::Cancelled));
+                    $mock->shouldReceive('find')->with('op_000000000000000000000123', null)->andReturn($operation);
+                    $mock->shouldReceive('saveIfVersionMatches')->once()->with(Mockery::on(fn ($data): bool => $data instanceof OperationData && $data->status === OperationStatus::Cancelled), Mockery::any(), Mockery::any())->andReturn(true);
                 });
 
                 $function = new OperationCancelFunction($repository);
                 $request = RequestObjectData::asRequest(
                     'urn:cline:forrst:ext:async:fn:cancel',
-                    ['operation_id' => 'op_123456789012345678901'],
+                    ['operation_id' => 'op_000000000000000000000123'],
                 );
                 $function->setRequest($request);
                 $before = CarbonImmutable::now()->subSecond();
@@ -219,7 +219,7 @@ describe('OperationCancelFunction', function (): void {
 
                 // Assert
                 expect($result)->toHaveKey('operation_id')
-                    ->and($result['operation_id'])->toBe('op-123')
+                    ->and($result['operation_id'])->toBe('op_000000000000000000000123')
                     ->and($result)->toHaveKey('status')
                     ->and($result['status'])->toBe('cancelled')
                     ->and($result)->toHaveKey('cancelled_at');
@@ -232,7 +232,7 @@ describe('OperationCancelFunction', function (): void {
             test('cancels processing operation', function (): void {
                 // Arrange
                 $operation = new OperationData(
-                    'op-456',
+                    'op_000000000000000000000456',
                     'data.export',
                     status: OperationStatus::Processing,
                     progress: 0.5,
@@ -241,18 +241,18 @@ describe('OperationCancelFunction', function (): void {
 
                 $savedOperation = null;
                 $repository = mock(OperationRepositoryInterface::class, function (MockInterface $mock) use ($operation, &$savedOperation): void {
-                    $mock->shouldReceive('find')->with('op-456')->andReturn($operation);
-                    $mock->shouldReceive('save')->once()->with(Mockery::on(function ($data) use (&$savedOperation): bool {
+                    $mock->shouldReceive('find')->with('op_000000000000000000000456', null)->andReturn($operation);
+                    $mock->shouldReceive('saveIfVersionMatches')->once()->with(Mockery::on(function ($data) use (&$savedOperation): bool {
                         $savedOperation = $data;
 
                         return $data instanceof OperationData && $data->status === OperationStatus::Cancelled;
-                    }));
+                    }), Mockery::any(), Mockery::any())->andReturn(true);
                 });
 
                 $function = new OperationCancelFunction($repository);
                 $request = RequestObjectData::asRequest(
                     'urn:cline:forrst:ext:async:fn:cancel',
-                    ['operation_id' => 'op_456789012345678901234'],
+                    ['operation_id' => 'op_000000000000000000000456'],
                 );
                 $function->setRequest($request);
 
@@ -260,7 +260,7 @@ describe('OperationCancelFunction', function (): void {
                 $result = $function();
 
                 // Assert
-                expect($result['operation_id'])->toBe('op-456')
+                expect($result['operation_id'])->toBe('op_000000000000000000000456')
                     ->and($result['status'])->toBe('cancelled')
                     ->and($savedOperation->status)->toBe(OperationStatus::Cancelled)
                     ->and($savedOperation->cancelledAt)->not()->toBeNull();
@@ -269,25 +269,25 @@ describe('OperationCancelFunction', function (): void {
             test('updates operation status to cancelled', function (): void {
                 // Arrange
                 $operation = new OperationData(
-                    'op-789',
+                    'op_000000000000000000000789',
                     'urn:cline:forrst:fn:test:function',
                     status: OperationStatus::Pending,
                 );
 
                 $savedOperation = null;
                 $repository = mock(OperationRepositoryInterface::class, function (MockInterface $mock) use ($operation, &$savedOperation): void {
-                    $mock->shouldReceive('find')->with('op-789')->andReturn($operation);
-                    $mock->shouldReceive('save')->once()->with(Mockery::on(function ($data) use (&$savedOperation): bool {
+                    $mock->shouldReceive('find')->with('op_000000000000000000000789', null)->andReturn($operation);
+                    $mock->shouldReceive('saveIfVersionMatches')->once()->with(Mockery::on(function ($data) use (&$savedOperation): bool {
                         $savedOperation = $data;
 
                         return $data instanceof OperationData && $data->status === OperationStatus::Cancelled;
-                    }));
+                    }), Mockery::any(), Mockery::any())->andReturn(true);
                 });
 
                 $function = new OperationCancelFunction($repository);
                 $request = RequestObjectData::asRequest(
                     'urn:cline:forrst:ext:async:fn:cancel',
-                    ['operation_id' => 'op_789012345678901234567'],
+                    ['operation_id' => 'op_000000000000000000000789'],
                 );
                 $function->setRequest($request);
 
@@ -301,25 +301,25 @@ describe('OperationCancelFunction', function (): void {
             test('sets cancelled_at timestamp on operation', function (): void {
                 // Arrange
                 $operation = new OperationData(
-                    'op-999',
+                    'op_000000000000000000000999',
                     'urn:cline:forrst:fn:test:function',
                     status: OperationStatus::Pending,
                 );
 
                 $savedOperation = null;
                 $repository = mock(OperationRepositoryInterface::class, function (MockInterface $mock) use ($operation, &$savedOperation): void {
-                    $mock->shouldReceive('find')->with('op-999')->andReturn($operation);
-                    $mock->shouldReceive('save')->once()->with(Mockery::on(function ($data) use (&$savedOperation): bool {
+                    $mock->shouldReceive('find')->with('op_000000000000000000000999', null)->andReturn($operation);
+                    $mock->shouldReceive('saveIfVersionMatches')->once()->with(Mockery::on(function ($data) use (&$savedOperation): bool {
                         $savedOperation = $data;
 
                         return $data instanceof OperationData && $data->status === OperationStatus::Cancelled;
-                    }));
+                    }), Mockery::any(), Mockery::any())->andReturn(true);
                 });
 
                 $function = new OperationCancelFunction($repository);
                 $request = RequestObjectData::asRequest(
                     'urn:cline:forrst:ext:async:fn:cancel',
-                    ['operation_id' => 'op_999012345678901234567'],
+                    ['operation_id' => 'op_000000000000000000000999'],
                 );
                 $function->setRequest($request);
                 $before = CarbonImmutable::now();
@@ -337,20 +337,20 @@ describe('OperationCancelFunction', function (): void {
             test('saves operation to repository', function (): void {
                 // Arrange
                 $operation = new OperationData(
-                    'op-save',
+                    'op_0000000000000000000save',
                     'urn:cline:forrst:fn:test:function',
                     status: OperationStatus::Pending,
                 );
 
                 $repository = mock(OperationRepositoryInterface::class, function (MockInterface $mock) use ($operation): void {
-                    $mock->shouldReceive('find')->with('op-save')->andReturn($operation);
-                    $mock->shouldReceive('save')->once()->with(Mockery::on(fn ($data): bool => $data instanceof OperationData && $data->status === OperationStatus::Cancelled));
+                    $mock->shouldReceive('find')->with('op_0000000000000000000save', null)->andReturn($operation);
+                    $mock->shouldReceive('saveIfVersionMatches')->once()->with(Mockery::on(fn ($data): bool => $data instanceof OperationData && $data->status === OperationStatus::Cancelled), Mockery::any(), Mockery::any())->andReturn(true);
                 });
 
                 $function = new OperationCancelFunction($repository);
                 $request = RequestObjectData::asRequest(
                     'urn:cline:forrst:ext:async:fn:cancel',
-                    ['operation_id' => 'op_save01234567890123456'],
+                    ['operation_id' => 'op_0000000000000000000save'],
                 );
                 $function->setRequest($request);
 
@@ -358,7 +358,7 @@ describe('OperationCancelFunction', function (): void {
                 $function();
 
                 // Assert - verified by mock expectations
-                $repository->shouldHaveReceived('save')->once();
+                $repository->shouldHaveReceived('saveIfVersionMatches')->once();
             });
         });
     });
@@ -368,25 +368,25 @@ describe('OperationCancelFunction', function (): void {
             test('operation is terminal after cancellation', function (): void {
                 // Arrange
                 $operation = new OperationData(
-                    'op-123',
+                    'op_000000000000000000000123',
                     'urn:cline:forrst:fn:test:function',
                     status: OperationStatus::Pending,
                 );
 
                 $savedOperation = null;
                 $repository = mock(OperationRepositoryInterface::class, function (MockInterface $mock) use ($operation, &$savedOperation): void {
-                    $mock->shouldReceive('find')->with('op-123')->andReturn($operation);
-                    $mock->shouldReceive('save')->once()->with(Mockery::on(function ($data) use (&$savedOperation): bool {
+                    $mock->shouldReceive('find')->with('op_000000000000000000000123', null)->andReturn($operation);
+                    $mock->shouldReceive('saveIfVersionMatches')->once()->with(Mockery::on(function ($data) use (&$savedOperation): bool {
                         $savedOperation = $data;
 
                         return $data instanceof OperationData && $data->status === OperationStatus::Cancelled;
-                    }));
+                    }), Mockery::any(), Mockery::any())->andReturn(true);
                 });
 
                 $function = new OperationCancelFunction($repository);
                 $request = RequestObjectData::asRequest(
                     'urn:cline:forrst:ext:async:fn:cancel',
-                    ['operation_id' => 'op_123456789012345678901'],
+                    ['operation_id' => 'op_000000000000000000000123'],
                 );
                 $function->setRequest($request);
 
@@ -403,25 +403,25 @@ describe('OperationCancelFunction', function (): void {
             test('cancelled_at matches return value timestamp', function (): void {
                 // Arrange
                 $operation = new OperationData(
-                    'op-time',
+                    'op_0000000000000000000time',
                     'urn:cline:forrst:fn:test:function',
                     status: OperationStatus::Pending,
                 );
 
                 $savedOperation = null;
                 $repository = mock(OperationRepositoryInterface::class, function (MockInterface $mock) use ($operation, &$savedOperation): void {
-                    $mock->shouldReceive('find')->with('op-time')->andReturn($operation);
-                    $mock->shouldReceive('save')->once()->with(Mockery::on(function ($data) use (&$savedOperation): bool {
+                    $mock->shouldReceive('find')->with('op_0000000000000000000time', null)->andReturn($operation);
+                    $mock->shouldReceive('saveIfVersionMatches')->once()->with(Mockery::on(function ($data) use (&$savedOperation): bool {
                         $savedOperation = $data;
 
                         return $data instanceof OperationData && $data->status === OperationStatus::Cancelled;
-                    }));
+                    }), Mockery::any(), Mockery::any())->andReturn(true);
                 });
 
                 $function = new OperationCancelFunction($repository);
                 $request = RequestObjectData::asRequest(
                     'urn:cline:forrst:ext:async:fn:cancel',
-                    ['operation_id' => 'op_time01234567890123456'],
+                    ['operation_id' => 'op_0000000000000000000time'],
                 );
                 $function->setRequest($request);
 
@@ -439,13 +439,13 @@ describe('OperationCancelFunction', function (): void {
             test('throws NotFoundException when operation does not exist', function (): void {
                 // Arrange
                 $repository = mock(OperationRepositoryInterface::class, function (MockInterface $mock): void {
-                    $mock->shouldReceive('find')->with('nonexistent')->andReturn(null);
+                    $mock->shouldReceive('find')->with('op_000000000000000000000001', null)->andReturn(null);
                 });
 
                 $function = new OperationCancelFunction($repository);
                 $request = RequestObjectData::asRequest(
                     'urn:cline:forrst:ext:async:fn:cancel',
-                    ['operation_id' => 'op_nonexistent01234567890'],
+                    ['operation_id' => 'op_000000000000000000000001'],
                 );
                 $function->setRequest($request);
 
@@ -458,7 +458,7 @@ describe('OperationCancelFunction', function (): void {
             test('throws OperationException when trying to cancel completed operation', function (): void {
                 // Arrange
                 $operation = new OperationData(
-                    'op-completed',
+                    'op_000000000000000completed',
                     'urn:cline:forrst:fn:test:function',
                     status: OperationStatus::Completed,
                     result: ['data' => 'result'],
@@ -467,13 +467,13 @@ describe('OperationCancelFunction', function (): void {
                 );
 
                 $repository = mock(OperationRepositoryInterface::class, function (MockInterface $mock) use ($operation): void {
-                    $mock->shouldReceive('find')->with('op-completed')->andReturn($operation);
+                    $mock->shouldReceive('find')->with('op_000000000000000completed', null)->andReturn($operation);
                 });
 
                 $function = new OperationCancelFunction($repository);
                 $request = RequestObjectData::asRequest(
                     'urn:cline:forrst:ext:async:fn:cancel',
-                    ['operation_id' => 'op_completed012345678901'],
+                    ['operation_id' => 'op_000000000000000completed'],
                 );
                 $function->setRequest($request);
 
@@ -484,7 +484,7 @@ describe('OperationCancelFunction', function (): void {
             test('throws OperationException when trying to cancel failed operation', function (): void {
                 // Arrange
                 $operation = new OperationData(
-                    'op-failed',
+                    'op_000000000000000000failed',
                     'urn:cline:forrst:fn:test:function',
                     status: OperationStatus::Failed,
                     errors: [],
@@ -493,13 +493,13 @@ describe('OperationCancelFunction', function (): void {
                 );
 
                 $repository = mock(OperationRepositoryInterface::class, function (MockInterface $mock) use ($operation): void {
-                    $mock->shouldReceive('find')->with('op-failed')->andReturn($operation);
+                    $mock->shouldReceive('find')->with('op_000000000000000000failed', null)->andReturn($operation);
                 });
 
                 $function = new OperationCancelFunction($repository);
                 $request = RequestObjectData::asRequest(
                     'urn:cline:forrst:ext:async:fn:cancel',
-                    ['operation_id' => 'op_failed0123456789012'],
+                    ['operation_id' => 'op_000000000000000000failed'],
                 );
                 $function->setRequest($request);
 
@@ -510,7 +510,7 @@ describe('OperationCancelFunction', function (): void {
             test('throws OperationException when trying to cancel already cancelled operation', function (): void {
                 // Arrange
                 $operation = new OperationData(
-                    'op-cancelled',
+                    'op_000000000000000cancelled',
                     'urn:cline:forrst:fn:test:function',
                     status: OperationStatus::Cancelled,
                     startedAt: CarbonImmutable::now()->subMinutes(5),
@@ -518,13 +518,13 @@ describe('OperationCancelFunction', function (): void {
                 );
 
                 $repository = mock(OperationRepositoryInterface::class, function (MockInterface $mock) use ($operation): void {
-                    $mock->shouldReceive('find')->with('op-cancelled')->andReturn($operation);
+                    $mock->shouldReceive('find')->with('op_000000000000000cancelled', null)->andReturn($operation);
                 });
 
                 $function = new OperationCancelFunction($repository);
                 $request = RequestObjectData::asRequest(
                     'urn:cline:forrst:ext:async:fn:cancel',
-                    ['operation_id' => 'op_cancelled01234567890'],
+                    ['operation_id' => 'op_000000000000000cancelled'],
                 );
                 $function->setRequest($request);
 
@@ -545,7 +545,7 @@ describe('OperationCancelFunction', function (): void {
                 $function = new OperationCancelFunction($repository);
                 $request = RequestObjectData::asRequest(
                     'urn:cline:forrst:ext:async:fn:cancel',
-                    ['operation_id' => 'op_123456789012345678901'],
+                    ['operation_id' => 'op_000000000000000000000123'],
                 );
                 $function->setRequest($request);
 
@@ -556,14 +556,14 @@ describe('OperationCancelFunction', function (): void {
             test('propagates repository save exception', function (): void {
                 // Arrange
                 $operation = new OperationData(
-                    'op-123',
+                    'op_000000000000000000000123',
                     'urn:cline:forrst:fn:test:function',
                     status: OperationStatus::Pending,
                 );
 
                 $repository = mock(OperationRepositoryInterface::class, function (MockInterface $mock) use ($operation): void {
-                    $mock->shouldReceive('find')->with('op-123')->andReturn($operation);
-                    $mock->shouldReceive('save')->andThrow(
+                    $mock->shouldReceive('find')->with('op_000000000000000000000123', null)->andReturn($operation);
+                    $mock->shouldReceive('saveIfVersionMatches')->andThrow(
                         new RuntimeException('Save failed'),
                     );
                 });
@@ -571,7 +571,7 @@ describe('OperationCancelFunction', function (): void {
                 $function = new OperationCancelFunction($repository);
                 $request = RequestObjectData::asRequest(
                     'urn:cline:forrst:ext:async:fn:cancel',
-                    ['operation_id' => 'op_123456789012345678901'],
+                    ['operation_id' => 'op_000000000000000000000123'],
                 );
                 $function->setRequest($request);
 
