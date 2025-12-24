@@ -260,7 +260,7 @@ describe('DatabaseOperationRepository', function (): void {
             $repository = new DatabaseOperationRepository();
             Operation::query()->create(['id' => 'op-1', 'function' => 'test.function1', 'status' => 'pending']);
             Operation::query()->create(['id' => 'op-2', 'function' => 'test.function2', 'status' => 'pending']);
-            Operation::query()->create(['id' => 'op-3', 'function' => 'test.function1', 'status' => 'completed']);
+            Operation::query()->create(['id' => 'op-3', 'function' => 'test.function1', 'status' => 'completed', 'started_at' => now()->subMinutes(5), 'completed_at' => now()]);
 
             // Act
             $result = $repository->list(function: 'test.function1');
