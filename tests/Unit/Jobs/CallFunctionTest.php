@@ -1007,8 +1007,8 @@ describe('CallFunction', function (): void {
             ]);
         });
 
-        test('filters falsy values from resolved parameters', function (): void {
-            // Arrange - This tests the actual behavior where array_filter removes falsy values
+        test('preserves explicitly provided falsy values', function (): void {
+            // Arrange - Explicitly provided falsy values (0, '', false) should be preserved
             $requestObject = RequestObjectData::from([
                 'protocol' => ProtocolData::forrst()->toArray(),
                 'id' => 'falsy-params',
@@ -1040,12 +1040,12 @@ describe('CallFunction', function (): void {
             $job = new CallFunction($method, $requestObject);
             $response = $job->handle();
 
-            // Assert - False, 0, and empty string are filtered out by array_filter
+            // Assert - Explicitly provided falsy values must be preserved (0 and '' are valid values)
             expect($response->result)->toBe([
                 'enabled' => false,
                 'active' => true,
-                'count' => null,
-                'name' => null,
+                'count' => 0,
+                'name' => '',
             ]);
         });
 
